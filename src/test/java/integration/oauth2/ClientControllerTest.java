@@ -38,15 +38,14 @@ public class ClientControllerTest {
     int randomServerPort = 8080;
 
     @Test
-    public void sad_createClient_no_resourceId() throws JsonProcessingException {
+    public void all_client_should_have_resource_id_field() throws JsonProcessingException {
         Client client = getClientAsNonResource();
         ResponseEntity<String> exchange = createClient(client);
-
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
 
     @Test
-    public void sad_createInvalidClient_w_resourceId_as_resource() throws JsonProcessingException {
+    public void only_client_w_first_party_n_backend_role_can_be_create_as_resource() throws JsonProcessingException {
         Client client = getInvalidClientAsResource();
         ResponseEntity<String> exchange = createClient(client);
 
@@ -54,7 +53,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void happy_createClient_w_resourceId_none_resource() throws JsonProcessingException {
+    public void create_non_resource_client_with_valid_resource_ids_then_able_to_use_this_client_to_login() throws JsonProcessingException {
         Client client = getClientAsNonResource(valid_resourceId);
         ResponseEntity<String> exchange = createClient(client);
 
@@ -68,15 +67,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void happy_search_created_client() throws JsonProcessingException {
-        happy_createClient_w_resourceId_none_resource();
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/clients/" + "search";
-        ResponseEntity<Object> forEntity = restTemplate.getForEntity(url, Object.class);
-        forEntity.getHeaders().getLocation();
-    }
-
-    @Test
-    public void happy_createClient_w_resourceId_as_resource() throws JsonProcessingException {
+    public void create_client_which_is_resource_itself_with_valid_resource_ids_then_able_to_use_this_client_to_login() throws JsonProcessingException {
         Client client = getClientAsResource(valid_resourceId);
         ResponseEntity<String> exchange = createClient(client);
 
@@ -90,26 +81,21 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void sad_createClient_w_resourceId_as_resource() throws JsonProcessingException {
+    public void should_not_able_to_create_client_which_is_resource_itself_with_wrong_resource_ids() throws JsonProcessingException {
         Client client = getClientAsResource(invalid_resourceId);
         ResponseEntity<String> exchange = createClient(client);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
 
     @Test
-    public void sad_createClient_w_invalid_resourceId() throws JsonProcessingException {
+    public void should_not_able_to_create_client_which_is_resource_itself_with_wrong_not_existing_resource_ids() throws JsonProcessingException {
         Client client = getClientAsNonResource(invalid_resourceId_not_found);
         ResponseEntity<String> exchange = createClient(client);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
 
-    /**
-     * when security is disabled, no security rule check against endpoits
-     *
-     * @throws JsonProcessingException
-     */
     @Test
-    public void createClient_w_admin_account_direct_call() throws JsonProcessingException {
+    public void when_bypass_proxy_even_admin_can_create_client_if_directly_call_oauth2() throws JsonProcessingException {
         Client client = getClientAsNonResource(valid_resourceId);
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/clients";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
@@ -124,7 +110,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void happy_readClients() {
+    public void root_account_can_create_client() {
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/clients";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -138,7 +124,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void happy_replaceClient_noUpdateSecret() throws JsonProcessingException {
+    public void create_client_then_replace_it_with_different_client_only_password_is_empty_then_login_with_new_client_but_password_should_be_old_one() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
@@ -162,7 +148,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void happy_replaceClient_as_resource() throws JsonProcessingException {
+    public void create_client_then_update_it_tobe_resource() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsResource(valid_resourceId);
@@ -187,7 +173,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void sad_replaceClient_noUpdateSecret_w_invalid_as_resource() throws JsonProcessingException {
+    public void should_not_be_able_to_create_client_then_replace_it_with_different_client_which_cannot_be_resource() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
@@ -206,8 +192,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void happy_replaceClient_updateSecret() throws JsonProcessingException {
-        ResponseEntity<String> ok = ResponseEntity.ok("");
+    public void create_client_then_update_it_secret() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
@@ -229,7 +214,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void happy_deleteClient() throws JsonProcessingException {
+    public void delete_client() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
@@ -248,7 +233,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void sad_delete_root_client() throws JsonProcessingException {
+    public void root_client_is_not_deletable() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);

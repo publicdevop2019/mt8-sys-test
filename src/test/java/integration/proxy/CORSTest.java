@@ -24,14 +24,14 @@ public class CORSTest {
             "authorize", "resourceOwner", "resourceOwner/0", "resourceOwner/pwd", "resourceOwners"};
 
     @Test
-    public void happy_oauthToken() {
+    public void cors_oauthToken() {
         String url = "http://localhost:" + randomServerPort + "/" + corsUris[0];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
     }
 
     @Test
-    public void happy_oauthTokenKey() {
+    public void cors_oauthTokenKey() {
         String url = "http://localhost:" + randomServerPort + "/" + corsUris[1];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
@@ -39,7 +39,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_client() {
+    public void cors_client() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[2];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
@@ -47,7 +47,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_client_w_id_put() {
+    public void cors_client_w_id_put() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[3];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PUT);
         corsAssertNonToken(res);
@@ -55,7 +55,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_client_w_id_delete() {
+    public void cors_client_w_id_delete() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[3];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.DELETE);
         corsAssertNonToken(res);
@@ -63,7 +63,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_clients() {
+    public void cors_clients() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[4];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.GET);
         corsAssertNonToken(res);
@@ -71,7 +71,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_authorize() {
+    public void cors_authorize() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[5];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
@@ -79,7 +79,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_resourceOwner() {
+    public void cors_resourceOwner() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[6];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
@@ -87,7 +87,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_resourceOwner_id_put() {
+    public void cors_resourceOwner_id_put() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[7];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PUT);
         corsAssertNonToken(res);
@@ -95,7 +95,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_resourceOwner_id_delete() {
+    public void cors_resourceOwner_id_delete() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[7];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.DELETE);
         corsAssertNonToken(res);
@@ -103,7 +103,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_resourceOwner_id_pwd() {
+    public void cors_resourceOwner_id_pwd() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[8];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PATCH);
         corsAssertNonToken(res);
@@ -111,7 +111,7 @@ public class CORSTest {
     }
 
     @Test
-    public void happy_resourceOwners() {
+    public void cors_resourceOwners() {
         String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[9];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.GET);
         corsAssertNonToken(res);

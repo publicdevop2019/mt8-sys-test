@@ -34,14 +34,21 @@ public class PasswordFlowTest {
     int randomServerPort = 8080;
 
     @Test
-    public void happy_getAccessToken_n_refreshToken() {
+    public void get_access_token_and_refresh_token_for_clients_with_refresh_configured() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
     }
 
     @Test
-    public void happy_check_root_jwt() {
+    public void get_access_token_only_for_clients_without_refresh_configured() {
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId_no_refersh, valid_empty_secret);
+        Assert.assertNotNull(tokenResponse.getBody().getValue());
+        Assert.assertNull(tokenResponse.getBody().getRefreshToken());
+    }
+
+    @Test
+    public void check_jwt_authorities_for_root_account() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
@@ -52,7 +59,7 @@ public class PasswordFlowTest {
     }
 
     @Test
-    public void happy_check_admin_jwt() {
+    public void check_jwt_authorities_for_admin_account() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
@@ -63,7 +70,7 @@ public class PasswordFlowTest {
     }
 
     @Test
-    public void happy_check_user_jwt() {
+    public void check_jwt_authorities_for_user_account() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_user, valid_pwd, valid_clientId, valid_empty_secret);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
@@ -73,27 +80,21 @@ public class PasswordFlowTest {
         Assert.assertEquals(0, authorities.stream().filter(e -> e.equals(ResourceOwnerAuthorityEnum.ROLE_ROOT.toString())).count());
     }
 
-    @Test
-    public void happy_getAccessToken_only() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId_no_refersh, valid_empty_secret);
-        Assert.assertNotNull(tokenResponse.getBody().getValue());
-        Assert.assertNull(tokenResponse.getBody().getRefreshToken());
-    }
 
     @Test
-    public void sad_getAccessToken_w_invalidUserCredentials() {
+    public void should_not_get_token_when_user_credentials_are_wrong_even_client_is_valid() {
         ResponseEntity<?> tokenResponse = getTokenResponse(password, invalid_username, valid_pwd, valid_clientId, valid_empty_secret);
         Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    public void sad_getAccessToken_w_invalidClientDetails() {
+    public void should_not_get_token_when_user_credentials_are_valid_but_client_is_wrong() {
         ResponseEntity<?> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, invalid_clientId, valid_empty_secret);
         Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    public void sad_getAccessToken_w_invalidGrantType() {
+    public void should_not_get_token_when_user_credentials_are_valid_and_client_is_valid_but_grant_type_is_wrong() {
         ResponseEntity<?> tokenResponse = getTokenResponse(client_credentials, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
     }

@@ -26,13 +26,12 @@ import java.util.UUID;
 public class ResourceOwnerControllerTest {
     private String password = "password";
     private String client_credentials = "client_credentials";
-    private String valid_clientId = "login-id";
-    private String invalid_clientId = "rightRoleNotSufficientResourceId";
+    private String valid_login_clientId = "login-id";
     private String valid_register_clientId = "register-id";
+    private String invalid_clientId = "rightRoleNotSufficientResourceId";
     private String valid_empty_secret = "";
     private String valid_username_root = "haolinwei2015@gmail.com";
     private String valid_username_admin = "haolinwei2017@gmail.com";
-    private String valid_username_user = "haolinwei2018@gmail.com";
     private String valid_pwd = "root";
     private Long root_index = 0L;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -42,7 +41,7 @@ public class ResourceOwnerControllerTest {
     int randomServerPort = 8080;
 
     @Test
-    public void happy_createUser() throws JsonProcessingException {
+    public void create_user_with_right_authority_is_user_only() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user);
 
@@ -50,7 +49,7 @@ public class ResourceOwnerControllerTest {
 
         Assert.assertNotNull(user1.getHeaders().getLocation());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
 
@@ -63,7 +62,7 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void sad_createUser_invalid_username() throws JsonProcessingException {
+    public void should_not_able_to_create_user_with_user_name_not_email() throws JsonProcessingException {
         ResourceOwner user = getUser_wrong_username();
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user);
 
@@ -72,7 +71,7 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void createUser_w_client_missing_right_role_direct_call() throws JsonProcessingException {
+    public void able_to_create_user_with_wrong_client_if_directly_call_bypassing_proxy() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user, invalid_clientId);
 
@@ -80,7 +79,7 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void happy_updateUserPwd() throws JsonProcessingException {
+    public void update_user_password() throws JsonProcessingException {
         ResponseEntity<String> ok = ResponseEntity.ok("");
         ResourceOwner user = getUser();
         createUser(user);
@@ -89,7 +88,7 @@ public class ResourceOwnerControllerTest {
         String newPassword = UUID.randomUUID().toString().replace("-", "");
         /** Login */
         String oldPassword = user.getPassword();
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(this.password, user.getEmail(), user.getPassword(), valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(this.password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -101,18 +100,18 @@ public class ResourceOwnerControllerTest {
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenRespons33e = getTokenResponse(this.password, user.getEmail(), oldPassword, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenRespons33e = getTokenResponse(this.password, user.getEmail(), oldPassword, valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenRespons33e.getStatusCode());
 
     }
 
     @Test
-    public void happy_readUsers() {
+    public void read_all_users_with_root_account() {
         ParameterizedTypeReference<List<ResourceOwner>> responseType = new ParameterizedTypeReference<>() {
         };
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners";
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<String> request = new HttpEntity<>(null, headers);
@@ -123,13 +122,13 @@ public class ResourceOwnerControllerTest {
 
 
     @Test
-    public void happy_updateUser_authority() throws JsonProcessingException {
+    public void update_user_authority_to_admin_with_root_account() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -148,7 +147,7 @@ public class ResourceOwnerControllerTest {
         /**
          * login to verify grantedAuthorities has been changed
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         List<String> authorities = ServiceUtility.getAuthority(tokenResponse1.getBody().getValue());
         Assert.assertEquals(1, authorities.stream().filter(e -> e.equals(ResourceOwnerAuthorityEnum.ROLE_USER.toString())).count());
         Assert.assertEquals(1, authorities.stream().filter(e -> e.equals(ResourceOwnerAuthorityEnum.ROLE_ADMIN.toString())).count());
@@ -156,11 +155,11 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void sad_update_root_user_authority() throws JsonProcessingException {
+    public void should_not_able_to_update_user_authority_to_root_with_admin_account() throws JsonProcessingException {
         ResourceOwner user = getUser();
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + root_index;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -180,13 +179,13 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void sad_updateUser_authority_include_root_role() throws JsonProcessingException {
+    public void should_not_able_to_update_user_authority_to_root_with_root_account() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -195,7 +194,9 @@ public class ResourceOwnerControllerTest {
         resourceOwnerAuthorityEnumGrantedAuthority.setGrantedAuthority(ResourceOwnerAuthorityEnum.ROLE_ROOT);
         GrantedAuthorityImpl<ResourceOwnerAuthorityEnum> resourceOwnerAuthorityEnumGrantedAuthority2 = new GrantedAuthorityImpl<>();
         resourceOwnerAuthorityEnumGrantedAuthority2.setGrantedAuthority(ResourceOwnerAuthorityEnum.ROLE_USER);
-        user.setGrantedAuthorities(List.of(resourceOwnerAuthorityEnumGrantedAuthority, resourceOwnerAuthorityEnumGrantedAuthority2));
+        GrantedAuthorityImpl<ResourceOwnerAuthorityEnum> resourceOwnerAuthorityEnumGrantedAuthority3 = new GrantedAuthorityImpl<>();
+        resourceOwnerAuthorityEnumGrantedAuthority3.setGrantedAuthority(ResourceOwnerAuthorityEnum.ROLE_ADMIN);
+        user.setGrantedAuthorities(List.of(resourceOwnerAuthorityEnumGrantedAuthority, resourceOwnerAuthorityEnumGrantedAuthority2, resourceOwnerAuthorityEnumGrantedAuthority3));
         String s1 = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
         ResponseEntity<DefaultOAuth2AccessToken> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
@@ -205,13 +206,13 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void sad_updateUser_authority_w_admin() throws JsonProcessingException {
+    public void should_not_able_to_update_user_authority_to_admin_with_admin_account() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -230,13 +231,13 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void happy_updateUser_lock() throws JsonProcessingException {
+    public void lock_then_unlock_user() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -254,7 +255,7 @@ public class ResourceOwnerControllerTest {
         /**
          * login to verify account has been locked
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenResponse1.getStatusCode());
 
         user.setLocked(false);
@@ -267,23 +268,23 @@ public class ResourceOwnerControllerTest {
         /**
          * login to verify account has been unlocked
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
     }
 
     @Test
-    public void happy_deleteUser() throws JsonProcessingException {
+    public void delete_user() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user);
 
         String s = user1.getHeaders().getLocation().toString();
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<Object> request = new HttpEntity<>(null, headers);
@@ -291,25 +292,25 @@ public class ResourceOwnerControllerTest {
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse123 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse123 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse123.getStatusCode());
 
     }
 
     @Test
-    public void sad_delete_rootUser() {
+    public void should_not_able_to_delete_root_user() {
 
         String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + root_index;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
 
         /**
          * try w root
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<Object> request = new HttpEntity<>(null, headers);
@@ -319,7 +320,7 @@ public class ResourceOwnerControllerTest {
         /**
          * try w admin, admin can not delete user
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse2 = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse2 = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers2 = new HttpHeaders();
         headers.setBearerAuth(tokenResponse2.getBody().getValue());
         HttpEntity<Object> request2 = new HttpEntity<>(null, headers2);

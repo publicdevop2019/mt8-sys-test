@@ -39,7 +39,7 @@ public class BlackListControllerTest {
     private String userPwd = "root";
 
     @Test
-    public void sad_receive_request_blacklist_client_then_block_client_old_request_access_proxy_endpoints() throws JsonProcessingException, InterruptedException {
+    public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_internal_endpoints() throws JsonProcessingException, InterruptedException {
         String url = "http://localhost:" + randomServerPort + "/proxy/blacklist" + "/client";
         /**
          * before client get blacklisted, client is able to access proxy endpoints
@@ -94,7 +94,7 @@ public class BlackListControllerTest {
     }
 
     @Test
-    public void sad_receive_request_blacklist_client_then_block_client_old_request() throws JsonProcessingException, InterruptedException {
+    public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_external_endpoints() throws JsonProcessingException, InterruptedException {
 
         String url = "http://localhost:" + randomServerPort + "/proxy/blacklist" + "/client";
         String url2 = "http://localhost:" + randomServerPort + "/api" + "/resourceOwners";
@@ -146,11 +146,8 @@ public class BlackListControllerTest {
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
     }
 
-    /**
-     * only root client and trusted client can add blacklist
-     */
     @Test
-    public void sad_receive_request_blacklist_from_wrong_client() throws JsonProcessingException {
+    public void only_root_client_and_trusted_client_can_add_blacklist() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, wrong_clientId, "");
         String bearer = tokenResponse.getBody().getValue();
 
@@ -167,7 +164,7 @@ public class BlackListControllerTest {
     }
 
     @Test
-    public void happy_receive_request_blacklist_resourceOwner_then_block_resourceOwner_old_request() throws JsonProcessingException, InterruptedException {
+    public void receive_request_blacklist_resourceOwner_then_block_resourceOwner_old_request() throws JsonProcessingException, InterruptedException {
         String url2 = "http://localhost:" + randomServerPort + "/api" + "/resourceOwners";
         /**
          * admin user can login & call resourceOwner api

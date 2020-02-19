@@ -18,7 +18,6 @@ public class ClientCredentialsTest {
     private String client_credentials = "client_credentials";
     private String valid_clientId = "oauth2-id";
     private String valid_clientId_no_secret = "register-id";
-    private String valid_clientId_no_access_authPort = "rightRoleNotSufficientResourceId";
     private String valid_clientSecret = "root";
     private String valid_empty_secret = "";
     private TestRestTemplate restTemplate = new TestRestTemplate();
@@ -26,41 +25,34 @@ public class ClientCredentialsTest {
     int randomServerPort = 8080;
 
     @Test
-    public void happy_client_w_secret() {
+    public void use_client_with_secret() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_clientSecret);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
     }
 
     @Test
-    public void happy_client_w_empty_secret() {
+    public void use_client_with_empty_secret() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId_no_secret, valid_empty_secret);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
 
     }
 
     @Test
-    public void sad_client_w_wrong_credentials() {
+    public void use_client_with_wrong_credentials() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_empty_secret);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
 
     }
 
     @Test
-    public void sad_client_authorizationPoint_not_include_in_resource() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId_no_access_authPort, valid_empty_secret);
-        Assert.assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
-
-    }
-
-    @Test
-    public void sad_client_w_wrong_grant_type() {
+    public void use_client_with_wrong_grant_type() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_clientId, valid_clientSecret);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
 
     }
 
     @Test
-    public void sad_no_exist_client() {
+    public void trying_to_login_with_not_exist_client() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
 

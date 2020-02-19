@@ -30,7 +30,7 @@ public class ResourceOwnerEPSecurityTest {
     int randomServerPort = 8111;
 
     @Test
-    public void sad_createUser_w_client_missing_right_role() throws JsonProcessingException {
+    public void should_not_able_to_create_user_w_client_missing_right_role() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user, invalid_clientId);
 

@@ -33,7 +33,7 @@ public class ClientEPSecurityTest {
     int randomServerPort = 8111;
 
     @Test
-    public void sad_createClient_w_admin_account() throws JsonProcessingException {
+    public void should_not_able_to_create_client_w_admin_account_when_going_through_proxy() throws JsonProcessingException {
         Client client = getClientAsNonResource(valid_resourceId);
         String url = "http://localhost:" + randomServerPort + "/api" + "/clients";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
