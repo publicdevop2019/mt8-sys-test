@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.clazz.GrantedAuthorityImpl;
-import com.hw.clazz.eenum.ResourceOwnerAuthorityEnum;
-import com.hw.entity.ResourceOwner;
-import helper.ServiceUtility;
+import helper.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -79,8 +76,7 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    public void update_user_password() throws JsonProcessingException {
-        ResponseEntity<String> ok = ResponseEntity.ok("");
+    public void update_user_password_without_current_pwd() throws JsonProcessingException {
         ResourceOwner user = getUser();
         createUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
@@ -98,11 +94,40 @@ public class ResourceOwnerControllerTest {
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
         ResponseEntity<Object> exchange = restTemplate.exchange(url, HttpMethod.PATCH, request, Object.class);
 
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
+    }
+
+    @Test
+    public void update_user_password_with_current_pwd() throws JsonProcessingException {
+        ResourceOwner user = getUser();
+        ResourceOwnerUpdatePwd resourceOwnerUpdatePwd = new ResourceOwnerUpdatePwd();
+        resourceOwnerUpdatePwd.setCurrentPwd(user.getPassword());
+        resourceOwnerUpdatePwd.setEmail(user.getEmail());
+        resourceOwnerUpdatePwd.setPassword(UUID.randomUUID().toString());
+        createUser(user);
+        /** Location is not used in this case, root/admin/user can only update their password */
+        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwner/pwd";
+        /** Login */
+        String oldPassword = user.getPassword();
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(this.password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        String bearer = tokenResponse.getBody().getValue();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(bearer);
+
+        String s1 = mapper.writeValueAsString(resourceOwnerUpdatePwd);
+        HttpEntity<String> request = new HttpEntity<>(s1, headers);
+        ResponseEntity<Object> exchange = restTemplate.exchange(url, HttpMethod.PATCH, request, Object.class);
+
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenRespons33e = getTokenResponse(this.password, user.getEmail(), oldPassword, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> resp3 = getTokenResponse(this.password, user.getEmail(), oldPassword, valid_login_clientId, valid_empty_secret);
 
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenRespons33e.getStatusCode());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, resp3.getStatusCode());
+
+        ResponseEntity<DefaultOAuth2AccessToken> resp4 = getTokenResponse(this.password, user.getEmail(), resourceOwnerUpdatePwd.getPassword(), valid_login_clientId, valid_empty_secret);
+
+        Assert.assertEquals(HttpStatus.OK, resp4.getStatusCode());
 
     }
 

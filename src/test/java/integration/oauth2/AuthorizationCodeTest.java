@@ -1,7 +1,6 @@
 package integration.oauth2;
 
 import com.jayway.jsonpath.JsonPath;
-import helper.ClientAuthorityEnum;
 import helper.ResourceOwnerAuthorityEnum;
 import helper.ServiceUtility;
 import org.junit.Assert;
@@ -15,7 +14,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
@@ -110,7 +108,6 @@ public class AuthorizationCodeTest {
         Assert.assertEquals(0, authorities.stream().filter(e -> e.equals(ResourceOwnerAuthorityEnum.ROLE_ROOT.toString())).count());
 
     }
-
 
 
     @Test

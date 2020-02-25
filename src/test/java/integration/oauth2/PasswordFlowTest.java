@@ -1,6 +1,6 @@
 package integration.oauth2;
 
-import com.hw.clazz.eenum.ResourceOwnerAuthorityEnum;
+import helper.ResourceOwnerAuthorityEnum;
 import helper.ServiceUtility;
 import org.junit.Assert;
 import org.junit.Test;
