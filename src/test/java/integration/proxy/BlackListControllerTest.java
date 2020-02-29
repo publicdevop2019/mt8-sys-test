@@ -173,7 +173,7 @@ public class BlackListControllerTest {
 
         String bearer0 = pwdTokenResponse.getBody().getValue();
         String refreshToken = pwdTokenResponse.getBody().getRefreshToken().getValue();
-        String user_name = (String) pwdTokenResponse.getBody().getAdditionalInformation().get("uid");
+        String userId = (String) pwdTokenResponse.getBody().getAdditionalInformation().get("uid");
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer0);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
@@ -188,7 +188,7 @@ public class BlackListControllerTest {
 
         String url = "http://localhost:" + randomServerPort + "/proxy/blacklist" + "/resourceOwner";
         HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("name", user_name);
+        stringStringHashMap.put("name", userId);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         headers.setContentType(MediaType.APPLICATION_JSON);
