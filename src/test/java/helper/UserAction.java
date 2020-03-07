@@ -1,0 +1,215 @@
+package helper;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+
+public class UserAction {
+    public static String PASSWORD = "password";
+    public static String CLIENT_CREDENTIALS = "client_credentials";
+    public static String AUTHORIZATION_CODE = "authorization_code";
+    public static String LOGIN_ID = "login-id";
+    public static String REGISTER_ID = "login-id";
+    public static String CLIENT_SECRET = "";
+    public static String AUTHORIZE_STATE = "login";
+    public static String AUTHORIZE_RESPONSE_TYPE = "code";
+    public static String REDIRECT_URI = "http://localhost:4200";
+    public static String ROOT_USERNAME = "haolinwei2015@gmail.com";
+    public static String ROOT_PASSWORD = "root";
+    public static String ADMIN_USERNAME = "haolinwei2017@gmail.com";
+    public static String ADMIN_PASSWORD = "root";
+    public static String USER_USERNAME = "haolinwei2018@gmail.com";
+    public static String USER_PASSWORD = "root";
+    public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    private TestRestTemplate restTemplate = new TestRestTemplate();
+    private int randomServerPort = 8111;
+
+    public ResourceOwner registerResourceOwner() {
+        ResourceOwner randomResourceOwner = getRandomResourceOwner();
+        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse();
+        registerResourceOwner(randomResourceOwner, registerTokenResponse.getBody().getValue());
+        return randomResourceOwner;
+    }
+
+    public String registerResourceOwnerThenLogin() {
+        ResourceOwner randomResourceOwner = getRandomResourceOwner();
+        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse();
+        registerResourceOwner(randomResourceOwner, registerTokenResponse.getBody().getValue());
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(randomResourceOwner.getEmail(), randomResourceOwner.getPassword());
+        return loginTokenResponse.getBody().getValue();
+    }
+
+    public ResponseEntity<List<Category>> getCategories() {
+        String url = "http://localhost:" + randomServerPort + "/api/" + "categories";
+        ParameterizedTypeReference<List<Category>> responseType = new ParameterizedTypeReference<>() {
+        };
+        return restTemplate.exchange(url, HttpMethod.GET, null, responseType);
+    }
+
+    public String getDefaultRootToken() {
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(ROOT_USERNAME, ROOT_PASSWORD);
+        return loginTokenResponse.getBody().getValue();
+    }
+
+    public String getDefaultAdminToken() {
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(ADMIN_USERNAME, ADMIN_PASSWORD);
+        return loginTokenResponse.getBody().getValue();
+    }
+
+    public String getDefaultUserToken() {
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(USER_USERNAME, USER_PASSWORD);
+        return loginTokenResponse.getBody().getValue();
+    }
+
+    public ResourceOwner getRandomResourceOwner() {
+        ResourceOwner resourceOwner = new ResourceOwner();
+        resourceOwner.setPassword(UUID.randomUUID().toString().replace("-", ""));
+        resourceOwner.setEmail(UUID.randomUUID().toString().replace("-", "") + "@gmail.com");
+        return resourceOwner;
+    }
+
+    public Category getRandomCategory() {
+        Category category = new Category();
+        category.setTitle(UUID.randomUUID().toString().replace("-", ""));
+        category.setUrl(UUID.randomUUID().toString().replace("-", ""));
+        return category;
+    }
+
+    public ProductDetail getRandomProduct(String category) {
+        ProductDetail productDetail = new ProductDetail();
+        productDetail.setImageUrlSmall(UUID.randomUUID().toString().replace("-", ""));
+        HashSet<String> objects = new HashSet<>();
+        objects.add(UUID.randomUUID().toString().replace("-", ""));
+        objects.add(UUID.randomUUID().toString().replace("-", ""));
+        productDetail.setSpecification(objects);
+        productDetail.setName(UUID.randomUUID().toString().replace("-", ""));
+        productDetail.setCategory(category);
+        productDetail.setOrderStorage(new Random().nextInt());
+        productDetail.setActualStorage(new Random().nextInt());
+        productDetail.setPrice(BigDecimal.valueOf(new Random().nextDouble()));
+        return productDetail;
+    }
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
+        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", grantType);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, clientSecret);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse() {
+        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", CLIENT_CREDENTIALS);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(REGISTER_ID, CLIENT_SECRET);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public ResponseEntity<DefaultOAuth2AccessToken> registerResourceOwner(ResourceOwner user, String registerToken) {
+        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(registerToken);
+        String s = null;
+        try {
+            s = mapper.writeValueAsString(user);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        HttpEntity<String> request = new HttpEntity<>(s, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
+        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", grantType);
+        params.add("username", username);
+        params.add("password", userPwd);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, clientSecret);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String username, String userPwd) {
+        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", PASSWORD);
+        params.add("username", username);
+        params.add("password", userPwd);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(LOGIN_ID, CLIENT_SECRET);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken, String response_type, String state, String redirectUri) {
+        String url = "http://localhost:" + randomServerPort + "/" + "v1/api/" + "authorize";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("response_type", response_type);
+        params.add("client_id", clientId);
+        params.add("state", state);
+        params.add("redirect_uri", redirectUri);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(bearerToken);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+    }
+
+    public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken) {
+        String url = "http://localhost:" + randomServerPort + "/" + "v1/api/" + "authorize";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("response_type", AUTHORIZE_RESPONSE_TYPE);
+        params.add("client_id", clientId);
+        params.add("state", AUTHORIZE_STATE);
+        params.add("redirect_uri", REDIRECT_URI);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(bearerToken);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+    }
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret, String grantType) {
+        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", grantType);
+        params.add("code", code);
+        params.add("redirect_uri", redirectUri);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, clientSecret);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret) {
+        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", AUTHORIZATION_CODE);
+        params.add("code", code);
+        params.add("redirect_uri", redirectUri);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, clientSecret);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+}

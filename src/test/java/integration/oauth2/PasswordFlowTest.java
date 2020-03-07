@@ -1,5 +1,10 @@
 package integration.oauth2;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import helper.ResourceOwner;
 import helper.ResourceOwnerAuthorityEnum;
 import helper.ServiceUtility;
 import org.junit.Assert;
@@ -13,6 +18,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @RunWith(SpringRunner.class)
@@ -20,6 +26,7 @@ public class PasswordFlowTest {
     private String password = "password";
     private String client_credentials = "client_credentials";
     private String valid_clientId = "login-id";
+    private String valid_register_clientId = "register-id";
     private String valid_clientId_no_refersh = "test-id";
     private String valid_empty_secret = "";
     private String valid_username_root = "haolinwei2015@gmail.com";
@@ -28,10 +35,20 @@ public class PasswordFlowTest {
     private String valid_pwd = "root";
     private String invalid_username = "root2@gmail.com";
     private String invalid_clientId = "root2";
+    public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     private TestRestTemplate restTemplate = new TestRestTemplate();
 
 
     int randomServerPort = 8080;
+
+    @Test
+    public void create_user_then_login() {
+        ResourceOwner user = getUser();
+        ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user, valid_register_clientId);
+        Assert.assertEquals(HttpStatus.OK, user1.getStatusCode());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        Assert.assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
+    }
 
     @Test
     public void get_access_token_and_refresh_token_for_clients_with_refresh_configured() {
@@ -84,13 +101,13 @@ public class PasswordFlowTest {
     @Test
     public void should_not_get_token_when_user_credentials_are_wrong_even_client_is_valid() {
         ResponseEntity<?> tokenResponse = getTokenResponse(password, invalid_username, valid_pwd, valid_clientId, valid_empty_secret);
-        Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenResponse.getStatusCode());
     }
 
     @Test
     public void should_not_get_token_when_user_credentials_are_valid_but_client_is_wrong() {
         ResponseEntity<?> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, invalid_clientId, valid_empty_secret);
-        Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+        Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
     }
 
     @Test
@@ -110,5 +127,40 @@ public class PasswordFlowTest {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
+
+    private ResourceOwner getUser() {
+        ResourceOwner resourceOwner = new ResourceOwner();
+        resourceOwner.setPassword(UUID.randomUUID().toString().replace("-", ""));
+        resourceOwner.setEmail(UUID.randomUUID().toString().replace("-", "") + "@gmail.com");
+        return resourceOwner;
+    }
+
+    private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) {
+        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners";
+        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
+        String value = registerTokenResponse.getBody().getValue();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(value);
+        String s = null;
+        try {
+            s = mapper.writeValueAsString(user);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        HttpEntity<String> request = new HttpEntity<>(s, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
+        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", grantType);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, clientSecret);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
 
 }

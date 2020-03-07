@@ -319,7 +319,7 @@ public class ResourceOwnerControllerTest {
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse123 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
-        Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse123.getStatusCode());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenResponse123.getStatusCode());
 
     }
 
