@@ -29,7 +29,7 @@ public class ProductServiceTest {
 
     @Test
     public void concurrentValidation() {
-        String url = UserAction.proxyUrl + "/v1/api/productDetails/validate";
+        String url = UserAction.proxyUrl + "/api/productDetails/validate";
         OptionItem optionItem1 = new OptionItem("scoj", "+8.41");
         OptionItem optionItem2 = new OptionItem("yla", "+7.39");
         OptionItem optionItem3 = new OptionItem("azqv", "-2.79");
