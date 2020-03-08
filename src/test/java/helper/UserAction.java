@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -12,17 +13,14 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class UserAction {
     public static String PASSWORD = "password";
     public static String CLIENT_CREDENTIALS = "client_credentials";
     public static String AUTHORIZATION_CODE = "authorization_code";
     public static String LOGIN_ID = "login-id";
-    public static String REGISTER_ID = "login-id";
+    public static String REGISTER_ID = "register-id";
     public static String CLIENT_SECRET = "";
     public static String AUTHORIZE_STATE = "login";
     public static String AUTHORIZE_RESPONSE_TYPE = "code";
@@ -44,12 +42,92 @@ public class UserAction {
         return randomResourceOwner;
     }
 
+    public OrderDetail createOrderDetailForUser(String defaultUserToken, String profileId1) {
+        ResponseEntity<List<ProductSimple>> randomProducts = getRandomProducts();
+        ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
+        String url = "http://localhost:" + randomServerPort + "/api/" + "productDetails/" + productSimple.getId();
+        ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
+        ProductDetail body = exchange.getBody();
+        SnapshotProduct snapshotProduct = selectProduct(body);
+        String url2 = "http://localhost:" + randomServerPort + "/api/profiles/" + profileId1 + "/cart";
+        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+
+        ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
+        };
+        ResponseEntity<List<SnapshotProduct>> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), responseType);
+
+        OrderDetail orderDetail = new OrderDetail();
+        SnapshotAddress snapshotAddress = new SnapshotAddress();
+        BeanUtils.copyProperties(getRandomAddress(), snapshotAddress);
+        orderDetail.setAddress(snapshotAddress);
+        orderDetail.setProductList(exchange5.getBody());
+        orderDetail.setPaymentType("wechatpay");
+        BigDecimal reduce = orderDetail.getProductList().stream().map(e -> BigDecimal.valueOf(Double.parseDouble(e.getFinalPrice()))).reduce(BigDecimal.valueOf(0), BigDecimal::add);
+        orderDetail.setPaymentAmt(reduce);
+        return orderDetail;
+    }
+
     public String registerResourceOwnerThenLogin() {
         ResourceOwner randomResourceOwner = getRandomResourceOwner();
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse();
         registerResourceOwner(randomResourceOwner, registerTokenResponse.getBody().getValue());
         ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(randomResourceOwner.getEmail(), randomResourceOwner.getPassword());
         return loginTokenResponse.getBody().getValue();
+    }
+
+    public ResponseEntity<List<ProductSimple>> getRandomProducts() {
+        ResponseEntity<List<Category>> categories = getCategories();
+        List<Category> body = categories.getBody();
+        int i = new Random().nextInt(body.size());
+        Category category = body.get(i);
+        String url = "http://localhost:" + randomServerPort + "/api/" + "categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
+        ParameterizedTypeReference<List<ProductSimple>> responseType = new ParameterizedTypeReference<>() {
+        };
+        ResponseEntity<List<ProductSimple>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
+        while (exchange.getBody().size() == 0 || exchange.getBody().size() == 1) {
+            exchange = getRandomProducts();
+        }
+        return exchange;
+    }
+
+    public SnapshotProduct selectProduct(ProductDetail productDetail) {
+        List<ProductOption> selectedOptions = productDetail.getSelectedOptions();
+        List<String> priceVarCollection = new ArrayList<>();
+        if (selectedOptions != null && selectedOptions.size() != 0) {
+            /*
+            pick first option
+            * */
+            selectedOptions.forEach(productOption -> {
+                OptionItem optionItem = productOption.options.stream().findFirst().get();
+                productOption.setOptions(List.of(optionItem));
+                priceVarCollection.add(optionItem.getPriceVar());
+            });
+        }
+        SnapshotProduct snapshotProduct = new SnapshotProduct();
+        snapshotProduct.setName(productDetail.getName());
+        snapshotProduct.setProductId(productDetail.getId().toString());
+        snapshotProduct.setSelectedOptions(productDetail.getSelectedOptions());
+
+        BigDecimal calc = new BigDecimal(0);
+        for (String priceVar : priceVarCollection) {
+            if (priceVar.contains("+")) {
+                double v = Double.parseDouble(priceVar.replace("+", ""));
+                BigDecimal bigDecimal = BigDecimal.valueOf(v);
+                calc = calc.add(bigDecimal);
+            } else if (priceVar.contains("-")) {
+                double v = Double.parseDouble(priceVar.replace("-", ""));
+                BigDecimal bigDecimal = BigDecimal.valueOf(v);
+                calc = calc.subtract(bigDecimal);
+
+            } else if (priceVar.contains("*")) {
+                double v = Double.parseDouble(priceVar.replace("*", ""));
+                BigDecimal bigDecimal = BigDecimal.valueOf(v);
+                calc = calc.multiply(bigDecimal);
+            } else {
+            }
+        }
+        snapshotProduct.setFinalPrice(calc.add(productDetail.getPrice()).toString());
+        return snapshotProduct;
     }
 
     public ResponseEntity<List<Category>> getCategories() {
@@ -74,6 +152,44 @@ public class UserAction {
         return loginTokenResponse.getBody().getValue();
     }
 
+    public String getProfileId(String authorizeToken) {
+        String url = "http://localhost:" + randomServerPort + "/api/" + "profiles/search";
+        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, getHttpRequest(authorizeToken), String.class);
+        String profileId;
+        if (exchange.getStatusCode() == HttpStatus.BAD_REQUEST) {
+            profileId = createProfile(authorizeToken);
+        } else {
+            profileId = exchange.getBody();
+        }
+        return profileId;
+    }
+
+    public HttpEntity getHttpRequest(String authorizeToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(authorizeToken);
+        return new HttpEntity<>(headers);
+    }
+
+    public HttpEntity getHttpRequest(String authorizeToken, Object object) {
+        String s = null;
+        try {
+            s = mapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(authorizeToken);
+        return new HttpEntity<>(s, headers);
+    }
+
+    public String createProfile(String authorizeToken) {
+        String url = "http://localhost:" + randomServerPort + "/api/" + "profiles";
+        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, getHttpRequest(authorizeToken), String.class);
+        return exchange.getHeaders().getLocation().toString();
+    }
+
     public ResourceOwner getRandomResourceOwner() {
         ResourceOwner resourceOwner = new ResourceOwner();
         resourceOwner.setPassword(UUID.randomUUID().toString().replace("-", ""));
@@ -86,6 +202,19 @@ public class UserAction {
         category.setTitle(UUID.randomUUID().toString().replace("-", ""));
         category.setUrl(UUID.randomUUID().toString().replace("-", ""));
         return category;
+    }
+
+    public Address getRandomAddress() {
+        Address address = new Address();
+        address.setCity(UUID.randomUUID().toString().replace("-", ""));
+        address.setCountry(UUID.randomUUID().toString().replace("-", ""));
+        address.setFullName(UUID.randomUUID().toString().replace("-", ""));
+        address.setLine1(UUID.randomUUID().toString().replace("-", ""));
+        address.setLine2(UUID.randomUUID().toString().replace("-", ""));
+        address.setPhoneNumber(UUID.randomUUID().toString().replace("-", ""));
+        address.setPostalCode(UUID.randomUUID().toString().replace("-", ""));
+        address.setProvince(UUID.randomUUID().toString().replace("-", ""));
+        return address;
     }
 
     public ProductDetail getRandomProduct(String category) {
@@ -124,7 +253,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> registerResourceOwner(ResourceOwner user, String registerToken) {
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners";
+        String url = "http://localhost:" + randomServerPort + "/api" + "/resourceOwners";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(registerToken);
@@ -164,7 +293,7 @@ public class UserAction {
     }
 
     public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken, String response_type, String state, String redirectUri) {
-        String url = "http://localhost:" + randomServerPort + "/" + "v1/api/" + "authorize";
+        String url = "http://localhost:" + randomServerPort + "/api/" + "authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", response_type);
         params.add("client_id", clientId);
@@ -177,7 +306,7 @@ public class UserAction {
     }
 
     public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken) {
-        String url = "http://localhost:" + randomServerPort + "/" + "v1/api/" + "authorize";
+        String url = "http://localhost:" + randomServerPort + "/api/" + "authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", AUTHORIZE_RESPONSE_TYPE);
         params.add("client_id", clientId);

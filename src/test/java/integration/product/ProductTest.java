@@ -8,7 +8,6 @@ import helper.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
 import java.math.BigDecimal;
@@ -23,14 +22,16 @@ public class ProductTest {
 
     @Test
     public void shop_get_products_by_category() {
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
-        int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
-        String url = "http://localhost:" + randomServerPort + "/v1/api/" + "categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
-        ParameterizedTypeReference<List<ProductSimple>> responseType = new ParameterizedTypeReference<>() {
-        };
-        ResponseEntity<List<ProductSimple>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
+        ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
+        Assert.assertEquals(HttpStatus.OK, randomProducts.getStatusCode());
+    }
+
+    @Test
+    public void shop_get_product_detail() {
+        ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
+        ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
+        String url = "http://localhost:" + randomServerPort + "/v1/api/" + "productDetails/" + productSimple.getId();
+        ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
     }
 
