@@ -87,13 +87,13 @@ public class CartTest {
         Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
     }
 
-    @Test
-    public void shop_read_carts_details() {
-    }
-
-    @Test
-    public void shop_update_cart_details() {
-
-    }
+//    @Test
+//    public void shop_read_carts_details() {
+//    }
+//
+//    @Test
+//    public void shop_update_cart_details() {
+//
+//    }
 
 }
