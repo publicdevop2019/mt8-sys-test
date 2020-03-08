@@ -33,7 +33,7 @@ public class UserAction {
     public static String USER_PASSWORD = "root";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     private TestRestTemplate restTemplate = new TestRestTemplate();
-    private int randomServerPort = 8111;
+    public static String proxyUrl = "http://localhost:" + 8111;
 
     public ResourceOwner registerResourceOwner() {
         ResourceOwner randomResourceOwner = getRandomResourceOwner();
@@ -45,11 +45,11 @@ public class UserAction {
     public OrderDetail createOrderDetailForUser(String defaultUserToken, String profileId1) {
         ResponseEntity<List<ProductSimple>> randomProducts = getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = "http://localhost:" + randomServerPort + "/api/" + "productDetails/" + productSimple.getId();
+        String url = proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = selectProduct(body);
-        String url2 = "http://localhost:" + randomServerPort + "/api/profiles/" + profileId1 + "/cart";
+        String url2 = proxyUrl + "/api/profiles/" + profileId1 + "/cart";
         restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
 
         ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
@@ -80,7 +80,7 @@ public class UserAction {
         List<Category> body = categories.getBody();
         int i = new Random().nextInt(body.size());
         Category category = body.get(i);
-        String url = "http://localhost:" + randomServerPort + "/api/" + "categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
+        String url = proxyUrl + "/api/" + "categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
         ParameterizedTypeReference<List<ProductSimple>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<ProductSimple>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
@@ -131,7 +131,7 @@ public class UserAction {
     }
 
     public ResponseEntity<List<Category>> getCategories() {
-        String url = "http://localhost:" + randomServerPort + "/api/" + "categories";
+        String url = proxyUrl + "/api/" + "categories";
         ParameterizedTypeReference<List<Category>> responseType = new ParameterizedTypeReference<>() {
         };
         return restTemplate.exchange(url, HttpMethod.GET, null, responseType);
@@ -153,7 +153,7 @@ public class UserAction {
     }
 
     public String getProfileId(String authorizeToken) {
-        String url = "http://localhost:" + randomServerPort + "/api/" + "profiles/search";
+        String url = proxyUrl + "/api/" + "profiles/search";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, getHttpRequest(authorizeToken), String.class);
         String profileId;
         if (exchange.getStatusCode() == HttpStatus.BAD_REQUEST) {
@@ -185,7 +185,7 @@ public class UserAction {
     }
 
     public String createProfile(String authorizeToken) {
-        String url = "http://localhost:" + randomServerPort + "/api/" + "profiles";
+        String url = proxyUrl + "/api/" + "profiles";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, getHttpRequest(authorizeToken), String.class);
         return exchange.getHeaders().getLocation().toString();
     }
@@ -233,7 +233,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();
@@ -243,7 +243,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse() {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", CLIENT_CREDENTIALS);
         HttpHeaders headers = new HttpHeaders();
@@ -253,7 +253,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> registerResourceOwner(ResourceOwner user, String registerToken) {
-        String url = "http://localhost:" + randomServerPort + "/api" + "/resourceOwners";
+        String url = proxyUrl + "/api" + "/resourceOwners";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(registerToken);
@@ -269,7 +269,7 @@ public class UserAction {
 
 
     public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -281,7 +281,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String username, String userPwd) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", PASSWORD);
         params.add("username", username);
@@ -293,7 +293,7 @@ public class UserAction {
     }
 
     public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken, String response_type, String state, String redirectUri) {
-        String url = "http://localhost:" + randomServerPort + "/api/" + "authorize";
+        String url = proxyUrl + "/api/" + "authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", response_type);
         params.add("client_id", clientId);
@@ -306,7 +306,7 @@ public class UserAction {
     }
 
     public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken) {
-        String url = "http://localhost:" + randomServerPort + "/api/" + "authorize";
+        String url = proxyUrl + "/api/" + "authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", AUTHORIZE_RESPONSE_TYPE);
         params.add("client_id", clientId);
@@ -319,7 +319,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret, String grantType) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("code", code);
@@ -331,7 +331,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", AUTHORIZATION_CODE);
         params.add("code", code);

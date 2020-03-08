@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import helper.ResourceOwner;
+import helper.UserAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +28,6 @@ public class ResourceOwnerEPSecurityTest {
     private String valid_empty_secret = "";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     private TestRestTemplate restTemplate = new TestRestTemplate();
-    int randomServerPort = 8111;
 
     @Test
     public void should_not_able_to_create_user_w_client_missing_right_role() throws JsonProcessingException {
@@ -45,7 +45,7 @@ public class ResourceOwnerEPSecurityTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) throws JsonProcessingException {
-        String url = "http://localhost:" + randomServerPort + "/api" + "/resourceOwners";
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
@@ -57,7 +57,7 @@ public class ResourceOwnerEPSecurityTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();

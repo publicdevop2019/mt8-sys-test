@@ -1,5 +1,6 @@
 package integration.oauth2;
 
+import helper.UserAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,7 +23,6 @@ public class ClientCredentialsTest {
     private String valid_empty_secret = "";
     private TestRestTemplate restTemplate = new TestRestTemplate();
 
-    int randomServerPort = 8080;
 
     @Test
     public void use_client_with_secret() {
@@ -59,7 +59,7 @@ public class ClientCredentialsTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();

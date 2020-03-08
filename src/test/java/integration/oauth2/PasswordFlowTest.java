@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import helper.ResourceOwner;
 import helper.ResourceOwnerAuthorityEnum;
 import helper.ServiceUtility;
+import helper.UserAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,9 +38,6 @@ public class PasswordFlowTest {
     private String invalid_clientId = "root2";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     private TestRestTemplate restTemplate = new TestRestTemplate();
-
-
-    int randomServerPort = 8080;
 
     @Test
     public void create_user_then_login() {
@@ -117,7 +115,7 @@ public class PasswordFlowTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -136,7 +134,7 @@ public class PasswordFlowTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) {
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners";
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
@@ -153,7 +151,7 @@ public class PasswordFlowTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();

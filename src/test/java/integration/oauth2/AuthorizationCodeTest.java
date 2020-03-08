@@ -3,6 +3,7 @@ package integration.oauth2;
 import com.jayway.jsonpath.JsonPath;
 import helper.ResourceOwnerAuthorityEnum;
 import helper.ServiceUtility;
+import helper.UserAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +36,6 @@ public class AuthorizationCodeTest {
 
     private TestRestTemplate restTemplate = new TestRestTemplate();
 
-    int randomServerPort = 8080;
 
     @Test
     public void should_get_authorize_code_after_pwd_login_for_user() {
@@ -174,7 +174,7 @@ public class AuthorizationCodeTest {
 
 
     private ResponseEntity<String> getCodeResp(String clientId, String bearerToken) {
-        String url = "http://localhost:" + randomServerPort + "/" + "v1/api/" + "authorize";
+        String url = UserAction.proxyUrl +"/api/" + "authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", response_type);
         params.add("client_id", clientId);
@@ -187,7 +187,7 @@ public class AuthorizationCodeTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> pwdFlowLogin(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -203,7 +203,7 @@ public class AuthorizationCodeTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenSecret(String grantType, String code, String redirect_uri, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("code", code);

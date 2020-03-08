@@ -30,12 +30,11 @@ public class ClientEPSecurityTest {
     private String valid_pwd = "root";
     private TestRestTemplate restTemplate = new TestRestTemplate();
     public ObjectMapper mapper = new ObjectMapper();
-    int randomServerPort = 8111;
 
     @Test
     public void should_not_able_to_create_client_w_admin_account_when_going_through_proxy() throws JsonProcessingException {
         Client client = getClientAsNonResource(valid_resourceId);
-        String url = "http://localhost:" + randomServerPort + "/api" + "/clients";
+        String url = UserAction.proxyUrl + "/api" + "/clients";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
@@ -73,7 +72,7 @@ public class ClientEPSecurityTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);

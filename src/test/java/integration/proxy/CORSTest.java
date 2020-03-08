@@ -1,5 +1,6 @@
 package integration.proxy;
 
+import helper.UserAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,7 +13,6 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 public class CORSTest {
-    int randomServerPort = 8111;
 
     private TestRestTemplate restTemplate = new TestRestTemplate();
 
@@ -25,14 +25,14 @@ public class CORSTest {
 
     @Test
     public void cors_oauthToken() {
-        String url = "http://localhost:" + randomServerPort + "/" + corsUris[0];
+        String url = UserAction.proxyUrl + "/" + corsUris[0];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
     }
 
     @Test
     public void cors_oauthTokenKey() {
-        String url = "http://localhost:" + randomServerPort + "/" + corsUris[1];
+        String url = UserAction.proxyUrl + "/" + corsUris[1];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
 
@@ -40,7 +40,7 @@ public class CORSTest {
 
     @Test
     public void cors_client() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[2];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[2];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
 
@@ -48,7 +48,7 @@ public class CORSTest {
 
     @Test
     public void cors_client_w_id_put() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[3];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[3];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PUT);
         corsAssertNonToken(res);
 
@@ -56,7 +56,7 @@ public class CORSTest {
 
     @Test
     public void cors_client_w_id_delete() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[3];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[3];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.DELETE);
         corsAssertNonToken(res);
 
@@ -64,7 +64,7 @@ public class CORSTest {
 
     @Test
     public void cors_clients() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[4];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[4];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.GET);
         corsAssertNonToken(res);
 
@@ -72,7 +72,7 @@ public class CORSTest {
 
     @Test
     public void cors_authorize() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[5];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[5];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
 
@@ -80,7 +80,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[6];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[6];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
 
@@ -88,7 +88,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner_id_put() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[7];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[7];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PUT);
         corsAssertNonToken(res);
 
@@ -96,7 +96,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner_id_delete() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[7];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[7];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.DELETE);
         corsAssertNonToken(res);
 
@@ -104,7 +104,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner_id_pwd() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[8];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[8];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PATCH);
         corsAssertNonToken(res);
 
@@ -112,7 +112,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwners() {
-        String url = "http://localhost:" + randomServerPort + apiVersion + corsUris[9];
+        String url = UserAction.proxyUrl + apiVersion + corsUris[9];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.GET);
         corsAssertNonToken(res);
 

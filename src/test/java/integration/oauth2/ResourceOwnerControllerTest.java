@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import helper.*;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -68,6 +69,7 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
+    @Ignore
     public void able_to_create_user_with_wrong_client_if_directly_call_bypassing_proxy() throws JsonProcessingException {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user, invalid_clientId);
@@ -80,7 +82,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         createUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwner/pwd";
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwner/pwd";
         String newPassword = UUID.randomUUID().toString().replace("-", "");
         /** Login */
         String oldPassword = user.getPassword();
@@ -106,7 +108,7 @@ public class ResourceOwnerControllerTest {
         resourceOwnerUpdatePwd.setPassword(UUID.randomUUID().toString());
         createUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwner/pwd";
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwner/pwd";
         /** Login */
         String oldPassword = user.getPassword();
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(this.password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
@@ -135,7 +137,7 @@ public class ResourceOwnerControllerTest {
     public void read_all_users_with_root_account() {
         ParameterizedTypeReference<List<ResourceOwner>> responseType = new ParameterizedTypeReference<>() {
         };
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners";
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
@@ -151,7 +153,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -182,7 +184,7 @@ public class ResourceOwnerControllerTest {
     @Test
     public void should_not_able_to_update_user_authority_to_root_with_admin_account() throws JsonProcessingException {
         ResourceOwner user = getUser();
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + root_index;
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + root_index;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -208,7 +210,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -235,7 +237,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -260,7 +262,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -303,7 +305,7 @@ public class ResourceOwnerControllerTest {
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user);
 
         String s = user1.getHeaders().getLocation().toString();
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
@@ -326,7 +328,7 @@ public class ResourceOwnerControllerTest {
     @Test
     public void should_not_able_to_delete_root_user() {
 
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners/" + root_index;
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + root_index;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
 
@@ -350,8 +352,10 @@ public class ResourceOwnerControllerTest {
         headers.setBearerAuth(tokenResponse2.getBody().getValue());
         HttpEntity<Object> request2 = new HttpEntity<>(null, headers2);
         ResponseEntity<Object> exchange2 = restTemplate.exchange(url, HttpMethod.DELETE, request2, Object.class);
-
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange2.getStatusCode());
+        /**
+         * forbidden if using proxy instead of HttpStatus.BAD_REQUEST
+         */
+        Assert.assertEquals(HttpStatus.FORBIDDEN, exchange2.getStatusCode());
 
     }
 
@@ -370,7 +374,7 @@ public class ResourceOwnerControllerTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();
@@ -380,7 +384,7 @@ public class ResourceOwnerControllerTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -396,7 +400,7 @@ public class ResourceOwnerControllerTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) throws JsonProcessingException {
-        String url = "http://localhost:" + randomServerPort + "/v1/api" + "/resourceOwners";
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();

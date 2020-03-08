@@ -14,7 +14,6 @@ import org.springframework.http.*;
 import java.util.List;
 
 public class CategoryTest {
-    private int randomServerPort = 8083;
     private TestRestTemplate restTemplate = new TestRestTemplate();
     UserAction action = new UserAction();
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -41,7 +40,7 @@ public class CategoryTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = "http://localhost:" + randomServerPort + "/v1/api/" + "categories";
+        String url = UserAction.proxyUrl + "/api/" + "categories";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
@@ -62,7 +61,7 @@ public class CategoryTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = "http://localhost:" + randomServerPort + "/v1/api/" + "categories";
+        String url = UserAction.proxyUrl + "/api/" + "categories";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
@@ -96,7 +95,7 @@ public class CategoryTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = "http://localhost:" + randomServerPort + "/v1/api/" + "categories";
+        String url = UserAction.proxyUrl + "/api/" + "categories";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));

@@ -12,17 +12,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 public class SecurityTest {
-    private TestRestTemplate restTemplate = new TestRestTemplate();
     UserAction action = new UserAction();
-
-    int randomServerPort = 8111;
+    private TestRestTemplate restTemplate = new TestRestTemplate();
 
     @Test
     public void user_modify_jwt_token_after_login() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String defaultUserToken2 = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = "http://localhost:" + randomServerPort + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken2), String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
@@ -32,7 +30,7 @@ public class SecurityTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String defaultUserToken2 = action.registerResourceOwnerThenLogin();
         String profileId2 = action.getProfileId(defaultUserToken2);
-        String url = "http://localhost:" + randomServerPort + "/api/profiles/" + profileId2 + "/addresses";
+        String url = UserAction.proxyUrl + "/api/profiles/" + profileId2 + "/addresses";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
@@ -41,7 +39,7 @@ public class SecurityTest {
     public void trying_access_protected_api_without_jwt_token() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = "http://localhost:" + randomServerPort + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(null), String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange.getStatusCode());
     }

@@ -1,6 +1,7 @@
 package integration.proxy;
 
 import helper.SecurityProfile;
+import helper.UserAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,8 +11,6 @@ import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
-import java.net.URI;
 
 /**
  * this integration auth requires oauth2service to be running
@@ -23,13 +22,12 @@ public class SecurityProfileControllerTest {
     private String username_admin = "haolinwei2017@gmail.com";
     private String username_root = "haolinwei2015@gmail.com";
     private String userPwd = "root";
-    int randomServerPort = 8111;
 
     private TestRestTemplate restTemplate = new TestRestTemplate();
 
     @Test
     public void modify_existing_profile_to_prevent_access() {
-        String url2 = "http://localhost:" + randomServerPort + "/api" + "/resourceOwners";
+        String url2 = UserAction.proxyUrl + "/api" + "/resourceOwners";
         /**
          * before modify, admin is able to access resourceOwner apis
          */
@@ -71,7 +69,7 @@ public class SecurityProfileControllerTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getPwdTokenResponse(String grantType, String clientId, String clientSecret, String username, String pwd) {
-        String url = "http://localhost:" + randomServerPort + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -85,7 +83,7 @@ public class SecurityProfileControllerTest {
     private ResponseEntity<String> createProfile(SecurityProfile securityProfile) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = "http://localhost:" + randomServerPort + "/proxy/security" + "/profile";
+        String url = UserAction.proxyUrl + "/proxy/security" + "/profile";
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
@@ -95,7 +93,7 @@ public class SecurityProfileControllerTest {
     private ResponseEntity<String> updateProfile(SecurityProfile securityProfile, Long id) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = "http://localhost:" + randomServerPort + "/proxy/security" + "/profile/" + id;
+        String url = UserAction.proxyUrl + "/proxy/security" + "/profile/" + id;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
@@ -105,7 +103,7 @@ public class SecurityProfileControllerTest {
     private ResponseEntity<String> deleteProfile(Long id) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = "http://localhost:" + randomServerPort + "/proxy/security" + "/profile/" + id;
+        String url = UserAction.proxyUrl + "/proxy/security" + "/profile/" + id;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
