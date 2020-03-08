@@ -21,6 +21,8 @@ public class UserAction {
     public static String AUTHORIZATION_CODE = "authorization_code";
     public static String LOGIN_ID = "login-id";
     public static String REGISTER_ID = "register-id";
+    public static String USER_PROFILE_ID = "user-profile";
+    public static String USER_PROFILE_SECRET = "root";
     public static String CLIENT_SECRET = "";
     public static String AUTHORIZE_STATE = "login";
     public static String AUTHORIZE_RESPONSE_TYPE = "code";
@@ -33,7 +35,8 @@ public class UserAction {
     public static String USER_PASSWORD = "root";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     private TestRestTemplate restTemplate = new TestRestTemplate();
-    public static String proxyUrl = "http://localhost:" + 8111;
+    public static String proxyUrl = "http://www.ngform.com:" + 8111;
+//    public static String proxyUrl = "http://localhost:" + 8111;
 
     public ResourceOwner registerResourceOwner() {
         ResourceOwner randomResourceOwner = getRandomResourceOwner();
@@ -336,6 +339,16 @@ public class UserAction {
         params.add("grant_type", AUTHORIZATION_CODE);
         params.add("code", code);
         params.add("redirect_uri", redirectUri);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, clientSecret);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getClientCredentialResponse(String clientId, String clientSecret) {
+        String url = UserAction.proxyUrl + "/" + "oauth/token";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", CLIENT_CREDENTIALS);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);

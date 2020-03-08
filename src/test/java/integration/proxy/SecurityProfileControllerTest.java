@@ -1,16 +1,20 @@
 package integration.proxy;
 
 import helper.SecurityProfile;
+import helper.SnapshotProduct;
 import helper.UserAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import java.util.List;
 
 /**
  * this integration auth requires oauth2service to be running
@@ -42,12 +46,9 @@ public class SecurityProfileControllerTest {
         /**
          * modify profile to prevent admin access
          */
-        SecurityProfile securityProfile = new SecurityProfile();
-        securityProfile.setPath("/api/resourceOwners");
+        ResponseEntity<List<SecurityProfile>> listResponseEntity = readProfile();
+        SecurityProfile securityProfile = listResponseEntity.getBody().get(6);
         securityProfile.setExpression("hasRole('ROLE_ROOT') and #oauth2.hasScope('trust') and #oauth2.isUser()");
-        securityProfile.setMethod("GET");
-        securityProfile.setResourceID("oauth2-id");
-        securityProfile.setUrl("http://localhost:8080/v1/api/resourceOwners");
         ResponseEntity<String> stringResponseEntity = updateProfile(securityProfile, 6L);
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity.getStatusCode());
 
@@ -78,6 +79,18 @@ public class SecurityProfileControllerTest {
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    private ResponseEntity<List<SecurityProfile>> readProfile() {
+        ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
+        String bearer1 = pwdTokenResponse2.getBody().getValue();
+        String url = UserAction.proxyUrl + "/proxy/security" + "/profiles";
+        HttpHeaders headers1 = new HttpHeaders();
+        headers1.setBearerAuth(bearer1);
+        HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(headers1);
+        ParameterizedTypeReference<List<SecurityProfile>> responseType = new ParameterizedTypeReference<>() {
+        };
+        return restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, responseType);
     }
 
     private ResponseEntity<String> createProfile(SecurityProfile securityProfile) {

@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -20,11 +21,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+import static helper.UserAction.USER_PROFILE_ID;
+import static helper.UserAction.USER_PROFILE_SECRET;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 public class ProductServiceTest {
-
+    UserAction action = new UserAction();
     TestRestTemplate testRestTemplate = new TestRestTemplate();
 
     @Test
@@ -71,7 +74,9 @@ public class ProductServiceTest {
         products.add(snapshotProduct);
         products.add(snapshotProduct);
         products.add(snapshotProduct);
-        HttpEntity<List<SnapshotProduct>> listHttpEntity = new HttpEntity<>(products, null);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        HttpEntity<List<SnapshotProduct>> listHttpEntity = new HttpEntity<>(products, headers);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
