@@ -1,9 +1,6 @@
 package concurrent;
 
-import helper.OptionItem;
-import helper.ProductDetail;
-import helper.ProductOption;
-import helper.SnapshotProduct;
+import helper.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,13 +25,11 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 public class ProductServiceTest {
 
-    int randomServerPort = 8083;
-
     TestRestTemplate testRestTemplate = new TestRestTemplate();
 
     @Test
     public void concurrentValidation() {
-        String url = "http://localhost:" + randomServerPort + "/v1/api/productDetails/validate";
+        String url = UserAction.proxyUrl + "/v1/api/productDetails/validate";
         OptionItem optionItem1 = new OptionItem("scoj", "+8.41");
         OptionItem optionItem2 = new OptionItem("yla", "+7.39");
         OptionItem optionItem3 = new OptionItem("azqv", "-2.79");
