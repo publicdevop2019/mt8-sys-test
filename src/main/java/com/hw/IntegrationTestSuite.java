@@ -18,22 +18,22 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses(value = {
         ProductServiceTest.class,
-//        AuthorizationCodeTest.class,
-//        ClientControllerTest.class,
-//        ClientCredentialsTest.class,
-//        PasswordFlowTest.class,
-//        ResourceOwnerControllerTest.class,
-//        CategoryTest.class,
-//        ProductTest.class,
-//        AddressTest.class,
-//        CartTest.class,
-//        OrderTest.class,
-//        BlackListControllerTest.class,
-//        ClientEPSecurityTest.class,
-//        CORSTest.class,
-//        ResourceOwnerControllerTest.class,
-//        SecurityProfileControllerTest.class,
-//        SecurityTest.class
+        AuthorizationCodeTest.class,
+        ClientControllerTest.class,
+        ClientCredentialsTest.class,
+        PasswordFlowTest.class,
+        ResourceOwnerControllerTest.class,
+        CategoryTest.class,
+        ProductTest.class,
+        AddressTest.class,
+        CartTest.class,
+        OrderTest.class,
+        BlackListControllerTest.class,
+        ClientEPSecurityTest.class,
+        CORSTest.class,
+        ResourceOwnerControllerTest.class,
+        SecurityProfileControllerTest.class,
+        SecurityTest.class
 
 })
 public class IntegrationTestSuite {
