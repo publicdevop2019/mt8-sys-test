@@ -27,7 +27,6 @@ import static com.hw.helper.UserAction.USER_PROFILE_SECRET;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
-@ActiveProfiles({"test"})
 public class ProductServiceTest {
     UserAction action = new UserAction();
     TestRestTemplate testRestTemplate = new TestRestTemplate();

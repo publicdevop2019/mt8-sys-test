@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.OrderDetail;
 import com.hw.helper.UserAction;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -21,7 +23,7 @@ public class OrderTest {
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     @Test
-    public void shop_create_order() {
+    public void shop_create_then_confirm_payment_for_an_order() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
@@ -29,7 +31,12 @@ public class OrderTest {
         ResponseEntity<String> exchange = restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-
+        String orderId = action.getOrderId(exchange.getHeaders());
+        String url4 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/orders/" + orderId + "/confirm";
+        ResponseEntity<String> exchange7 = restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
+        Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
+        Assert.assertEquals(true, read);
     }
 
     @Test
@@ -62,11 +69,8 @@ public class OrderTest {
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/orders";
         ResponseEntity<String> exchange = restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
-        String s = exchange.getHeaders().getLocation().toString();
-        Integer start = s.indexOf("product_id");
-        String searchStr = s.substring(start);
-        String substring = searchStr.substring(searchStr.indexOf('=') + 1, searchStr.indexOf('&'));
-        ResponseEntity<OrderDetail> exchange2 = restTemplate.exchange(url3 + "/" + substring, HttpMethod.GET, action.getHttpRequest(defaultUserToken), OrderDetail.class);
+        String orderId = action.getOrderId(exchange.getHeaders());
+        ResponseEntity<OrderDetail> exchange2 = restTemplate.exchange(url3 + "/" + orderId, HttpMethod.GET, action.getHttpRequest(defaultUserToken), OrderDetail.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
         Assert.assertNotNull(exchange2.getBody());
 
@@ -74,7 +78,10 @@ public class OrderTest {
     }
 
     @Test
+    @Ignore
     public void shop_place_order_but_insufficient_order_storage() {
 
     }
+
+
 }

@@ -47,7 +47,11 @@ public class UserAction {
 
     public OrderDetail createOrderDetailForUser(String defaultUserToken, String profileId1) {
         ResponseEntity<List<ProductSimple>> randomProducts = getRandomProducts();
+
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
+        while (productSimple.getOrderStorage() == 0) {
+            productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
+        }
         String url = proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
@@ -353,5 +357,12 @@ public class UserAction {
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public String getOrderId(HttpHeaders headers) {
+        String s = headers.getLocation().toString();
+        Integer start = s.indexOf("product_id");
+        String searchStr = s.substring(start);
+        return searchStr.substring(searchStr.indexOf('=') + 1, searchStr.indexOf('&'));
     }
 }
