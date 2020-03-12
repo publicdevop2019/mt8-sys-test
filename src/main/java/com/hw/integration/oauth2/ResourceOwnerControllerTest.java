@@ -5,9 +5,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.*;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,10 +18,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
+@Slf4j
 public class ResourceOwnerControllerTest {
     private String password = "password";
     private String client_credentials = "client_credentials";
@@ -33,9 +36,21 @@ public class ResourceOwnerControllerTest {
     private String valid_pwd = "root";
     private Long root_index = 0L;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    private UserAction action = new UserAction();
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
 
-    private TestRestTemplate restTemplate = new TestRestTemplate();
-
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
     @Test
     public void create_user_with_right_authority_is_user_only() throws JsonProcessingException {
         ResourceOwner user = getUser();
@@ -92,7 +107,7 @@ public class ResourceOwnerControllerTest {
         user.setPassword(newPassword);
         String s1 = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<Object> exchange = restTemplate.exchange(url, HttpMethod.PATCH, request, Object.class);
+        ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.PATCH, request, Object.class);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
@@ -117,7 +132,7 @@ public class ResourceOwnerControllerTest {
 
         String s1 = mapper.writeValueAsString(resourceOwnerUpdatePwd);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<Object> exchange = restTemplate.exchange(url, HttpMethod.PATCH, request, Object.class);
+        ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.PATCH, request, Object.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
@@ -140,7 +155,7 @@ public class ResourceOwnerControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        ResponseEntity<List<ResourceOwner>> exchange = restTemplate.exchange(url, HttpMethod.GET, request, responseType);
+        ResponseEntity<List<ResourceOwner>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, responseType);
 
         Assert.assertNotSame(0, exchange.getBody().size());
     }
@@ -165,7 +180,7 @@ public class ResourceOwnerControllerTest {
         user.setGrantedAuthorities(List.of(resourceOwnerAuthorityEnumGrantedAuthority, resourceOwnerAuthorityEnumGrantedAuthority2));
         String s1 = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<DefaultOAuth2AccessToken> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
+        ResponseEntity<DefaultOAuth2AccessToken> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
@@ -197,7 +212,7 @@ public class ResourceOwnerControllerTest {
         user.setGrantedAuthorities(List.of(resourceOwnerAuthorityEnumGrantedAuthority, resourceOwnerAuthorityEnumGrantedAuthority2));
         String s1 = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<DefaultOAuth2AccessToken> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
+        ResponseEntity<DefaultOAuth2AccessToken> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
 
@@ -224,7 +239,7 @@ public class ResourceOwnerControllerTest {
         user.setGrantedAuthorities(List.of(resourceOwnerAuthorityEnumGrantedAuthority, resourceOwnerAuthorityEnumGrantedAuthority2, resourceOwnerAuthorityEnumGrantedAuthority3));
         String s1 = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<DefaultOAuth2AccessToken> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
+        ResponseEntity<DefaultOAuth2AccessToken> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
 
@@ -249,7 +264,7 @@ public class ResourceOwnerControllerTest {
         user.setGrantedAuthorities(List.of(resourceOwnerAuthorityEnumGrantedAuthority, resourceOwnerAuthorityEnumGrantedAuthority2));
         String s1 = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<DefaultOAuth2AccessToken> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
+        ResponseEntity<DefaultOAuth2AccessToken> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
 
@@ -273,7 +288,7 @@ public class ResourceOwnerControllerTest {
         user.setLocked(true);
         String s1 = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<DefaultOAuth2AccessToken> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
+        ResponseEntity<DefaultOAuth2AccessToken> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
@@ -286,7 +301,7 @@ public class ResourceOwnerControllerTest {
         user.setLocked(false);
         String s3 = mapper.writeValueAsString(user);
         HttpEntity<String> request22 = new HttpEntity<>(s3, headers);
-        ResponseEntity<DefaultOAuth2AccessToken> exchange22 = restTemplate.exchange(url, HttpMethod.PUT, request22, DefaultOAuth2AccessToken.class);
+        ResponseEntity<DefaultOAuth2AccessToken> exchange22 = action.restTemplate.exchange(url, HttpMethod.PUT, request22, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange22.getStatusCode());
 
@@ -313,7 +328,7 @@ public class ResourceOwnerControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<Object> request = new HttpEntity<>(null, headers);
-        ResponseEntity<Object> exchange = restTemplate.exchange(url, HttpMethod.DELETE, request, Object.class);
+        ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.DELETE, request, Object.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
@@ -339,7 +354,7 @@ public class ResourceOwnerControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<Object> request = new HttpEntity<>(null, headers);
-        ResponseEntity<Object> exchange = restTemplate.exchange(url, HttpMethod.DELETE, request, Object.class);
+        ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.DELETE, request, Object.class);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
         /**
@@ -349,7 +364,7 @@ public class ResourceOwnerControllerTest {
         HttpHeaders headers2 = new HttpHeaders();
         headers.setBearerAuth(tokenResponse2.getBody().getValue());
         HttpEntity<Object> request2 = new HttpEntity<>(null, headers2);
-        ResponseEntity<Object> exchange2 = restTemplate.exchange(url, HttpMethod.DELETE, request2, Object.class);
+        ResponseEntity<Object> exchange2 = action.restTemplate.exchange(url, HttpMethod.DELETE, request2, Object.class);
         /**
          * forbidden if using proxy instead of HttpStatus.BAD_REQUEST
          */
@@ -378,7 +393,7 @@ public class ResourceOwnerControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
@@ -390,7 +405,7 @@ public class ResourceOwnerControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user) throws JsonProcessingException {
@@ -406,6 +421,6 @@ public class ResourceOwnerControllerTest {
         headers.setBearerAuth(value);
         String s = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 }

@@ -1,11 +1,17 @@
 package com.hw.integration.oauth2;
 
+import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.ResourceOwnerAuthorityEnum;
 import com.hw.helper.ServiceUtility;
 import com.hw.helper.UserAction;
 import com.jayway.jsonpath.JsonPath;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
@@ -14,10 +20,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
+@Slf4j
 public class AuthorizationCodeTest {
 
     private String password = "password";
@@ -33,9 +41,21 @@ public class AuthorizationCodeTest {
     private String valid_redirect_uri = "http://localhost:4200";
     private String state = "login";
     private String response_type = "code";
+    private UserAction action = new UserAction();
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
 
-    private TestRestTemplate restTemplate = new TestRestTemplate();
-
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
 
     @Test
     public void should_get_authorize_code_after_pwd_login_for_user() {
@@ -183,7 +203,7 @@ public class AuthorizationCodeTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearerToken);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> pwdFlowLogin(String grantType, String username, String userPwd, String clientId, String clientSecret) {
@@ -195,7 +215,7 @@ public class AuthorizationCodeTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationToken(String grantType, String code, String redirect_uri, String clientId) {
@@ -211,6 +231,6 @@ public class AuthorizationCodeTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 }

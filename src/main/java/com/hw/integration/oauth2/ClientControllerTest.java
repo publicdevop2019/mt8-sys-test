@@ -4,9 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.*;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,12 +17,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
+@Slf4j
 public class ClientControllerTest {
 
     private String password = "password";
@@ -34,8 +33,21 @@ public class ClientControllerTest {
     private String valid_username_admin = "haolinwei2017@gmail.com";
     private String valid_pwd = "root";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false);
-    private TestRestTemplate restTemplate = new TestRestTemplate();
+    private UserAction action = new UserAction();
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
 
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
     @Test
     public void all_client_should_have_resource_id_field() throws JsonProcessingException {
         Client client = getClientAsNonResource();
@@ -105,7 +117,7 @@ public class ClientControllerTest {
         headers.setBearerAuth(bearer);
         String s = mapper.writeValueAsString(client);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
     }
 
@@ -119,7 +131,7 @@ public class ClientControllerTest {
         HttpEntity<String> request = new HttpEntity<>(null, headers);
         ParameterizedTypeReference<List<Client>> responseType = new ParameterizedTypeReference<>() {
         };
-        ResponseEntity<List<Client>> exchange = restTemplate.exchange(url, HttpMethod.GET, request, responseType);
+        ResponseEntity<List<Client>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, responseType);
         Assert.assertNotSame(0, exchange.getBody().size());
     }
 
@@ -137,7 +149,7 @@ public class ClientControllerTest {
         headers.setBearerAuth(bearer);
         String s1 = mapper.writeValueAsString(newClient);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, newClient.getClientId(), oldClient.getClientSecret());
@@ -162,7 +174,7 @@ public class ClientControllerTest {
         headers.setBearerAuth(bearer);
         String s1 = mapper.writeValueAsString(oldClient);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, oldClient.getClientId(), clientSecret);
@@ -186,7 +198,7 @@ public class ClientControllerTest {
         headers.setBearerAuth(bearer);
         String s1 = mapper.writeValueAsString(newClient);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
 
     }
@@ -204,7 +216,7 @@ public class ClientControllerTest {
         headers.setBearerAuth(bearer);
         String s1 = mapper.writeValueAsString(newClient);
         HttpEntity<String> request = new HttpEntity<>(s1, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, newClient.getClientId(), newClient.getClientSecret());
@@ -223,7 +235,7 @@ public class ClientControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
@@ -251,7 +263,7 @@ public class ClientControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
 
@@ -270,7 +282,7 @@ public class ClientControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     /**
@@ -329,6 +341,6 @@ public class ClientControllerTest {
         headers.setBearerAuth(bearer);
         String s = mapper.writeValueAsString(client);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 }

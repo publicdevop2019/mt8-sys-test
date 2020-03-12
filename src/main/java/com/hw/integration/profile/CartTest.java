@@ -3,26 +3,46 @@ package com.hw.integration.profile;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.helper.ProductDetail;
-import com.hw.helper.ProductSimple;
-import com.hw.helper.SnapshotProduct;
-import com.hw.helper.UserAction;
+import com.hw.helper.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
+@RunWith(SpringRunner.class)
+@Slf4j
 public class CartTest {
-    private TestRestTemplate restTemplate = new TestRestTemplate();
     UserAction action = new UserAction();
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
 
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
     @Test
     public void shop_add_product_cart() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
@@ -30,11 +50,11 @@ public class CartTest {
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
         String url = UserAction.proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
-        ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
+        ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = action.selectProduct(body);
         String url2 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
-        ResponseEntity<String> exchange3 = restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
     }
@@ -46,14 +66,14 @@ public class CartTest {
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
         String url = UserAction.proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
-        ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
+        ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = action.selectProduct(body);
         String url2 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
-        ResponseEntity<String> exchange3 = restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
-        ResponseEntity<String> exchange4 = restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
         Assert.assertNotEquals(-1, exchange4.getHeaders().getLocation().toString());
     }
@@ -65,7 +85,7 @@ public class CartTest {
         String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
         ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
         };
-        ResponseEntity<List<SnapshotProduct>> exchange = restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
+        ResponseEntity<List<SnapshotProduct>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(-1, exchange.getBody().size());
     }
@@ -78,13 +98,13 @@ public class CartTest {
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
         String url = UserAction.proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
-        ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
+        ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = action.selectProduct(body);
         String url2 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
-        ResponseEntity<String> exchange3 = restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         String s = exchange3.getHeaders().getLocation().toString();
-        ResponseEntity<String> exchange4 = restTemplate.exchange(url2 + "/" + s, HttpMethod.DELETE, action.getHttpRequest(defaultUserToken), String.class);
+        ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2 + "/" + s, HttpMethod.DELETE, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
     }
 

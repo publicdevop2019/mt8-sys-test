@@ -4,30 +4,51 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.ResourceOwner;
 import com.hw.helper.UserAction;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Collections;
 import java.util.UUID;
 
 /**
  * this integration auth requires oauth2service to be running
  */
 @RunWith(SpringRunner.class)
+@Slf4j
 public class ResourceOwnerEPSecurityTest {
     private String client_credentials = "client_credentials";
     private String invalid_clientId = "rightRoleNotSufficientResourceId";
     private String valid_empty_secret = "";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    private TestRestTemplate restTemplate = new TestRestTemplate();
+    private UserAction action = new UserAction();
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
+
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
 
     @Test
     public void should_not_able_to_create_user_w_client_missing_right_role() throws JsonProcessingException {
@@ -53,7 +74,7 @@ public class ResourceOwnerEPSecurityTest {
         headers.setBearerAuth(value);
         String s = mapper.writeValueAsString(user);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
@@ -63,7 +84,7 @@ public class ResourceOwnerEPSecurityTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
 }

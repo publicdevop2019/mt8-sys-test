@@ -1,6 +1,7 @@
 package com.hw;
 
 import com.hw.entity.TestResult;
+import com.hw.helper.UserAction;
 import com.hw.repo.TestResultRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.JUnitCore;
@@ -9,6 +10,7 @@ import org.junit.runner.notification.Failure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -45,7 +47,7 @@ public class TestRunner {
         } else {
             testResult.setFailedMsg(stringBuilder.toString());
             testResult.setStatus("failed");
-            log.info("Tests failed, check log ");
+            log.error("Tests failed, check log");
         }
         testResultRepo.save(testResult);
     }

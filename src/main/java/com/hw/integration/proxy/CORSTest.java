@@ -1,20 +1,29 @@
 package com.hw.integration.proxy;
 
+import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Collections;
+import java.util.UUID;
 
 /**
  * this test suits requires cors profile to be added
  */
 @RunWith(SpringRunner.class)
+@Slf4j
 public class CORSTest {
 
-    private TestRestTemplate restTemplate = new TestRestTemplate();
+    private UserAction action = new UserAction();
 
     private String thirdPartyOrigin = "https://editor.swagger.io";
 
@@ -22,7 +31,20 @@ public class CORSTest {
 
     private String[] corsUris = {"oauth/token", "oauth/token_key", "client", "client/0", "clients",
             "authorize", "resourceOwner", "resourceOwner/0", "resourceOwner/pwd", "resourceOwners"};
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
 
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
     @Test
     public void cors_oauthToken() {
         String url = UserAction.proxyUrl + "/" + corsUris[0];
@@ -129,7 +151,7 @@ public class CORSTest {
         headers.add("Access-Control-Request-Method", "POST");
         headers.add("Access-Control-Request-Headers", "authorization,x-requested-with");
         HttpEntity<String> request = new HttpEntity<>(headers);
-        return restTemplate.exchange(uri, HttpMethod.OPTIONS, request, String.class);
+        return action.restTemplate.exchange(uri, HttpMethod.OPTIONS, request, String.class);
 
     }
 
@@ -152,7 +174,7 @@ public class CORSTest {
         headers.add("Access-Control-Request-Method", method.toString());
         headers.add("Access-Control-Request-Headers", "authorization");
         HttpEntity<String> request = new HttpEntity<>(headers);
-        return restTemplate.exchange(uri, HttpMethod.OPTIONS, request, String.class);
+        return action.restTemplate.exchange(uri, HttpMethod.OPTIONS, request, String.class);
 
     }
 

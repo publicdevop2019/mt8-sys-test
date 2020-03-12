@@ -1,8 +1,14 @@
 package com.hw.integration.oauth2;
 
+import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
@@ -11,9 +17,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Collections;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
+@Slf4j
 public class ClientCredentialsTest {
     private String password = "password";
     private String client_credentials = "client_credentials";
@@ -21,9 +29,21 @@ public class ClientCredentialsTest {
     private String valid_clientId_no_secret = "register-id";
     private String valid_clientSecret = "root";
     private String valid_empty_secret = "";
-    private TestRestTemplate restTemplate = new TestRestTemplate();
+    private UserAction action = new UserAction();
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
 
-
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
     @Test
     public void use_client_with_secret() {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_clientSecret);
@@ -65,6 +85,6 @@ public class ClientCredentialsTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 }

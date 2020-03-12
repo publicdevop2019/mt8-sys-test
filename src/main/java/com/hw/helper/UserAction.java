@@ -4,18 +4,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hw.entity.FailedRecord;
+import com.hw.repo.FailedRecordRepo;
+import org.junit.runner.Description;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.math.BigDecimal;
 import java.util.*;
 
+@Component
 public class UserAction {
+    @Autowired
+    FailedRecordRepo failedRecordRepo;
     public static String PASSWORD = "password";
     public static String CLIENT_CREDENTIALS = "client_credentials";
     public static String AUTHORIZATION_CODE = "authorization_code";
@@ -34,9 +42,16 @@ public class UserAction {
     public static String USER_USERNAME = "haolinwei2018@gmail.com";
     public static String USER_PASSWORD = "root";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    private TestRestTemplate restTemplate = new TestRestTemplate();
+    public TestRestTemplate restTemplate = new TestRestTemplate();
     public static String proxyUrl = "http://www.ngform.com:" + 8111;
 //    public static String proxyUrl = "http://localhost:" + 8111;
+
+    public void saveResult(Description description, UUID uuid) {
+        FailedRecord failedRecord = new FailedRecord();
+        failedRecord.setFailedTestMethod(description.getMethodName());
+        failedRecord.setUuid(uuid.toString());
+        failedRecordRepo.save(failedRecord);
+    }
 
     public ResourceOwner registerResourceOwner() {
         ResourceOwner randomResourceOwner = getRandomResourceOwner();
@@ -49,7 +64,7 @@ public class UserAction {
         ResponseEntity<List<ProductSimple>> randomProducts = getRandomProducts();
 
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        while (productSimple.getOrderStorage() == 0) {
+        while (productSimple.getActualStorage() == 0) {
             productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
         }
         String url = proxyUrl + "/api/" + "productDetails/" + productSimple.getId();

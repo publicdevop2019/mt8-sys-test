@@ -1,21 +1,25 @@
 package com.hw.concurrent;
 
 import com.hw.helper.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,9 +31,23 @@ import static com.hw.helper.UserAction.USER_PROFILE_SECRET;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
+@Slf4j
 public class ProductServiceTest {
     UserAction action = new UserAction();
-    TestRestTemplate testRestTemplate = new TestRestTemplate();
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
+
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
 
     @Test
     public void concurrentValidation() {
@@ -81,7 +99,7 @@ public class ProductServiceTest {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                ResponseEntity<Object> exchange = testRestTemplate.exchange(url, HttpMethod.POST, listHttpEntity, Object.class);
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.POST, listHttpEntity, Object.class);
                 Assert.assertEquals(200, exchange.getStatusCodeValue());
             }
         };

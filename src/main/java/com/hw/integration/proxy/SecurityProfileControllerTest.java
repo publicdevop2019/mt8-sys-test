@@ -1,9 +1,15 @@
 package com.hw.integration.proxy;
 
+import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.SecurityProfile;
 import com.hw.helper.UserAction;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -13,21 +19,36 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * this integration auth requires oauth2service to be running
  */
 @RunWith(SpringRunner.class)
+@Slf4j
 public class SecurityProfileControllerTest {
     private String password = "password";
     private String login_clientId = "login-id";
     private String username_admin = "haolinwei2017@gmail.com";
     private String username_root = "haolinwei2015@gmail.com";
     private String userPwd = "root";
+    private UserAction action=new UserAction();
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
 
-    private TestRestTemplate restTemplate = new TestRestTemplate();
-
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
     @Test
     public void modify_existing_profile_to_prevent_access() {
         String url2 = UserAction.proxyUrl + "/api" + "/resourceOwners";
@@ -39,7 +60,7 @@ public class SecurityProfileControllerTest {
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
-        ResponseEntity<String> exchange1 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
 
         /**
@@ -54,7 +75,7 @@ public class SecurityProfileControllerTest {
         /**
          * after modify, admin is not able to access resourceOwner apis
          */
-        ResponseEntity<String> exchange = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
 
         /**
@@ -64,7 +85,7 @@ public class SecurityProfileControllerTest {
         ResponseEntity<String> stringResponseEntity1 = updateProfile(securityProfile, 6L);
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity1.getStatusCode());
 
-        ResponseEntity<String> exchange2 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }
 
@@ -77,7 +98,7 @@ public class SecurityProfileControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<List<SecurityProfile>> readProfile() {
@@ -89,7 +110,7 @@ public class SecurityProfileControllerTest {
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(headers1);
         ParameterizedTypeReference<List<SecurityProfile>> responseType = new ParameterizedTypeReference<>() {
         };
-        return restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, responseType);
+        return action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, responseType);
     }
 
     private ResponseEntity<String> createProfile(SecurityProfile securityProfile) {
@@ -99,7 +120,7 @@ public class SecurityProfileControllerTest {
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
-        return restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
     }
 
     private ResponseEntity<String> updateProfile(SecurityProfile securityProfile, Long id) {
@@ -109,7 +130,7 @@ public class SecurityProfileControllerTest {
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
-        return restTemplate.exchange(url, HttpMethod.PUT, hashMapHttpEntity1, String.class);
+        return action.restTemplate.exchange(url, HttpMethod.PUT, hashMapHttpEntity1, String.class);
     }
 
     private ResponseEntity<String> deleteProfile(Long id) {
@@ -119,6 +140,6 @@ public class SecurityProfileControllerTest {
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
-        return restTemplate.exchange(url, HttpMethod.DELETE, hashMapHttpEntity1, String.class);
+        return action.restTemplate.exchange(url, HttpMethod.DELETE, hashMapHttpEntity1, String.class);
     }
 }

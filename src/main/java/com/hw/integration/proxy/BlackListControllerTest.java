@@ -2,23 +2,30 @@ package com.hw.integration.proxy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
 
 /**
  * this integration auth requires oauth2service to be running
  */
+@Slf4j
 @RunWith(SpringRunner.class)
 public class BlackListControllerTest {
     private String client_credentials = "client_credentials";
@@ -31,10 +38,23 @@ public class BlackListControllerTest {
     private String valid_clientSecret = "root";
 
     private ObjectMapper mapper = new ObjectMapper();
-
-    private TestRestTemplate restTemplate = new TestRestTemplate();
+    private UserAction action = new UserAction();
     private String username = "haolinwei2017@gmail.com";
     private String userPwd = "root";
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
+
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
 
     @Test
     public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_internal_endpoints() throws JsonProcessingException, InterruptedException {
@@ -52,7 +72,7 @@ public class BlackListControllerTest {
         headers1.setBearerAuth(bearer1);
         headers1.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> hashMapHttpEntity1 = new HttpEntity<>(s, headers1);
-        ResponseEntity<String> exchange1 = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
 
 
@@ -69,13 +89,13 @@ public class BlackListControllerTest {
         blockCallHeader.setBearerAuth(bearer);
         blockCallHeader.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> blockReqEntity = new HttpEntity<>(body, blockCallHeader);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, blockReqEntity, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, blockReqEntity, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         /**
          * after client get blacklisted, client with old token will get 401
          */
-        ResponseEntity<String> exchange2 = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange2.getStatusCode());
 
         /**
@@ -87,7 +107,7 @@ public class BlackListControllerTest {
         String bearer3 = tokenResponse3.getBody().getValue();
         headers1.setBearerAuth(bearer3);
         HttpEntity<String> hashMapHttpEntity3 = new HttpEntity<>(s, headers1);
-        ResponseEntity<String> exchange3 = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity3, String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity3, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
     }
 
@@ -104,7 +124,7 @@ public class BlackListControllerTest {
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
-        ResponseEntity<String> exchange1 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
 
 
@@ -122,13 +142,13 @@ public class BlackListControllerTest {
         headers.setBearerAuth(bearer);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> hashMapHttpEntity = new HttpEntity<>(s, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         /**
          * after client get blacklisted, client with old token will get 401
          */
-        ResponseEntity<String> exchange2 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange2.getStatusCode());
 
         /**
@@ -140,7 +160,7 @@ public class BlackListControllerTest {
         String bearer3 = tokenResponse3.getBody().getValue();
         headers1.setBearerAuth(bearer3);
         HttpEntity<Object> hashMapHttpEntity3 = new HttpEntity<>(headers1);
-        ResponseEntity<String> exchange3 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity3, String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity3, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
     }
 
@@ -157,7 +177,7 @@ public class BlackListControllerTest {
         headers.setBearerAuth(bearer);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> hashMapHttpEntity = new HttpEntity<>(s, headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity, String.class);
         Assert.assertEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
     }
 
@@ -175,7 +195,7 @@ public class BlackListControllerTest {
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer0);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
-        ResponseEntity<String> exchange2 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
 
         /**
@@ -191,13 +211,13 @@ public class BlackListControllerTest {
         headers.setBearerAuth(bearer);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> hashMapHttpEntity = new HttpEntity<>(mapper.writeValueAsString(stringStringHashMap), headers);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         /**
          * resourceOwner request get blocked, even refresh token should not work
          */
-        ResponseEntity<String> exchange1 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange1.getStatusCode());
 
         ResponseEntity<DefaultOAuth2AccessToken> refreshTokenResponse = getRefreshTokenResponse(refreshToken, login_clientId, "");
@@ -212,7 +232,7 @@ public class BlackListControllerTest {
         String bearer3 = tokenResponse3.getBody().getValue();
         headers1.setBearerAuth(bearer3);
         HttpEntity<Object> hashMapHttpEntity3 = new HttpEntity<>(headers1);
-        ResponseEntity<String> exchange3 = restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity3, String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity3, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
 
     }
@@ -225,7 +245,7 @@ public class BlackListControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRefreshTokenResponse(String refreshToken, String clientId, String clientSecret) {
@@ -236,7 +256,7 @@ public class BlackListControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getPwdTokenResponse(String grantType, String clientId, String clientSecret, String username, String pwd) {
@@ -248,6 +268,6 @@ public class BlackListControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 }

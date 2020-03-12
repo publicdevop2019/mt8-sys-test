@@ -5,18 +5,39 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.Category;
+import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.springframework.http.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 public class CategoryTest {
-    private TestRestTemplate restTemplate = new TestRestTemplate();
     UserAction action = new UserAction();
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    UUID uuid;
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
+        }
+    };
+
+    @Before
+    public void setUp() {
+        uuid = UUID.randomUUID();
+        action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
 
     @Test
     public void shop_get_all_category() {
@@ -41,7 +62,7 @@ public class CategoryTest {
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
         String url = UserAction.proxyUrl + "/api/" + "categories";
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
 
@@ -56,14 +77,14 @@ public class CategoryTest {
         headers2.setContentType(MediaType.APPLICATION_JSON);
         headers2.setBearerAuth(s1);
         HttpEntity<String> request2 = new HttpEntity<>(s21, headers2);
-        ResponseEntity<String> exchange2 = restTemplate.exchange(url + "/" + exchange.getHeaders().getLocation().toString(), HttpMethod.PUT, request2, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + exchange.getHeaders().getLocation().toString(), HttpMethod.PUT, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
 
         HttpHeaders headers3 = new HttpHeaders();
         headers3.setContentType(MediaType.APPLICATION_JSON);
         headers3.setBearerAuth(s1);
         HttpEntity<String> request3 = new HttpEntity<>(headers3);
-        ResponseEntity<String> exchange3 = restTemplate.exchange(url + "/" + exchange.getHeaders().getLocation().toString(), HttpMethod.DELETE, request3, String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url + "/" + exchange.getHeaders().getLocation().toString(), HttpMethod.DELETE, request3, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
     }
 }
