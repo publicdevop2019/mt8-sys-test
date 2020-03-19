@@ -43,8 +43,8 @@ public class UserAction {
     public static String USER_PASSWORD = "root";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
-    //    public static String proxyUrl = "http://www.ngform.com:" + 8111;
-    public static String proxyUrl = "http://localhost:" + 8111;
+    public static String proxyUrl = "http://www.ngform.com:" + 8111;
+//    public static String proxyUrl = "http://localhost:" + 8111;
 
     public void saveResult(Description description, UUID uuid) {
         FailedRecord failedRecord = new FailedRecord();

@@ -151,20 +151,9 @@ public class PasswordFlowTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) {
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(value);
-        String s = null;
-        try {
-            s = mapper.writeValueAsString(user);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.registerResourceOwner(user,value);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
