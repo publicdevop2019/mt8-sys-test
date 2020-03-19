@@ -43,8 +43,8 @@ public class UserAction {
     public static String USER_PASSWORD = "root";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
-    public static String proxyUrl = "http://www.ngform.com:" + 8111;
-//    public static String proxyUrl = "http://localhost:" + 8111;
+    //    public static String proxyUrl = "http://www.ngform.com:" + 8111;
+    public static String proxyUrl = "http://localhost:" + 8111;
 
     public void saveResult(Description description, UUID uuid) {
         FailedRecord failedRecord = new FailedRecord();
@@ -64,7 +64,7 @@ public class UserAction {
         ResponseEntity<List<ProductSimple>> randomProducts = getRandomProducts();
 
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        while (productSimple.getActualStorage() == 0) {
+        while (productSimple.getActualStorage() <= 0 || productSimple.getOrderStorage() <= 0) {
             productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
         }
         String url = proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
@@ -275,18 +275,35 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> registerResourceOwner(ResourceOwner user, String registerToken) {
-        String url = proxyUrl + "/api" + "/resourceOwners";
+        String urlRegister = proxyUrl + "/api" + "/resourceOwners/register";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(registerToken);
         String s = null;
+        PendingResourceOwner pendingResourceOwner = new PendingResourceOwner();
+        pendingResourceOwner.setEmail(user.getEmail());
         try {
-            s = mapper.writeValueAsString(user);
+            s = mapper.writeValueAsString(pendingResourceOwner);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
         HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        restTemplate.exchange(urlRegister, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+
+        String url = proxyUrl + "/api" + "/resourceOwners";
+        HttpHeaders headers1 = new HttpHeaders();
+        headers1.setContentType(MediaType.APPLICATION_JSON);
+        headers1.setBearerAuth(registerToken);
+        String s2 = null;
+        pendingResourceOwner.setPassword(user.getPassword());
+        pendingResourceOwner.setActivationCode("123456");
+        try {
+            s2 = mapper.writeValueAsString(pendingResourceOwner);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        HttpEntity<String> request1 = new HttpEntity<>(s2, headers1);
+        return restTemplate.exchange(url, HttpMethod.POST, request1, DefaultOAuth2AccessToken.class);
     }
 
 

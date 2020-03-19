@@ -31,7 +31,6 @@ import org.junit.runners.Suite;
         BlackListControllerTest.class,
         ClientEPSecurityTest.class,
         CORSTest.class,
-        ResourceOwnerControllerTest.class,
         SecurityProfileControllerTest.class,
         SecurityTest.class
 

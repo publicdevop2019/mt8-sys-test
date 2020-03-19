@@ -413,14 +413,8 @@ public class ResourceOwnerControllerTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) throws JsonProcessingException {
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(value);
-        String s = mapper.writeValueAsString(user);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.registerResourceOwner(user,value);
     }
 }

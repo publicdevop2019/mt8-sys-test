@@ -23,7 +23,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="com.hw" level="error" additivity="false">
+        <Logger name="com.hw" level="info" additivity="false">
             <appender-ref ref="console"/>
             <appender-ref ref="fileLogger"/>
         </Logger>

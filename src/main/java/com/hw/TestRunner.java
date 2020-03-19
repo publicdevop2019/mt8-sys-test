@@ -25,8 +25,9 @@ public class TestRunner {
         SpringApplication.run(TestRunner.class, args);
     }
 
-    @Scheduled(fixedRate = 150 * 1000)
+    @Scheduled(fixedRate = 300 * 1000)
     public void runTest() {
+        log.info("test started");
         TestResult testResult = new TestResult();
         testResult.setStatus("just started");
         StringBuilder stringBuilder = new StringBuilder();
