@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
@@ -25,7 +27,7 @@ import java.util.UUID;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class ResourceOwnerControllerTest {
-    private String password = "password";
+    private String PASSWORD_GRANT = "password";
     private String client_credentials = "client_credentials";
     private String valid_login_clientId = "login-id";
     private String valid_register_clientId = "register-id";
@@ -51,6 +53,7 @@ public class ResourceOwnerControllerTest {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
     }
+
     @Test
     public void create_user_with_right_authority_is_user_only() throws JsonProcessingException {
         ResourceOwner user = getUser();
@@ -60,7 +63,7 @@ public class ResourceOwnerControllerTest {
 
         Assert.assertNotNull(user1.getHeaders().getLocation());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
 
@@ -82,15 +85,6 @@ public class ResourceOwnerControllerTest {
     }
 
     @Test
-    @Ignore
-    public void able_to_create_user_with_wrong_client_if_directly_call_bypassing_proxy() throws JsonProcessingException {
-        ResourceOwner user = getUser();
-        ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user, invalid_clientId);
-
-        Assert.assertEquals(HttpStatus.OK, user1.getStatusCode());
-    }
-
-    @Test
     public void update_user_password_without_current_pwd() throws JsonProcessingException {
         ResourceOwner user = getUser();
         createUser(user);
@@ -98,8 +92,7 @@ public class ResourceOwnerControllerTest {
         String url = UserAction.proxyUrl + "/api" + "/resourceOwner/pwd";
         String newPassword = UUID.randomUUID().toString().replace("-", "");
         /** Login */
-        String oldPassword = user.getPassword();
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(this.password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -110,6 +103,39 @@ public class ResourceOwnerControllerTest {
         ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.PATCH, request, Object.class);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
+    }
+
+    @Test
+    public void forget_password() throws JsonProcessingException {
+        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, valid_register_clientId, valid_empty_secret);
+        String value = registerTokenResponse.getBody().getValue();
+        ResourceOwner user = getUser();
+        createUser(user);
+        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/forgetPwd";
+        ForgetPasswordRequest forgetPasswordRequest = new ForgetPasswordRequest();
+        forgetPasswordRequest.setEmail(user.getEmail());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(value);
+        String s1 = mapper.writeValueAsString(forgetPasswordRequest);
+        HttpEntity<String> request = new HttpEntity<>(s1, headers);
+        ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, Object.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+
+        String url2 = UserAction.proxyUrl + "/api" + "/resourceOwners/resetPwd";
+        forgetPasswordRequest.setToken("123456789");
+        forgetPasswordRequest.setNewPassword(UUID.randomUUID().toString());
+        String s2 = mapper.writeValueAsString(forgetPasswordRequest);
+        HttpHeaders header2 = new HttpHeaders();
+        header2.setContentType(MediaType.APPLICATION_JSON);
+        header2.setBearerAuth(value);
+        HttpEntity<String> request2 = new HttpEntity<>(s2, header2);
+        action.restTemplate.exchange(url2, HttpMethod.POST, request2, Object.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        /**login */
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, forgetPasswordRequest.getEmail(), forgetPasswordRequest.getNewPassword(), valid_login_clientId, valid_empty_secret);
+        Assert.assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
+
     }
 
     @Test
@@ -124,7 +150,7 @@ public class ResourceOwnerControllerTest {
         String url = UserAction.proxyUrl + "/api" + "/resourceOwner/pwd";
         /** Login */
         String oldPassword = user.getPassword();
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(this.password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -136,11 +162,11 @@ public class ResourceOwnerControllerTest {
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> resp3 = getTokenResponse(this.password, user.getEmail(), oldPassword, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> resp3 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), oldPassword, valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, resp3.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> resp4 = getTokenResponse(this.password, user.getEmail(), resourceOwnerUpdatePwd.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> resp4 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), resourceOwnerUpdatePwd.getPassword(), valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.OK, resp4.getStatusCode());
 
@@ -151,7 +177,7 @@ public class ResourceOwnerControllerTest {
         ParameterizedTypeReference<List<ResourceOwner>> responseType = new ParameterizedTypeReference<>() {
         };
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<String> request = new HttpEntity<>(null, headers);
@@ -168,7 +194,7 @@ public class ResourceOwnerControllerTest {
         String s = createResp.getHeaders().getLocation().toString();
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -187,7 +213,7 @@ public class ResourceOwnerControllerTest {
         /**
          * login to verify grantedAuthorities has been changed
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         List<String> authorities = ServiceUtility.getAuthority(tokenResponse1.getBody().getValue());
         Assert.assertEquals(1, authorities.stream().filter(e -> e.equals(ResourceOwnerAuthorityEnum.ROLE_USER.toString())).count());
         Assert.assertEquals(1, authorities.stream().filter(e -> e.equals(ResourceOwnerAuthorityEnum.ROLE_ADMIN.toString())).count());
@@ -199,7 +225,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + root_index;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -225,7 +251,7 @@ public class ResourceOwnerControllerTest {
         String s = createResp.getHeaders().getLocation().toString();
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -252,7 +278,7 @@ public class ResourceOwnerControllerTest {
         String s = createResp.getHeaders().getLocation().toString();
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -277,7 +303,7 @@ public class ResourceOwnerControllerTest {
         String s = createResp.getHeaders().getLocation().toString();
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -295,7 +321,7 @@ public class ResourceOwnerControllerTest {
         /**
          * login to verify account has been locked
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenResponse1.getStatusCode());
 
         user.setLocked(false);
@@ -308,7 +334,7 @@ public class ResourceOwnerControllerTest {
         /**
          * login to verify account has been unlocked
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
     }
 
@@ -320,11 +346,11 @@ public class ResourceOwnerControllerTest {
         String s = user1.getHeaders().getLocation().toString();
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<Object> request = new HttpEntity<>(null, headers);
@@ -332,7 +358,7 @@ public class ResourceOwnerControllerTest {
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse123 = getTokenResponse(password, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse123 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenResponse123.getStatusCode());
 
@@ -343,14 +369,14 @@ public class ResourceOwnerControllerTest {
 
         String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + root_index;
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse12.getStatusCode());
 
         /**
          * try w root
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
         HttpEntity<Object> request = new HttpEntity<>(null, headers);
@@ -360,7 +386,7 @@ public class ResourceOwnerControllerTest {
         /**
          * try w admin, admin can not delete user
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse2 = getTokenResponse(password, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse2 = getTokenResponse(PASSWORD_GRANT, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers2 = new HttpHeaders();
         headers.setBearerAuth(tokenResponse2.getBody().getValue());
         HttpEntity<Object> request2 = new HttpEntity<>(null, headers2);
@@ -415,6 +441,6 @@ public class ResourceOwnerControllerTest {
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
-        return action.registerResourceOwner(user,value);
+        return action.registerResourceOwner(user, value);
     }
 }
