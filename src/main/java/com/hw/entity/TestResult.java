@@ -22,7 +22,7 @@ public class TestResult {
     private Long elapse;
     @Column
     private String status;
-    @Column(length = 10000)
+    @Column(length = 100000)
     private String failedMsg;
 
 }
