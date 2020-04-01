@@ -12,6 +12,8 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -27,6 +29,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RunWith(SpringRunner.class)
+@SpringBootTest
 public class BlackListControllerTest {
     private String client_credentials = "client_credentials";
     private String password = "password";
@@ -38,7 +41,8 @@ public class BlackListControllerTest {
     private String valid_clientSecret = "root";
 
     private ObjectMapper mapper = new ObjectMapper();
-    private UserAction action = new UserAction();
+    @Autowired
+    private UserAction action;
     private String username = "haolinwei2017@gmail.com";
     private String userPwd = "root";
     UUID uuid;
@@ -46,6 +50,7 @@ public class BlackListControllerTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
+            action.saveResult(description,uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };

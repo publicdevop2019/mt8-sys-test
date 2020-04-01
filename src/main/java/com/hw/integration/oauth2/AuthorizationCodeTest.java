@@ -13,6 +13,8 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
+@SpringBootTest
 @Slf4j
 public class AuthorizationCodeTest {
 
@@ -41,12 +44,14 @@ public class AuthorizationCodeTest {
     private String valid_redirect_uri = "http://localhost:4200";
     private String state = "login";
     private String response_type = "code";
-    private UserAction action = new UserAction();
+    @Autowired
+    private UserAction action;
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
+            action.saveResult(description,uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };

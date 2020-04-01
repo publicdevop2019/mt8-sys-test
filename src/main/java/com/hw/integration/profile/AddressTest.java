@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -27,14 +29,17 @@ import java.util.UUID;
 
 @RunWith(SpringRunner.class)
 @Slf4j
+@SpringBootTest
 public class AddressTest {
-    UserAction action = new UserAction();
+    @Autowired
+    UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
+            action.saveResult(description,uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };

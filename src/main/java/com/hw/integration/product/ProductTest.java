@@ -12,8 +12,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -21,14 +25,18 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 @Slf4j
+@SpringBootTest
+@RunWith(SpringRunner.class)
 public class ProductTest {
-    UserAction action = new UserAction();
+    @Autowired
+    UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
+            action.saveResult(description,uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };

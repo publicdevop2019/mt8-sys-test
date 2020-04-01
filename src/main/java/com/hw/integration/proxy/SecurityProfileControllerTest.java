@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -28,18 +30,21 @@ import java.util.UUID;
  */
 @RunWith(SpringRunner.class)
 @Slf4j
+@SpringBootTest
 public class SecurityProfileControllerTest {
     private String password = "password";
     private String login_clientId = "login-id";
     private String username_admin = "haolinwei2017@gmail.com";
     private String username_root = "haolinwei2015@gmail.com";
     private String userPwd = "root";
-    private UserAction action=new UserAction();
+    @Autowired
+    private UserAction action;
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
+            action.saveResult(description,uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };

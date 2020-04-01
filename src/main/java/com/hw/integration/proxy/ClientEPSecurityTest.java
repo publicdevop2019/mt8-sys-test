@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -27,6 +29,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RunWith(SpringRunner.class)
+@SpringBootTest
 public class ClientEPSecurityTest {
     private String password = "password";
     private String valid_clientId = "login-id";
@@ -34,13 +37,15 @@ public class ClientEPSecurityTest {
     private String valid_empty_secret = "";
     private String valid_username_admin = "haolinwei2017@gmail.com";
     private String valid_pwd = "root";
-    private UserAction action = new UserAction();
+    @Autowired
+    private UserAction action;
     public ObjectMapper mapper = new ObjectMapper();
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
+            action.saveResult(description,uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
