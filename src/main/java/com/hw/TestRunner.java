@@ -4,6 +4,7 @@ import com.hw.entity.TestResult;
 import com.hw.helper.UserAction;
 import com.hw.repo.TestResultRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.LogManager;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
@@ -13,6 +14,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import javax.annotation.PreDestroy;
 
 @Slf4j
 @SpringBootApplication
@@ -51,5 +54,10 @@ public class TestRunner {
             log.error("Tests failed, check log");
         }
         testResultRepo.save(testResult);
+    }
+    @PreDestroy
+    public void onExit() {
+        log.info("Closing application..");
+        LogManager.shutdown();
     }
 }
