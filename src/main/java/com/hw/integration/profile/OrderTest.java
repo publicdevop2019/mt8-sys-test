@@ -14,7 +14,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -24,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -37,7 +37,7 @@ public class OrderTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -53,12 +53,12 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-        String url3 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/orders";
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
         String orderId = action.getOrderId(exchange.getHeaders());
-        String url4 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/orders/" + orderId + "/confirm";
+        String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId + "/confirm";
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
         Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
@@ -70,7 +70,7 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-        String url3 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/orders";
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
         action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
@@ -81,7 +81,7 @@ public class OrderTest {
     public void shop_read_history_orders() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/orders";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
         ParameterizedTypeReference<List<OrderDetail>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<OrderDetail>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
@@ -93,7 +93,7 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-        String url3 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/orders";
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         String orderId = action.getOrderId(exchange.getHeaders());
         ResponseEntity<OrderDetail> exchange2 = action.restTemplate.exchange(url3 + "/" + orderId, HttpMethod.GET, action.getHttpRequest(defaultUserToken), OrderDetail.class);

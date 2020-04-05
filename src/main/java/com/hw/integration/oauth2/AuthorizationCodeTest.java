@@ -15,7 +15,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -51,7 +50,7 @@ public class AuthorizationCodeTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -199,7 +198,7 @@ public class AuthorizationCodeTest {
 
 
     private ResponseEntity<String> getCodeResp(String clientId, String bearerToken) {
-        String url = UserAction.proxyUrl +"/api/" + "authorize";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", response_type);
         params.add("client_id", clientId);
@@ -212,7 +211,6 @@ public class AuthorizationCodeTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> pwdFlowLogin(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -220,7 +218,7 @@ public class AuthorizationCodeTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationToken(String grantType, String code, String redirect_uri, String clientId) {
@@ -228,7 +226,6 @@ public class AuthorizationCodeTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenSecret(String grantType, String code, String redirect_uri, String clientId, String clientSecret) {
-        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("code", code);
@@ -236,6 +233,6 @@ public class AuthorizationCodeTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 }

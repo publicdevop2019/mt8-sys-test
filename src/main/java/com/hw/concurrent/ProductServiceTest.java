@@ -43,7 +43,7 @@ public class ProductServiceTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -56,7 +56,7 @@ public class ProductServiceTest {
 
     @Test
     public void concurrentValidation() {
-        String url = UserAction.proxyUrl + "/api/productDetails/validate";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/validate";
         OptionItem optionItem1 = new OptionItem("scoj", "+8.41");
         OptionItem optionItem2 = new OptionItem("yla", "+7.39");
         OptionItem optionItem3 = new OptionItem("azqv", "-2.79");

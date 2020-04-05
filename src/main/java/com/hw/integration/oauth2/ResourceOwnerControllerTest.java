@@ -48,7 +48,7 @@ public class ResourceOwnerControllerTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -94,7 +94,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         createUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwner/pwd";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwner/pwd";
         String newPassword = UUID.randomUUID().toString().replace("-", "");
         /** Login */
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
@@ -116,7 +116,7 @@ public class ResourceOwnerControllerTest {
         String value = registerTokenResponse.getBody().getValue();
         ResourceOwner user = getUser();
         createUser(user);
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/forgetPwd";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/forgetPwd";
         ForgetPasswordRequest forgetPasswordRequest = new ForgetPasswordRequest();
         forgetPasswordRequest.setEmail(user.getEmail());
         HttpHeaders headers = new HttpHeaders();
@@ -127,7 +127,7 @@ public class ResourceOwnerControllerTest {
         ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, Object.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        String url2 = UserAction.proxyUrl + "/api" + "/resourceOwners/resetPwd";
+        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/resetPwd";
         forgetPasswordRequest.setToken("123456789");
         forgetPasswordRequest.setNewPassword(UUID.randomUUID().toString());
         String s2 = mapper.writeValueAsString(forgetPasswordRequest);
@@ -152,7 +152,7 @@ public class ResourceOwnerControllerTest {
         resourceOwnerUpdatePwd.setPassword(UUID.randomUUID().toString());
         createUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwner/pwd";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwner/pwd";
         /** Login */
         String oldPassword = user.getPassword();
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
@@ -181,7 +181,7 @@ public class ResourceOwnerControllerTest {
     public void read_all_users_with_root_account() {
         ParameterizedTypeReference<List<ResourceOwner>> responseType = new ParameterizedTypeReference<>() {
         };
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
@@ -197,7 +197,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -228,7 +228,7 @@ public class ResourceOwnerControllerTest {
     @Test
     public void should_not_able_to_update_user_authority_to_root_with_admin_account() throws JsonProcessingException {
         ResourceOwner user = getUser();
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + root_index;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/" + root_index;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -254,7 +254,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -281,7 +281,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_admin, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -306,7 +306,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = getUser();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
@@ -349,7 +349,7 @@ public class ResourceOwnerControllerTest {
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user);
 
         String s = user1.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(PASSWORD_GRANT, user.getEmail(), user.getPassword(), valid_login_clientId, valid_empty_secret);
 
@@ -372,7 +372,7 @@ public class ResourceOwnerControllerTest {
     @Test
     public void should_not_able_to_delete_root_user() {
 
-        String url = UserAction.proxyUrl + "/api" + "/resourceOwners/" + root_index;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/" + root_index;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = getTokenResponse(PASSWORD_GRANT, valid_username_root, valid_pwd, valid_login_clientId, valid_empty_secret);
 
@@ -418,17 +418,15 @@ public class ResourceOwnerControllerTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -436,7 +434,7 @@ public class ResourceOwnerControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user) throws JsonProcessingException {

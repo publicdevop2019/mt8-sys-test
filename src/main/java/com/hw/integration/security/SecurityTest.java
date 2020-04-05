@@ -12,7 +12,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +31,7 @@ public class SecurityTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -42,12 +41,13 @@ public class SecurityTest {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
     }
+
     @Test
     public void user_modify_jwt_token_after_login() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String defaultUserToken2 = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken2), String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
@@ -57,7 +57,7 @@ public class SecurityTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String defaultUserToken2 = action.registerResourceOwnerThenLogin();
         String profileId2 = action.getProfileId(defaultUserToken2);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId2 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId2 + "/addresses";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
@@ -66,7 +66,7 @@ public class SecurityTest {
     public void trying_access_protected_api_without_jwt_token() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(null), String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange.getStatusCode());
     }

@@ -15,7 +15,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -24,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -36,7 +36,7 @@ public class ProductTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -46,6 +46,7 @@ public class ProductTest {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
     }
+
     @Test
     public void shop_get_products_by_category() {
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
@@ -56,14 +57,14 @@ public class ProductTest {
     public void shop_get_product_detail() {
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = UserAction.proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
     }
 
     @Test
     public void shop_read_all_products() {
-        String url = UserAction.proxyUrl + "/api/" + "categories/all" + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/categories/all" + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
         ResponseEntity<ProductTotalResponse> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductTotalResponse.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0L, exchange.getBody().getTotalProductCount().longValue());
@@ -89,7 +90,7 @@ public class ProductTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + "/api/" + "productDetails";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
@@ -115,7 +116,7 @@ public class ProductTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + "/api/" + "productDetails";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().getLocation().toString());
@@ -123,7 +124,7 @@ public class ProductTest {
         randomProduct.setPrice(BigDecimal.valueOf(new Random().nextDouble()));
         randomProduct.setActualStorage(null);
         randomProduct.setOrderStorage(null);
-        String url2 = UserAction.proxyUrl + "/api/" + "productDetails/" + exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + exchange.getHeaders().getLocation().toString();
         String s2 = null;
         try {
             s2 = mapper.writeValueAsString(randomProduct);
@@ -155,13 +156,13 @@ public class ProductTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + "/api/" + "productDetails";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().getLocation().toString());
         // update price
         randomProduct.setPrice(BigDecimal.valueOf(new Random().nextDouble()));
-        String url2 = UserAction.proxyUrl + "/api/" + "productDetails/" + exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + exchange.getHeaders().getLocation().toString();
         String s2 = null;
         try {
             s2 = mapper.writeValueAsString(randomProduct);
@@ -193,7 +194,7 @@ public class ProductTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + "/api/" + "productDetails";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().getLocation().toString());
@@ -201,7 +202,7 @@ public class ProductTest {
         randomProduct.setIncreaseActualStorageBy(new Random().nextInt());
         randomProduct.setActualStorage(null);
         randomProduct.setOrderStorage(null);
-        String url2 = UserAction.proxyUrl + "/api/" + "productDetails/" + exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + exchange.getHeaders().getLocation().toString();
         String s2 = null;
         try {
             s2 = mapper.writeValueAsString(randomProduct);
@@ -234,11 +235,11 @@ public class ProductTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + "/api/" + "productDetails";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().getLocation().toString());
-        String url2 = UserAction.proxyUrl + "/api/" + "productDetails/" + exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<String> request2 = new HttpEntity<>(headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.DELETE, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());

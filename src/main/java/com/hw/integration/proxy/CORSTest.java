@@ -30,10 +30,8 @@ public class CORSTest {
 
     private String thirdPartyOrigin = "https://editor.swagger.io";
 
-    private String apiVersion = "/v1/api/";
-
-    private String[] corsUris = {"oauth/token", "oauth/token_key", "client", "client/0", "clients",
-            "authorize", "resourceOwner", "resourceOwner/0", "resourceOwner/pwd", "resourceOwners"};
+    private String[] corsUris = {"/oauth/token", "/oauth/token_key", "/client", "/client/0", "/clients",
+            "/authorize", "/resourceOwner", "/resourceOwner/0", "/resourceOwner/pwd", "/resourceOwners"};
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
@@ -51,14 +49,14 @@ public class CORSTest {
     }
     @Test
     public void cors_oauthToken() {
-        String url = UserAction.proxyUrl + "/" + corsUris[0];
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + corsUris[0];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
     }
 
     @Test
     public void cors_oauthTokenKey() {
-        String url = UserAction.proxyUrl + "/" + corsUris[1];
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + corsUris[1];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
 
@@ -66,7 +64,7 @@ public class CORSTest {
 
     @Test
     public void cors_client() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[2];
+        String url = UserAction.proxyUrl +  corsUris[2];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
 
@@ -74,7 +72,7 @@ public class CORSTest {
 
     @Test
     public void cors_client_w_id_put() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[3];
+        String url = UserAction.proxyUrl +  corsUris[3];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PUT);
         corsAssertNonToken(res);
 
@@ -82,7 +80,7 @@ public class CORSTest {
 
     @Test
     public void cors_client_w_id_delete() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[3];
+        String url = UserAction.proxyUrl +  corsUris[3];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.DELETE);
         corsAssertNonToken(res);
 
@@ -90,7 +88,7 @@ public class CORSTest {
 
     @Test
     public void cors_clients() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[4];
+        String url = UserAction.proxyUrl +  corsUris[4];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.GET);
         corsAssertNonToken(res);
 
@@ -98,7 +96,7 @@ public class CORSTest {
 
     @Test
     public void cors_authorize() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[5];
+        String url = UserAction.proxyUrl +  corsUris[5];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
 
@@ -106,7 +104,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[6];
+        String url = UserAction.proxyUrl +  corsUris[6];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.POST);
         corsAssertNonToken(res);
 
@@ -114,7 +112,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner_id_put() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[7];
+        String url = UserAction.proxyUrl +  corsUris[7];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PUT);
         corsAssertNonToken(res);
 
@@ -122,7 +120,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner_id_delete() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[7];
+        String url = UserAction.proxyUrl +  corsUris[7];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.DELETE);
         corsAssertNonToken(res);
 
@@ -130,7 +128,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwner_id_pwd() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[8];
+        String url = UserAction.proxyUrl +  corsUris[8];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.PATCH);
         corsAssertNonToken(res);
 
@@ -138,7 +136,7 @@ public class CORSTest {
 
     @Test
     public void cors_resourceOwners() {
-        String url = UserAction.proxyUrl + apiVersion + corsUris[9];
+        String url = UserAction.proxyUrl +  corsUris[9];
         ResponseEntity<?> res = sendValidCorsForNonTokenUri(url, HttpMethod.GET);
         corsAssertNonToken(res);
 

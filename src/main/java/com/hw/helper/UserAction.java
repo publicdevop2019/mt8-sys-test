@@ -41,10 +41,14 @@ public class UserAction {
     public static String ADMIN_PASSWORD = "root";
     public static String USER_USERNAME = "haolinwei2018@gmail.com";
     public static String USER_PASSWORD = "root";
+    public static String AUTH_SVC = "/auth-svc";
+    public static String PRODUCT_SVC = "/product-svc";
+    public static String PROFILE_SVC = "/profile-svc";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
-    public static String proxyUrl = "http://www.ngform.com:" + 8111;
-//    public static String proxyUrl = "http://localhost:" + 8111;
+    //    public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
+    public static String proxyUrl = "http://localhost:" + 8111;
+    public static String PROXY_URL_TOKEN = proxyUrl + AUTH_SVC + "/oauth/token";
 
     public void saveResult(Description description, UUID uuid) {
         FailedRecord failedRecord = new FailedRecord();
@@ -67,11 +71,11 @@ public class UserAction {
         while (productSimple.getActualStorage() <= 0 || productSimple.getOrderStorage() <= 0) {
             productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
         }
-        String url = proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
+        String url = proxyUrl + PRODUCT_SVC + "/productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = selectProduct(body);
-        String url2 = proxyUrl + "/api/profiles/" + profileId1 + "/cart";
+        String url2 = proxyUrl + PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
 
         ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
@@ -102,7 +106,7 @@ public class UserAction {
         List<Category> body = categories.getBody();
         int i = new Random().nextInt(body.size());
         Category category = body.get(i);
-        String url = proxyUrl + "/api/" + "categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
+        String url = proxyUrl + PRODUCT_SVC + "/categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
         ParameterizedTypeReference<List<ProductSimple>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<ProductSimple>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
@@ -153,7 +157,7 @@ public class UserAction {
     }
 
     public ResponseEntity<List<Category>> getCategories() {
-        String url = proxyUrl + "/api/" + "categories";
+        String url = proxyUrl + PRODUCT_SVC + "/categories";
         ParameterizedTypeReference<List<Category>> responseType = new ParameterizedTypeReference<>() {
         };
         return restTemplate.exchange(url, HttpMethod.GET, null, responseType);
@@ -175,7 +179,7 @@ public class UserAction {
     }
 
     public String getProfileId(String authorizeToken) {
-        String url = proxyUrl + "/api/" + "profiles/search";
+        String url = proxyUrl + PROFILE_SVC + "/profiles/search";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, getHttpRequest(authorizeToken), String.class);
         String profileId;
         if (exchange.getStatusCode() == HttpStatus.BAD_REQUEST) {
@@ -207,7 +211,7 @@ public class UserAction {
     }
 
     public String createProfile(String authorizeToken) {
-        String url = proxyUrl + "/api/" + "profiles";
+        String url = proxyUrl + PROFILE_SVC + "/profiles";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, getHttpRequest(authorizeToken), String.class);
         return exchange.getHeaders().getLocation().toString();
     }
@@ -255,27 +259,25 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse() {
-        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", CLIENT_CREDENTIALS);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(REGISTER_ID, CLIENT_SECRET);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> registerResourceOwner(ResourceOwner user, String registerToken) {
-        String urlRegister = proxyUrl + "/api" + "/resourceOwners/register";
+        String urlRegister = proxyUrl + AUTH_SVC + "/resourceOwners/register";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(registerToken);
@@ -290,7 +292,7 @@ public class UserAction {
         HttpEntity<String> request = new HttpEntity<>(s, headers);
         restTemplate.exchange(urlRegister, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
 
-        String url = proxyUrl + "/api" + "/resourceOwners";
+        String url = proxyUrl + AUTH_SVC + "/resourceOwners";
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setContentType(MediaType.APPLICATION_JSON);
         headers1.setBearerAuth(registerToken);
@@ -308,7 +310,6 @@ public class UserAction {
 
 
     public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -316,11 +317,10 @@ public class UserAction {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String username, String userPwd) {
-        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", PASSWORD);
         params.add("username", username);
@@ -328,11 +328,11 @@ public class UserAction {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(LOGIN_ID, CLIENT_SECRET);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken, String response_type, String state, String redirectUri) {
-        String url = proxyUrl + "/api/" + "authorize";
+        String url = proxyUrl + AUTH_SVC + "/authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", response_type);
         params.add("client_id", clientId);
@@ -345,7 +345,7 @@ public class UserAction {
     }
 
     public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken) {
-        String url = proxyUrl + "/api/" + "authorize";
+        String url = proxyUrl + AUTH_SVC + "/authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", AUTHORIZE_RESPONSE_TYPE);
         params.add("client_id", clientId);
@@ -358,7 +358,6 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret, String grantType) {
-        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("code", code);
@@ -366,11 +365,10 @@ public class UserAction {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret) {
-        String url = proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", AUTHORIZATION_CODE);
         params.add("code", code);
@@ -378,11 +376,11 @@ public class UserAction {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getClientCredentialResponse(String clientId, String clientSecret) {
-        String url = UserAction.proxyUrl + "/" + "oauth/token";
+        String url = UserAction.proxyUrl + AUTH_SVC + "/oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", CLIENT_CREDENTIALS);
         HttpHeaders headers = new HttpHeaders();

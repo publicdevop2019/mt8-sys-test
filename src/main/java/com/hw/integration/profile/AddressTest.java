@@ -39,7 +39,7 @@ public class AddressTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -54,7 +54,7 @@ public class AddressTest {
     public void shop_read_all_addresses() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         ParameterizedTypeReference<List<Address>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<Address>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
@@ -66,13 +66,13 @@ public class AddressTest {
     public void shop_read_address_details() {
         String defaultUserToken = action.getDefaultRootToken();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url2 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         ParameterizedTypeReference<List<Address>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<Address>> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
         int i = new Random().nextInt(exchange2.getBody().size());
         Long id = exchange2.getBody().get(i).getId();
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses/" + id;
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses/" + id;
         ResponseEntity<Address> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), Address.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
@@ -82,7 +82,7 @@ public class AddressTest {
     public void shop_update_address_details() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
         String s = exchange.getHeaders().getLocation().toString();
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + s, HttpMethod.PUT, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
@@ -93,7 +93,7 @@ public class AddressTest {
     public void shop_create_address() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
@@ -103,7 +103,7 @@ public class AddressTest {
     public void shop_create_same_address() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         Address randomAddress = action.getRandomAddress();
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
@@ -116,7 +116,7 @@ public class AddressTest {
     public void shop_delete_address() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
         Address randomAddress = action.getRandomAddress();
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
         String s = exchange.getHeaders().getLocation().toString();

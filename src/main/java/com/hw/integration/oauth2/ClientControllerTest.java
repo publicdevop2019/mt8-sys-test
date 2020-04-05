@@ -5,13 +5,15 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
@@ -43,7 +45,7 @@ public class ClientControllerTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -53,6 +55,7 @@ public class ClientControllerTest {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
     }
+
     @Test
     public void all_client_should_have_resource_id_field() throws JsonProcessingException {
         Client client = getClientAsNonResource();
@@ -111,24 +114,8 @@ public class ClientControllerTest {
     }
 
     @Test
-    @Ignore
-    public void when_bypass_proxy_even_admin_can_create_client_if_directly_call_oauth2() throws JsonProcessingException {
-        Client client = getClientAsNonResource(valid_resourceId);
-        String url = UserAction.proxyUrl + "/v1/api" + "/clients";
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
-        String bearer = tokenResponse.getBody().getValue();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(bearer);
-        String s = mapper.writeValueAsString(client);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-    }
-
-    @Test
     public void root_account_can_create_client() {
-        String url = UserAction.proxyUrl + "/api" + "/clients";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
@@ -146,7 +133,7 @@ public class ClientControllerTest {
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + "/api" + "/clients/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients/" + client1.getHeaders().getLocation().toString();
         Client newClient = getClientAsNonResource(valid_resourceId);
         newClient.setClientSecret(" ");
         HttpHeaders headers = new HttpHeaders();
@@ -170,7 +157,7 @@ public class ClientControllerTest {
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsResource(valid_resourceId);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + "/api" + "/clients/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients/" + client1.getHeaders().getLocation().toString();
         String clientSecret = oldClient.getClientSecret();
         oldClient.setResourceIndicator(true);
         oldClient.setClientSecret(" ");
@@ -195,7 +182,7 @@ public class ClientControllerTest {
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + "/api" + "/clients/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients/" + client1.getHeaders().getLocation().toString();
         Client newClient = getInvalidClientAsResource(valid_resourceId);
         newClient.setClientSecret(" ");
         HttpHeaders headers = new HttpHeaders();
@@ -214,7 +201,7 @@ public class ClientControllerTest {
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + "/api" + "/clients/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients/" + client1.getHeaders().getLocation().toString();
         Client newClient = getClientAsNonResource(valid_resourceId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -236,7 +223,7 @@ public class ClientControllerTest {
         String bearer = tokenResponse.getBody().getValue();
         Client oldClient = getClientAsNonResource(valid_resourceId);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + "/api" + "/clients/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
@@ -264,7 +251,7 @@ public class ClientControllerTest {
         oldClient.setGrantedAuthorities(Arrays.asList(clientAuthorityEnumGrantedAuthority, clientAuthorityEnumGrantedAuthority2));
         ResponseEntity<String> client1 = createClient(oldClient);
 
-        String url = UserAction.proxyUrl + "/api" + "/clients/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
@@ -279,7 +266,6 @@ public class ClientControllerTest {
 
 
     private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        String url = UserAction.proxyUrl + "/" + "oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", grantType);
         params.add("username", username);
@@ -287,7 +273,7 @@ public class ClientControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     /**
@@ -338,7 +324,7 @@ public class ClientControllerTest {
     }
 
     public ResponseEntity<String> createClient(Client client) throws JsonProcessingException {
-        String url = UserAction.proxyUrl + "/api" + "/clients";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();

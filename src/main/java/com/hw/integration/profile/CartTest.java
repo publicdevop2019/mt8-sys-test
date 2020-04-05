@@ -14,7 +14,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -38,7 +37,7 @@ public class CartTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -48,17 +47,18 @@ public class CartTest {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
     }
+
     @Test
     public void shop_add_product_cart() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = UserAction.proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = action.selectProduct(body);
-        String url2 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
@@ -70,11 +70,11 @@ public class CartTest {
         String profileId1 = action.getProfileId(defaultUserToken);
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = UserAction.proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = action.selectProduct(body);
-        String url2 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
@@ -87,7 +87,7 @@ public class CartTest {
     public void shop_read_all_carts() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<SnapshotProduct>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
@@ -102,11 +102,11 @@ public class CartTest {
         String profileId1 = action.getProfileId(defaultUserToken);
         ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = UserAction.proxyUrl + "/api/" + "productDetails/" + productSimple.getId();
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
         ProductDetail body = exchange.getBody();
         SnapshotProduct snapshotProduct = action.selectProduct(body);
-        String url2 = UserAction.proxyUrl + "/api/profiles/" + profileId1 + "/cart";
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         String s = exchange3.getHeaders().getLocation().toString();
         ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2 + "/" + s, HttpMethod.DELETE, action.getHttpRequest(defaultUserToken), String.class);
