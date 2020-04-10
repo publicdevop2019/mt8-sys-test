@@ -45,21 +45,20 @@ public class SecurityTest {
     @Test
     public void user_modify_jwt_token_after_login() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String defaultUserToken2 = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken2), String.class);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken+"valueChange"), String.class);
+        Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange.getStatusCode());
     }
 
     @Test
-    public void use_modify_jwt_token_after_login_trying_to_access_other_profile() {
+    public void user_after_login_trying_to_access_other_profile() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String defaultUserToken2 = action.registerResourceOwnerThenLogin();
         String profileId2 = action.getProfileId(defaultUserToken2);
         String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId2 + "/addresses";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
+        Assert.assertEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
     }
 
     @Test

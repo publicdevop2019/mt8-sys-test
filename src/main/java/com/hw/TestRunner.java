@@ -40,7 +40,7 @@ public class TestRunner {
             log.error(failure.toString());
             stringBuilder.append(failure.toString());
         }
-        log.info("Tests executed {} ignored {} failed {} elapse {}ms", result.getRunCount(), result.getIgnoreCount(), result.getFailureCount(), result.getRunTime());
+        log.info("Tests {}-executed {}-ignored {}-failed elapse-{}ms", result.getRunCount(), result.getIgnoreCount(), result.getFailureCount(), result.getRunTime());
         testResult.setTestExecuted(result.getRunCount());
         testResult.setIgnored(result.getIgnoreCount());
         testResult.setFailed(result.getFailureCount());

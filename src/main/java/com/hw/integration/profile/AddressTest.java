@@ -24,7 +24,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
@@ -64,17 +63,15 @@ public class AddressTest {
 
     @Test
     public void shop_read_address_details() {
-        String defaultUserToken = action.getDefaultRootToken();
+
+        String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
-        ParameterizedTypeReference<List<Address>> responseType = new ParameterizedTypeReference<>() {
-        };
-        ResponseEntity<List<Address>> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
-        int i = new Random().nextInt(exchange2.getBody().size());
-        Long id = exchange2.getBody().get(i).getId();
-        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses/" + id;
-        ResponseEntity<Address> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), Address.class);
-        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
+        String addressId = exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses/" + addressId;
+        ResponseEntity<Address> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, action.getHttpRequest(defaultUserToken), Address.class);
+        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
 
     }
 

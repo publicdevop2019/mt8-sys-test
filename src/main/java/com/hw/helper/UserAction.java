@@ -46,7 +46,7 @@ public class UserAction {
     public static String PROFILE_SVC = "/profile-svc";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
-    //    public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
+//        public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
     public static String proxyUrl = "http://localhost:" + 8111;
     public static String PROXY_URL_TOKEN = proxyUrl + AUTH_SVC + "/oauth/token";
 
