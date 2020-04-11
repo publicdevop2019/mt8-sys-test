@@ -1,5 +1,7 @@
 package com.hw.concurrent;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -11,17 +13,11 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 public class ProductServiceTest {
     @Autowired
     UserAction action;
+    ObjectMapper mapper = new ObjectMapper();
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
@@ -119,31 +116,59 @@ public class ProductServiceTest {
         }
     }
 
-//    @Test
-//    public void concurrentDecrease() {
-//        Integer threadCount = 20;
-//        String productId = "0";
-//        Integer iniOrderStorage = productDetailRepo.findById(Long.parseLong(productId)).get().getOrderStorage();
-//        Integer expected = iniOrderStorage - threadCount;
-//        HashMap<String, String> stringStringHashMap = new HashMap<>();
-//        stringStringHashMap.put(productId, "1");
-//        Runnable runnable = new Runnable() {
-//            @Override
-//            public void run() {
-//                productService.decreaseOrderStorageForMappedProducts.accept(stringStringHashMap);
-//            }
-//        };
-//        ArrayList<Runnable> runnables = new ArrayList<>();
-//        IntStream.range(0, threadCount).forEach(e -> {
-//            runnables.add(runnable);
-//        });
-//        try {
-//            assertConcurrent("", runnables, 30000);
-//            assertTrue("remain storage should be " + expected, productDetailRepo.findById(Long.parseLong(productId)).get().getOrderStorage().equals(expected));
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    @Test
+    public void create_product_then_concurrent_decrease() {
+        Integer iniOrderStorage = 1000;
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy";
+        ResponseEntity<List<Category>> categories = action.getCategories();
+        List<Category> body = categories.getBody();
+        int i = new Random().nextInt(body.size());
+        Category category = body.get(i);
+        ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
+        randomProduct.setOrderStorage(iniOrderStorage);
+        String s = null;
+        try {
+            s = mapper.writeValueAsString(randomProduct);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        String s1 = action.getDefaultAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<String> request = new HttpEntity<>(s, headers);
+
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        String productId = exchange.getHeaders().getLocation().toString();
+
+        Integer threadCount = 20;
+        Integer expected = iniOrderStorage - threadCount;
+        HashMap<String, String> stringStringHashMap = new HashMap<>();
+        stringStringHashMap.put(productId, "1");
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        HttpEntity<Object> listHttpEntity = new HttpEntity<>(stringStringHashMap, headers2);
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(url2, HttpMethod.PUT, listHttpEntity, Object.class);
+                Assert.assertEquals(200, exchange.getStatusCodeValue());
+            }
+        };
+        ArrayList<Runnable> runnables = new ArrayList<>();
+        IntStream.range(0, threadCount).forEach(e -> {
+            runnables.add(runnable);
+        });
+        try {
+            assertConcurrent("", runnables, 30000);
+            // get product order count
+            ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
+            assertTrue("remain storage should be " + expected, exchange1.getBody().getOrderStorage().equals(expected));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 //
 //    @Test
 //    public void transactionalDecreaseEnough() {
