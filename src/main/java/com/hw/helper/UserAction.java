@@ -46,7 +46,7 @@ public class UserAction {
     public static String PROFILE_SVC = "/profile-svc";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
-//        public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
+    //        public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
     public static String proxyUrl = "http://localhost:" + 8111;
     public static String PROXY_URL_TOKEN = proxyUrl + AUTH_SVC + "/oauth/token";
 
@@ -68,7 +68,7 @@ public class UserAction {
         ResponseEntity<List<ProductSimple>> randomProducts = getRandomProducts();
 
         ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        while (productSimple.getActualStorage() <= 0 || productSimple.getOrderStorage() <= 0) {
+        while (productSimple.getOrderStorage() <= 0) {
             productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
         }
         String url = proxyUrl + PRODUCT_SVC + "/productDetails/" + productSimple.getId();
@@ -252,9 +252,10 @@ public class UserAction {
         productDetail.setSpecification(objects);
         productDetail.setName(UUID.randomUUID().toString().replace("-", ""));
         productDetail.setCategory(category);
-        productDetail.setOrderStorage(new Random().nextInt());
-        productDetail.setActualStorage(new Random().nextInt());
-        productDetail.setPrice(BigDecimal.valueOf(new Random().nextDouble()));
+        int i = new Random().nextInt(2000);
+        productDetail.setOrderStorage(i);
+        productDetail.setActualStorage(i + new Random().nextInt(1000));
+        productDetail.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
         return productDetail;
     }
 

@@ -161,7 +161,8 @@ public class ProductTest {
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().getLocation().toString());
         // update price
-        randomProduct.setPrice(BigDecimal.valueOf(new Random().nextDouble()));
+        Integer orderStorage = randomProduct.getOrderStorage();
+        randomProduct.setOrderStorage(randomProduct.getOrderStorage() + 100);
         String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + exchange.getHeaders().getLocation().toString();
         String s2 = null;
         try {
@@ -171,7 +172,12 @@ public class ProductTest {
         }
         HttpEntity<String> request2 = new HttpEntity<>(s2, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange2.getStatusCode());
+        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
+
+        String url3 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + exchange.getHeaders().getLocation().toString();
+        ResponseEntity<ProductDetail> exchange3 = action.restTemplate.exchange(url3, HttpMethod.GET, null, ProductDetail.class);
+        Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
+        Assert.assertEquals(orderStorage, exchange3.getBody().getOrderStorage());
     }
 
     @Test

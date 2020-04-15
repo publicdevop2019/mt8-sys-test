@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static com.hw.helper.UserAction.USER_PROFILE_ID;
@@ -118,14 +119,14 @@ public class ProductServiceTest {
 
     @Test
     public void create_product_then_concurrent_decrease() {
-        Integer iniOrderStorage = 1000;
+        AtomicInteger iniOrderStorage = new AtomicInteger(1000);
         String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=";
         ResponseEntity<List<Category>> categories = action.getCategories();
         List<Category> body = categories.getBody();
         int i = new Random().nextInt(body.size());
         Category category = body.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
-        randomProduct.setOrderStorage(iniOrderStorage);
+        randomProduct.setOrderStorage(iniOrderStorage.get());
         String s = null;
         try {
             s = mapper.writeValueAsString(randomProduct);
@@ -142,18 +143,23 @@ public class ProductServiceTest {
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         String productId = exchange.getHeaders().getLocation().toString();
 
-        Integer threadCount = 20;
-        Integer expected = iniOrderStorage - threadCount;
+        Integer threadCount = 50;
         HashMap<String, String> stringStringHashMap = new HashMap<>();
         stringStringHashMap.put(productId, "1");
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         HttpEntity<Object> listHttpEntity = new HttpEntity<>(stringStringHashMap, headers2);
+        ArrayList<Integer> integers = new ArrayList<>();
+        integers.add(200);
+        integers.add(400);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 ResponseEntity<Object> exchange = action.restTemplate.exchange(url2 + UUID.randomUUID().toString(), HttpMethod.PUT, listHttpEntity, Object.class);
-                Assert.assertEquals(200, exchange.getStatusCodeValue());
+                if (exchange.getStatusCodeValue() == 200) {
+                    iniOrderStorage.decrementAndGet();
+                }
+                Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
             }
         };
         ArrayList<Runnable> runnables = new ArrayList<>();
@@ -164,7 +170,7 @@ public class ProductServiceTest {
             assertConcurrent("", runnables, 30000);
             // get product order count
             ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
-            assertTrue("remain storage should be " + expected, exchange1.getBody().getOrderStorage().equals(expected));
+            assertTrue("remain storage should be " + iniOrderStorage.get(), exchange1.getBody().getOrderStorage().equals(iniOrderStorage.get()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -204,11 +210,14 @@ public class ProductServiceTest {
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         HttpEntity<Object> listHttpEntity = new HttpEntity<>(stringStringHashMap, headers2);
+        ArrayList<Integer> integers = new ArrayList<>();
+        integers.add(200);
+        integers.add(400);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 ResponseEntity<Object> exchange = action.restTemplate.exchange(url2, HttpMethod.PUT, listHttpEntity, Object.class);
-                Assert.assertEquals(200, exchange.getStatusCodeValue());
+                Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
             }
         };
         ArrayList<Runnable> runnables = new ArrayList<>();
@@ -220,6 +229,107 @@ public class ProductServiceTest {
             // get product order count
             ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
             assertTrue("remain storage should be " + expected, exchange1.getBody().getOrderStorage().equals(expected));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * if lock is pessimistic then deadlock exception will deteceted
+     */
+    @Test
+    public void create_two_product_then_concurrent_decrease_diff_product_concurrent() {
+        Integer initial = 1000;
+        AtomicInteger iniOrderStorage = new AtomicInteger(initial);
+        AtomicInteger iniOrderStorage2 = new AtomicInteger(initial);
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=";
+        ResponseEntity<List<Category>> categories = action.getCategories();
+        List<Category> body = categories.getBody();
+        int i = new Random().nextInt(body.size());
+        Category category = body.get(i);
+        ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
+        ProductDetail randomProduct2 = action.getRandomProduct(category.getTitle());
+        randomProduct.setOrderStorage(iniOrderStorage.get());
+        randomProduct2.setOrderStorage(iniOrderStorage2.get());
+        String s = null;
+        String s2 = null;
+        try {
+            s = mapper.writeValueAsString(randomProduct);
+            s2 = mapper.writeValueAsString(randomProduct2);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        String s1 = action.getDefaultAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<String> request = new HttpEntity<>(s, headers);
+        HttpEntity<String> request2 = new HttpEntity<>(s2, headers);
+
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.POST, request2, String.class);
+        String productId = exchange.getHeaders().getLocation().toString();
+        String productId2 = exchange2.getHeaders().getLocation().toString();
+
+        Integer threadCount = 10;
+        HashMap<String, String> stringStringHashMap = new HashMap<>();
+        stringStringHashMap.put(productId, "1");
+        stringStringHashMap.put(productId2, "1");
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers2.setContentType(MediaType.APPLICATION_JSON);
+        String swappedProduct = null;
+        try {
+            swappedProduct = mapper.writeValueAsString(stringStringHashMap);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        log.info("swappedProduct {}", swappedProduct);
+        String[] split = swappedProduct.replace("{", "").replace("}", "").split(",");
+        String s3 = "{"+split[1] + "," + split[0]+"}";
+        HttpEntity<String> listHttpEntity = new HttpEntity<>(swappedProduct, headers2);
+        log.info("swappedProduct {}", s3);
+        HttpEntity<String> listHttpEntity2 = new HttpEntity<>(s3, headers2);
+        ArrayList<Integer> integers = new ArrayList<>();
+        integers.add(200);
+        integers.add(400);
+        integers.add(500);
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(url2 + UUID.randomUUID().toString(), HttpMethod.PUT, listHttpEntity, Object.class);
+                if (exchange.getStatusCodeValue() == 200) {
+                    iniOrderStorage.decrementAndGet();
+                    iniOrderStorage2.decrementAndGet();
+                }
+                Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
+            }
+        };
+        Runnable runnable2 = new Runnable() {
+            @Override
+            public void run() {
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(url2 + UUID.randomUUID().toString(), HttpMethod.PUT, listHttpEntity2, Object.class);
+                if (exchange.getStatusCodeValue() == 200) {
+                    iniOrderStorage.decrementAndGet();
+                    iniOrderStorage2.decrementAndGet();
+                }
+                Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
+            }
+        };
+        ArrayList<Runnable> runnables = new ArrayList<>();
+        IntStream.range(0, threadCount).forEach(e -> {
+            runnables.add(runnable);
+            runnables.add(runnable2);
+        });
+        try {
+            assertConcurrent("", runnables, 30000);
+            // get product order count
+            ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
+            ResponseEntity<ProductDetail> exchange3 = action.restTemplate.exchange(url + "/" + productId2, HttpMethod.GET, null, ProductDetail.class);
+            assertTrue("remain storage should be " + iniOrderStorage.get(), exchange1.getBody().getOrderStorage().equals(iniOrderStorage.get()));
+            assertTrue("remain storage should be " + iniOrderStorage2.get(), exchange3.getBody().getOrderStorage().equals(iniOrderStorage2.get()));
+            log.info("failed request number is {}", threadCount - (initial - iniOrderStorage.get()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
