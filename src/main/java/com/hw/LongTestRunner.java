@@ -1,7 +1,7 @@
 package com.hw;
 
 import com.hw.entity.TestResult;
-import com.hw.helper.UserAction;
+import com.hw.longrun.LongRunTest;
 import com.hw.repo.TestResultRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
@@ -11,50 +11,50 @@ import org.junit.runner.notification.Failure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import javax.annotation.PreDestroy;
 
 @Slf4j
-//@SpringBootApplication
+@SpringBootApplication
 @EnableScheduling
-public class TestRunner {
+public class LongTestRunner {
     @Autowired
     TestResultRepo testResultRepo;
 
     public static void main(String[] args) {
-        SpringApplication.run(TestRunner.class, args);
+        SpringApplication.run(LongTestRunner.class, args);
     }
 
-    @Scheduled(fixedRate = 300 * 1000)
+    @Scheduled(fixedRate = 5 * 1000)
     public void runTest() {
-        log.info("test started");
+        log.info("long run test started");
         TestResult testResult = new TestResult();
         testResult.setStatus("just started");
         StringBuilder stringBuilder = new StringBuilder();
         testResultRepo.save(testResult);
-        Result result = JUnitCore.runClasses(IntegrationTestSuite.class);
+        Result result = JUnitCore.runClasses(LongRunTest.class);
         for (Failure failure : result.getFailures()) {
             log.error(failure.toString());
             stringBuilder.append(failure.toString());
         }
-        log.info("Tests {}-executed {}-ignored {}-failed elapse-{}ms", result.getRunCount(), result.getIgnoreCount(), result.getFailureCount(), result.getRunTime());
+        log.info("Long run tests {}-executed {}-ignored {}-failed elapse-{}ms", result.getRunCount(), result.getIgnoreCount(), result.getFailureCount(), result.getRunTime());
         testResult.setTestExecuted(result.getRunCount());
         testResult.setIgnored(result.getIgnoreCount());
         testResult.setFailed(result.getFailureCount());
         testResult.setElapse(result.getRunTime());
         if (result.wasSuccessful()) {
-            log.info("Tests all passed");
+            log.info("Long run tests all passed");
             testResult.setStatus("success");
         } else {
             testResult.setFailedMsg(stringBuilder.toString());
             testResult.setStatus("failed");
-            log.error("Tests failed, check log");
+            log.error("Long run tests failed, check log");
         }
         testResultRepo.save(testResult);
     }
+
     @PreDestroy
     public void onExit() {
         log.info("Closing application..");

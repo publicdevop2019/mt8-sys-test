@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.entity.FailedRecord;
 import com.hw.repo.FailedRecordRepo;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.Description;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +18,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.*;
 
 @Component
+@Slf4j
 public class UserAction {
     @Autowired
     FailedRecordRepo failedRecordRepo;
+    public List<ResourceOwner> testUser = new ArrayList<>();
     public static String PASSWORD = "password";
     public static String CLIENT_CREDENTIALS = "client_credentials";
     public static String AUTHORIZATION_CODE = "authorization_code";
@@ -55,6 +59,33 @@ public class UserAction {
         failedRecord.setFailedTestMethod(description.getMethodName());
         failedRecord.setUuid(uuid.toString());
         failedRecordRepo.save(failedRecord);
+    }
+
+    public UserAction() {
+    }
+
+    @PostConstruct
+    private void registerTestUser() {
+        ResourceOwner resourceOwner1 = registerResourceOwner();
+        ResourceOwner resourceOwner2 = registerResourceOwner();
+        ResourceOwner resourceOwner3 = registerResourceOwner();
+        ResourceOwner resourceOwner4 = registerResourceOwner();
+        ResourceOwner resourceOwner5 = registerResourceOwner();
+        testUser.add(resourceOwner1);
+        testUser.add(resourceOwner2);
+        testUser.add(resourceOwner3);
+        testUser.add(resourceOwner4);
+        testUser.add(resourceOwner5);
+        String defaultUserToken1 = getLoginTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
+        String defaultUserToken2 = getLoginTokenResponse(resourceOwner2.getEmail(), resourceOwner2.getPassword()).getBody().getValue();
+        String defaultUserToken3 = getLoginTokenResponse(resourceOwner3.getEmail(), resourceOwner3.getPassword()).getBody().getValue();
+        String defaultUserToken4 = getLoginTokenResponse(resourceOwner4.getEmail(), resourceOwner4.getPassword()).getBody().getValue();
+        String defaultUserToken5 = getLoginTokenResponse(resourceOwner5.getEmail(), resourceOwner5.getPassword()).getBody().getValue();
+        getProfileId(defaultUserToken1);
+        getProfileId(defaultUserToken2);
+        getProfileId(defaultUserToken3);
+        getProfileId(defaultUserToken4);
+        getProfileId(defaultUserToken5);
     }
 
     public ResourceOwner registerResourceOwner() {

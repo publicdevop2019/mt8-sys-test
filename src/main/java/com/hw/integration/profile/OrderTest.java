@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.OrderDetail;
 import com.hw.helper.OutgoingReqInterceptor;
+import com.hw.helper.SnapshotAddress;
 import com.hw.helper.UserAction;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.junit.*;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
@@ -49,6 +51,17 @@ public class OrderTest {
     }
 
     @Test
+    public void shop_create_an_order_but_not_confrim() {
+        String defaultUserToken = action.registerResourceOwnerThenLogin();
+        String profileId1 = action.getProfileId(defaultUserToken);
+        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
+    }
+
+    @Test
     public void shop_create_then_confirm_payment_for_an_order() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
@@ -63,6 +76,27 @@ public class OrderTest {
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
         Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
         Assert.assertEquals(true, read);
+    }
+
+    @Test
+    public void shop_create_then_replace_an_order() {
+        String defaultUserToken = action.registerResourceOwnerThenLogin();
+        String profileId1 = action.getProfileId(defaultUserToken);
+        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
+
+        SnapshotAddress snapshotAddress = new SnapshotAddress();
+        BeanUtils.copyProperties(action.getRandomAddress(), snapshotAddress);
+        orderDetailForUser.setAddress(snapshotAddress);
+
+        String orderId = action.getOrderId(exchange.getHeaders());
+        String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId+"/replace";
+        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken,orderDetailForUser), String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
     }
 
     @Test

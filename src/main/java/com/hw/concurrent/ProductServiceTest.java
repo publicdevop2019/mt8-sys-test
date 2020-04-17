@@ -235,7 +235,7 @@ public class ProductServiceTest {
     }
 
     /**
-     * if lock is pessimistic then deadlock exception will deteceted
+     * if lock is pessimistic then deadlock exception will detected
      */
     @Test
     public void create_two_product_then_concurrent_decrease_diff_product_concurrent() {
@@ -285,11 +285,9 @@ public class ProductServiceTest {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        log.info("swappedProduct {}", swappedProduct);
         String[] split = swappedProduct.replace("{", "").replace("}", "").split(",");
         String s3 = "{"+split[1] + "," + split[0]+"}";
         HttpEntity<String> listHttpEntity = new HttpEntity<>(swappedProduct, headers2);
-        log.info("swappedProduct {}", s3);
         HttpEntity<String> listHttpEntity2 = new HttpEntity<>(s3, headers2);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
