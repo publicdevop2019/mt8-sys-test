@@ -96,7 +96,7 @@ public class OrderTest {
         String orderId = action.getOrderId(exchange.getHeaders());
         String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId+"/replace";
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken,orderDetailForUser), String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange7.getStatusCode());
     }
 
     @Test

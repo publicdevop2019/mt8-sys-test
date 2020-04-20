@@ -27,7 +27,7 @@ public class LongTestRunner {
         SpringApplication.run(LongTestRunner.class, args);
     }
 
-    @Scheduled(fixedRate = 5 * 1000)
+    @Scheduled(fixedRate = 20 * 1000)
     public void runTest() {
         log.info("long run test started");
         TestResult testResult = new TestResult();

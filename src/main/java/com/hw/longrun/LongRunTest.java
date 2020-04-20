@@ -162,39 +162,41 @@ public class LongRunTest {
             public void run() {
                 // randomly pick test user
                 log.info("thread start ");
+                ArrayList<Integer> integers4 = new ArrayList<>();
+                integers4.add(200);
+                integers4.add(500);
                 ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
-                log.info("randomly pick test user " + resourceOwner1.toString());
                 String defaultUserToken = action.getLoginTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
                 String profileId1 = action.getProfileId(defaultUserToken);
                 OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
                 String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
                 ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
-                Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-                Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-                String orderId = action.getOrderId(exchange.getHeaders());
+                Assert.assertTrue("create success or concurrent-failure", integers4.contains(exchange.getStatusCode().value()));
                 int i = new Random().nextInt(20);
                 if (i >= 0 && i < 5) {
-                    //randomly pay
-                    log.info("randomly pay");
-                    String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId + "/confirm";
-                    ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
-                    Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
-                    Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
-                    Assert.assertEquals(true, read);
+                    if(exchange.getStatusCode().is2xxSuccessful()){
+                        //randomly pay
+                        log.info("randomly pay");
+                        Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
+                        String orderId = action.getOrderId(exchange.getHeaders());
+                        String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId + "/confirm";
+                        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
+                        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
+                        Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
+                        Assert.assertEquals(true, read);
+                    }
                 } else if (i >= 5 && i < 10) {
                     log.info("randomly replace");
-                    // randomly replace old order
+                    // randomly replace order, regardless it's state
                     String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
                     ParameterizedTypeReference<List<OrderDetail>> responseType = new ParameterizedTypeReference<>() {
                     };
                     ResponseEntity<List<OrderDetail>> exchange3 = action.restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
                     List<OrderDetail> body = exchange3.getBody();
                     if (body != null) {
-                        log.info("pending order found");
-                        List<OrderDetail> collect = body.stream().filter(e -> e.getPaymentStatus().equals(PaymentStatus.unpaid)).collect(Collectors.toList());
-                        int size = collect.size();
+                        int size = body.size();
                         if (size > 0) {
-                            OrderDetail orderDetail = collect.get(new Random().nextInt(size));
+                            OrderDetail orderDetail = body.get(new Random().nextInt(size));
                             String url8 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderDetail.getId();
                             ResponseEntity<OrderDetail> exchange8 = action.restTemplate.exchange(url8, HttpMethod.GET, action.getHttpRequest(defaultUserToken), OrderDetail.class);
                             Assert.assertEquals(HttpStatus.OK, exchange8.getStatusCode());
