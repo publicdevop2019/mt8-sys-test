@@ -97,7 +97,7 @@ public class ProductServiceTest {
         products.add(snapshotProduct);
         products.add(snapshotProduct);
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         HttpEntity<List<SnapshotProduct>> listHttpEntity = new HttpEntity<>(products, headers);
         Runnable runnable = new Runnable() {
             @Override
@@ -147,7 +147,7 @@ public class ProductServiceTest {
         HashMap<String, String> stringStringHashMap = new HashMap<>();
         stringStringHashMap.put(productId, "1");
         HttpHeaders headers2 = new HttpHeaders();
-        headers2.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         HttpEntity<Object> listHttpEntity = new HttpEntity<>(stringStringHashMap, headers2);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
@@ -208,7 +208,7 @@ public class ProductServiceTest {
         HashMap<String, String> stringStringHashMap = new HashMap<>();
         stringStringHashMap.put(productId, "1");
         HttpHeaders headers2 = new HttpHeaders();
-        headers2.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         HttpEntity<Object> listHttpEntity = new HttpEntity<>(stringStringHashMap, headers2);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
@@ -277,7 +277,7 @@ public class ProductServiceTest {
         stringStringHashMap.put(productId, "1");
         stringStringHashMap.put(productId2, "1");
         HttpHeaders headers2 = new HttpHeaders();
-        headers2.setBearerAuth(action.getClientCredentialResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         headers2.setContentType(MediaType.APPLICATION_JSON);
         String swappedProduct = null;
         try {

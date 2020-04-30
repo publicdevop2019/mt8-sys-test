@@ -20,6 +20,7 @@ import org.springframework.util.MultiValueMap;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Component
@@ -76,11 +77,11 @@ public class UserAction {
         testUser.add(resourceOwner3);
         testUser.add(resourceOwner4);
         testUser.add(resourceOwner5);
-        String defaultUserToken1 = getLoginTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
-        String defaultUserToken2 = getLoginTokenResponse(resourceOwner2.getEmail(), resourceOwner2.getPassword()).getBody().getValue();
-        String defaultUserToken3 = getLoginTokenResponse(resourceOwner3.getEmail(), resourceOwner3.getPassword()).getBody().getValue();
-        String defaultUserToken4 = getLoginTokenResponse(resourceOwner4.getEmail(), resourceOwner4.getPassword()).getBody().getValue();
-        String defaultUserToken5 = getLoginTokenResponse(resourceOwner5.getEmail(), resourceOwner5.getPassword()).getBody().getValue();
+        String defaultUserToken1 = getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
+        String defaultUserToken2 = getPasswordFlowTokenResponse(resourceOwner2.getEmail(), resourceOwner2.getPassword()).getBody().getValue();
+        String defaultUserToken3 = getPasswordFlowTokenResponse(resourceOwner3.getEmail(), resourceOwner3.getPassword()).getBody().getValue();
+        String defaultUserToken4 = getPasswordFlowTokenResponse(resourceOwner4.getEmail(), resourceOwner4.getPassword()).getBody().getValue();
+        String defaultUserToken5 = getPasswordFlowTokenResponse(resourceOwner5.getEmail(), resourceOwner5.getPassword()).getBody().getValue();
         getProfileId(defaultUserToken1);
         getProfileId(defaultUserToken2);
         getProfileId(defaultUserToken3);
@@ -128,7 +129,7 @@ public class UserAction {
         ResourceOwner randomResourceOwner = getRandomResourceOwner();
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse();
         registerResourceOwner(randomResourceOwner, registerTokenResponse.getBody().getValue());
-        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(randomResourceOwner.getEmail(), randomResourceOwner.getPassword());
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getPasswordFlowTokenResponse(randomResourceOwner.getEmail(), randomResourceOwner.getPassword());
         return loginTokenResponse.getBody().getValue();
     }
 
@@ -195,17 +196,17 @@ public class UserAction {
     }
 
     public String getDefaultRootToken() {
-        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(ROOT_USERNAME, ROOT_PASSWORD);
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getPasswordFlowTokenResponse(ROOT_USERNAME, ROOT_PASSWORD);
         return loginTokenResponse.getBody().getValue();
     }
 
     public String getDefaultAdminToken() {
-        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(ADMIN_USERNAME, ADMIN_PASSWORD);
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getPasswordFlowTokenResponse(ADMIN_USERNAME, ADMIN_PASSWORD);
         return loginTokenResponse.getBody().getValue();
     }
 
     public String getDefaultUserToken() {
-        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getLoginTokenResponse(USER_USERNAME, USER_PASSWORD);
+        ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getPasswordFlowTokenResponse(USER_USERNAME, USER_PASSWORD);
         return loginTokenResponse.getBody().getValue();
     }
 
@@ -224,6 +225,7 @@ public class UserAction {
     public HttpEntity getHttpRequest(String authorizeToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAcceptCharset(List.of(StandardCharsets.UTF_8));
         headers.setBearerAuth(authorizeToken);
         return new HttpEntity<>(headers);
     }
@@ -237,6 +239,7 @@ public class UserAction {
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAcceptCharset(List.of(StandardCharsets.UTF_8));
         headers.setBearerAuth(authorizeToken);
         return new HttpEntity<>(s, headers);
     }
@@ -290,15 +293,6 @@ public class UserAction {
         return productDetail;
     }
 
-    public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", grantType);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
-    }
-
     public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse() {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", CLIENT_CREDENTIALS);
@@ -341,18 +335,7 @@ public class UserAction {
     }
 
 
-    public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", grantType);
-        params.add("username", username);
-        params.add("password", userPwd);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
-    }
-
-    public ResponseEntity<DefaultOAuth2AccessToken> getLoginTokenResponse(String username, String userPwd) {
+    public ResponseEntity<DefaultOAuth2AccessToken> getPasswordFlowTokenResponse(String username, String userPwd) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", PASSWORD);
         params.add("username", username);
@@ -363,55 +346,7 @@ public class UserAction {
         return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
-    public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken, String response_type, String state, String redirectUri) {
-        String url = proxyUrl + AUTH_SVC + "/authorize";
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("response_type", response_type);
-        params.add("client_id", clientId);
-        params.add("state", state);
-        params.add("redirect_uri", redirectUri);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(bearerToken);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-    }
-
-    public ResponseEntity<String> getAuthorizationCodeResponseForClient(String clientId, String bearerToken) {
-        String url = proxyUrl + AUTH_SVC + "/authorize";
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("response_type", AUTHORIZE_RESPONSE_TYPE);
-        params.add("client_id", clientId);
-        params.add("state", AUTHORIZE_STATE);
-        params.add("redirect_uri", REDIRECT_URI);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(bearerToken);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-    }
-
-    public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret, String grantType) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", grantType);
-        params.add("code", code);
-        params.add("redirect_uri", redirectUri);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
-    }
-
-    public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationTokenForClient(String code, String redirectUri, String clientId, String clientSecret) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", AUTHORIZATION_CODE);
-        params.add("code", code);
-        params.add("redirect_uri", redirectUri);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
-    }
-
-    public ResponseEntity<DefaultOAuth2AccessToken> getClientCredentialResponse(String clientId, String clientSecret) {
+    public ResponseEntity<DefaultOAuth2AccessToken> getClientCredentialFlowResponse(String clientId, String clientSecret) {
         String url = UserAction.proxyUrl + AUTH_SVC + "/oauth/token";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", CLIENT_CREDENTIALS);

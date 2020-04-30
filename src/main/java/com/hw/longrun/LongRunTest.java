@@ -57,7 +57,7 @@ public class LongRunTest {
     @Ignore
     public void long_running_job_create_order_randomly_but_not_pay() {
         ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
-        String defaultUserToken = action.getLoginTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
+        String defaultUserToken = action.getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
@@ -70,7 +70,7 @@ public class LongRunTest {
     @Ignore
     public void long_running_job_create_order_randomly_pay_randomly() {
         ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
-        String defaultUserToken = action.getLoginTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
+        String defaultUserToken = action.getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
@@ -93,7 +93,7 @@ public class LongRunTest {
     public void long_running_job_create_order_randomly_pay_randomly_replace_randomly_after_sometime_validate_order_storage_actually_storage_with_sales() {
         // randomly pick test user
         ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
-        String defaultUserToken = action.getLoginTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
+        String defaultUserToken = action.getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
         String profileId1 = action.getProfileId(defaultUserToken);
 
 
@@ -166,7 +166,7 @@ public class LongRunTest {
                 integers4.add(200);
                 integers4.add(500);
                 ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
-                String defaultUserToken = action.getLoginTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
+                String defaultUserToken = action.getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
                 String profileId1 = action.getProfileId(defaultUserToken);
                 OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
                 String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
