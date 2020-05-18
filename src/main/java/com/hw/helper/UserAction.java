@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.entity.FailedRecord;
 import com.hw.repo.FailedRecordRepo;
+import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.Description;
 import org.springframework.beans.BeanUtils;
@@ -49,6 +50,9 @@ public class UserAction {
     public static String AUTH_SVC = "/auth-svc";
     public static String PRODUCT_SVC = "/product-svc";
     public static String PROFILE_SVC = "/profile-svc";
+    public static String BBS_ID = "bbs-ui";
+    public static String BBS_SVC = "/bbs-svc";
+    public static String BBS_REDIRECT_URI = "http://localhost:3000/account";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
     //        public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
@@ -361,5 +365,70 @@ public class UserAction {
         Integer start = s.indexOf("product_id");
         String searchStr = s.substring(start);
         return searchStr.substring(searchStr.indexOf('=') + 1, searchStr.indexOf('&'));
+    }
+
+    public String getRandomStr() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    public String getBbsRootToken() {
+        return getAuthorizationCodeTokenForUserAndClient(ROOT_USERNAME, ROOT_PASSWORD, BBS_ID, BBS_REDIRECT_URI);
+    }
+
+    public String getAuthorizationCodeTokenForUserAndClient(String username, String pwd, String clientId, String redirectUri) {
+        ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = getPasswordFlowTokenResponse(username, pwd);
+        String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
+        ResponseEntity<String> codeResp = getCodeResp(clientId, accessToken, redirectUri);
+        String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
+
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(code, redirectUri, clientId);
+
+        DefaultOAuth2AccessToken body = authorizationToken.getBody();
+        return body.getValue();
+    }
+
+    private ResponseEntity<String> getCodeResp(String clientId, String bearerToken, String redirectUri) {
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/authorize";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("response_type", AUTHORIZE_RESPONSE_TYPE);
+        params.add("client_id", clientId);
+        params.add("state", AUTHORIZE_STATE);
+        params.add("redirect_uri", redirectUri);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(bearerToken);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+    }
+
+    private ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationToken(String code, String redirect_uri, String clientId) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", AUTHORIZATION_CODE);
+        params.add("code", code);
+        params.add("redirect_uri", redirect_uri);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, CLIENT_SECRET);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+    public String createPost(String topic) {
+        CreatePostCommand createPostCommand = new CreatePostCommand();
+        createPostCommand.setTopic(topic);
+        createPostCommand.setContent(getRandomStr());
+        createPostCommand.setTitle(getRandomStr());
+        String s = null;
+        try {
+            s = mapper.writeValueAsString(createPostCommand);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        String s1 = getBbsRootToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<String> request = new HttpEntity<>(s, headers);
+        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts";
+        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        return exchange.getHeaders().get("Location").get(0);
     }
 }
