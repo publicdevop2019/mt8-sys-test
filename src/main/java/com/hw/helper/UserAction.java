@@ -375,6 +375,10 @@ public class UserAction {
         return getAuthorizationCodeTokenForUserAndClient(ROOT_USERNAME, ROOT_PASSWORD, BBS_ID, BBS_REDIRECT_URI);
     }
 
+    public String getBbsAdminToken() {
+        return getAuthorizationCodeTokenForUserAndClient(ADMIN_USERNAME, ADMIN_PASSWORD, BBS_ID, BBS_REDIRECT_URI);
+    }
+
     public String getAuthorizationCodeTokenForUserAndClient(String username, String pwd, String clientId, String redirectUri) {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = getPasswordFlowTokenResponse(username, pwd);
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
@@ -412,6 +416,11 @@ public class UserAction {
     }
 
     public String createPost(String topic) {
+        String s1 = getBbsRootToken();
+        return createPost(topic, s1);
+    }
+
+    public String createPost(String topic, String bearerToken) {
         CreatePostCommand createPostCommand = new CreatePostCommand();
         createPostCommand.setTopic(topic);
         createPostCommand.setContent(getRandomStr());
@@ -422,13 +431,35 @@ public class UserAction {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        String s1 = getBbsRootToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(s1);
+        headers.setBearerAuth(bearerToken);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
         String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts";
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         return exchange.getHeaders().get("Location").get(0);
+    }
+
+    public void createCommentForPost(String post) {
+        String s1 = getBbsRootToken();
+        createCommentForPost(post, s1);
+    }
+
+    public void createCommentForPost(String post, String bearerToken) {
+        String randomStr2 = getRandomStr();
+        CreateCommentCommand createCommentCommand = new CreateCommentCommand();
+        createCommentCommand.setContent(randomStr2);
+        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/comments";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(bearerToken);
+        String s = null;
+        try {
+            s = mapper.writeValueAsString(createCommentCommand);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        HttpEntity<String> request = new HttpEntity<>(s, headers);
+        ResponseEntity<String> exchange = restTemplate.exchange(url2, HttpMethod.POST, request, String.class);
     }
 }
