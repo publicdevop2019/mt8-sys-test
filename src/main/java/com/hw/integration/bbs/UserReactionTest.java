@@ -48,7 +48,21 @@ public class UserReactionTest {
         ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
     }
-
+    @Test
+    public void add_like_then_dislike(){
+        String randomStr = action.getRandomStr();
+        String post = action.createPost(randomStr);
+        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/likes";
+        String s1 = action.getBbsRootToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        action.restTemplate.exchange(url2, HttpMethod.POST, request, String.class);
+        String url3 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/dislikes";
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url3, HttpMethod.POST, request, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
+    }
     @Test
     public void add_dislike() {
         String randomStr = action.getRandomStr();
