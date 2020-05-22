@@ -36,6 +36,32 @@ public class UserReactionTest {
     };
 
     @Test
+    public void add_report() {
+        String randomStr = action.getRandomStr();
+        String post = action.createPost(randomStr);
+        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/reports";
+        String s1 = action.getBbsRootToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.POST, request, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+    }
+    @Test
+    public void add_notInterested() {
+        String randomStr = action.getRandomStr();
+        String post = action.createPost(randomStr);
+        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/notInterested";
+        String s1 = action.getBbsRootToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.POST, request, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+    }
+    @Test
     public void add_like() {
         String randomStr = action.getRandomStr();
         String post = action.createPost(randomStr);
