@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -69,8 +68,7 @@ public class UserAction {
     public UserAction() {
     }
 
-    @PostConstruct
-    private void registerTestUser() {
+    public void initTestUser() {
         ResourceOwner resourceOwner1 = registerResourceOwner();
         ResourceOwner resourceOwner2 = registerResourceOwner();
         ResourceOwner resourceOwner3 = registerResourceOwner();

@@ -1,6 +1,7 @@
 package com.hw;
 
 import com.hw.entity.TestResult;
+import com.hw.helper.UserAction;
 import com.hw.longrun.LongRunTest;
 import com.hw.repo.TestResultRepo;
 import lombok.extern.slf4j.Slf4j;
@@ -14,14 +15,23 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 @Slf4j
-@SpringBootApplication
+//@SpringBootApplication
 @EnableScheduling
 public class LongTestRunner {
     @Autowired
     TestResultRepo testResultRepo;
+
+    @Autowired
+    UserAction userAction;
+
+    @PostConstruct
+    public void setUp() {
+        userAction.initTestUser();
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(LongTestRunner.class, args);
