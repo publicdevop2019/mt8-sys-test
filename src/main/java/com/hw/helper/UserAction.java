@@ -69,26 +69,28 @@ public class UserAction {
     }
 
     public void initTestUser() {
-        ResourceOwner resourceOwner1 = registerResourceOwner();
-        ResourceOwner resourceOwner2 = registerResourceOwner();
-        ResourceOwner resourceOwner3 = registerResourceOwner();
-        ResourceOwner resourceOwner4 = registerResourceOwner();
-        ResourceOwner resourceOwner5 = registerResourceOwner();
-        testUser.add(resourceOwner1);
-        testUser.add(resourceOwner2);
-        testUser.add(resourceOwner3);
-        testUser.add(resourceOwner4);
-        testUser.add(resourceOwner5);
-        String defaultUserToken1 = getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
-        String defaultUserToken2 = getPasswordFlowTokenResponse(resourceOwner2.getEmail(), resourceOwner2.getPassword()).getBody().getValue();
-        String defaultUserToken3 = getPasswordFlowTokenResponse(resourceOwner3.getEmail(), resourceOwner3.getPassword()).getBody().getValue();
-        String defaultUserToken4 = getPasswordFlowTokenResponse(resourceOwner4.getEmail(), resourceOwner4.getPassword()).getBody().getValue();
-        String defaultUserToken5 = getPasswordFlowTokenResponse(resourceOwner5.getEmail(), resourceOwner5.getPassword()).getBody().getValue();
-        getProfileId(defaultUserToken1);
-        getProfileId(defaultUserToken2);
-        getProfileId(defaultUserToken3);
-        getProfileId(defaultUserToken4);
-        getProfileId(defaultUserToken5);
+        if (testUser.size() == 0) {
+            ResourceOwner resourceOwner1 = registerResourceOwner();
+            ResourceOwner resourceOwner2 = registerResourceOwner();
+            ResourceOwner resourceOwner3 = registerResourceOwner();
+            ResourceOwner resourceOwner4 = registerResourceOwner();
+            ResourceOwner resourceOwner5 = registerResourceOwner();
+            testUser.add(resourceOwner1);
+            testUser.add(resourceOwner2);
+            testUser.add(resourceOwner3);
+            testUser.add(resourceOwner4);
+            testUser.add(resourceOwner5);
+            String defaultUserToken1 = getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
+            String defaultUserToken2 = getPasswordFlowTokenResponse(resourceOwner2.getEmail(), resourceOwner2.getPassword()).getBody().getValue();
+            String defaultUserToken3 = getPasswordFlowTokenResponse(resourceOwner3.getEmail(), resourceOwner3.getPassword()).getBody().getValue();
+            String defaultUserToken4 = getPasswordFlowTokenResponse(resourceOwner4.getEmail(), resourceOwner4.getPassword()).getBody().getValue();
+            String defaultUserToken5 = getPasswordFlowTokenResponse(resourceOwner5.getEmail(), resourceOwner5.getPassword()).getBody().getValue();
+            getProfileId(defaultUserToken1);
+            getProfileId(defaultUserToken2);
+            getProfileId(defaultUserToken3);
+            getProfileId(defaultUserToken4);
+            getProfileId(defaultUserToken5);
+        }
     }
 
     public ResourceOwner registerResourceOwner() {

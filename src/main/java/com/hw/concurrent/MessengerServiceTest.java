@@ -7,10 +7,7 @@ import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.ResourceOwner;
 import com.hw.helper.UserAction;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -54,6 +51,7 @@ public class MessengerServiceTest {
 
     @Before
     public void setUp() {
+        action.initTestUser();
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
     }
@@ -109,6 +107,7 @@ public class MessengerServiceTest {
     }
 
     @Test
+    @Ignore
     public void concurrent_reset_pwd_for_dif_user() {
 
     }

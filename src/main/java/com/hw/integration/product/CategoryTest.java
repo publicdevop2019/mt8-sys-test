@@ -36,7 +36,7 @@ public class CategoryTest {
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            action.saveResult(description,uuid);
+            action.saveResult(description, uuid);
             log.error("test failed, method {}, uuid {}", description.getMethodName(), uuid);
         }
     };
@@ -45,6 +45,27 @@ public class CategoryTest {
     public void setUp() {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+    }
+
+    @Test
+    public void shop_create_category() {
+        Category randomCategory = action.getRandomCategory();
+        String s = null;
+        try {
+            s = mapper.writeValueAsString(randomCategory);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        String s1 = action.getDefaultAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<String> request = new HttpEntity<>(s, headers);
+
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/categories";
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
     }
 
     @Test
@@ -71,8 +92,6 @@ public class CategoryTest {
 
         String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/categories";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-        Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
 
         Category randomCategory2 = action.getRandomCategory();
         String s21 = null;
