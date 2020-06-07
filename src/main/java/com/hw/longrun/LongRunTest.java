@@ -30,9 +30,10 @@ import static org.junit.Assert.assertTrue;
 @SpringBootTest
 /**
  * create clean env before test
- * UPDATE product_simple SET order_storage = 1000;
- * UPDATE product_simple SET actual_storage = 500;
- * UPDATE product_simple SET sales = NULL ;
+ * UPDATE product_detail SET order_storage = 1000;
+ * UPDATE product_detail SET actual_storage = 500;
+ * UPDATE product_detail SET sales = NULL ;
+ * DELETE FROM change_record ;
  */
 public class LongRunTest {
     @Autowired

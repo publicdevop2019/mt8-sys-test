@@ -72,7 +72,6 @@ public class CategoryTest {
     public void shop_get_all_category() {
         ResponseEntity<List<Category>> categories = action.getCategories();
         Assert.assertEquals(HttpStatus.OK, categories.getStatusCode());
-        Assert.assertNotEquals(0, categories.getBody().size());
     }
 
     @Test

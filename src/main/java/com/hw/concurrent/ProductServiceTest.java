@@ -237,11 +237,11 @@ public class ProductServiceTest {
     /**
      * if lock is pessimistic then deadlock exception will detected
      */
-    @Test
-    public void create_two_product_then_concurrent_decrease_diff_product_concurrent() {
-        Integer initial = 1000;
+    public void create_three_product_then_concurrent_decrease_diff_product_concurrent(Integer initialStorage, Integer threads) {
+        Integer initial = initialStorage;
         AtomicInteger iniOrderStorage = new AtomicInteger(initial);
         AtomicInteger iniOrderStorage2 = new AtomicInteger(initial);
+        AtomicInteger iniOrderStorage3 = new AtomicInteger(initial);
         String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=";
         ResponseEntity<List<Category>> categories = action.getCategories();
         List<Category> body = categories.getBody();
@@ -249,13 +249,17 @@ public class ProductServiceTest {
         Category category = body.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
         ProductDetail randomProduct2 = action.getRandomProduct(category.getTitle());
+        ProductDetail randomProduct3 = action.getRandomProduct(category.getTitle());
         randomProduct.setOrderStorage(iniOrderStorage.get());
         randomProduct2.setOrderStorage(iniOrderStorage2.get());
+        randomProduct3.setOrderStorage(iniOrderStorage3.get());
         String s = null;
         String s2 = null;
+        String s3 = null;
         try {
             s = mapper.writeValueAsString(randomProduct);
             s2 = mapper.writeValueAsString(randomProduct2);
+            s3 = mapper.writeValueAsString(randomProduct3);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -265,30 +269,34 @@ public class ProductServiceTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
         HttpEntity<String> request2 = new HttpEntity<>(s2, headers);
+        HttpEntity<String> request3 = new HttpEntity<>(s3, headers);
 
         String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.POST, request2, String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url, HttpMethod.POST, request3, String.class);
         String productId = exchange.getHeaders().getLocation().toString();
         String productId2 = exchange2.getHeaders().getLocation().toString();
+        String productId3 = exchange3.getHeaders().getLocation().toString();
 
-        Integer threadCount = 10;
+        Integer threadCount = threads;
         HashMap<String, String> stringStringHashMap = new HashMap<>();
         stringStringHashMap.put(productId, "1");
         stringStringHashMap.put(productId2, "1");
+        stringStringHashMap.put(productId3, "1");
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         headers2.setContentType(MediaType.APPLICATION_JSON);
         String swappedProduct = null;
+        String replace = null;
         try {
             swappedProduct = mapper.writeValueAsString(stringStringHashMap);
+            replace = swappedProduct.replace(productId3, "temp").replace(productId, productId3).replace("temp", productId);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        String[] split = swappedProduct.replace("{", "").replace("}", "").split(",");
-        String s3 = "{"+split[1] + "," + split[0]+"}";
         HttpEntity<String> listHttpEntity = new HttpEntity<>(swappedProduct, headers2);
-        HttpEntity<String> listHttpEntity2 = new HttpEntity<>(s3, headers2);
+        HttpEntity<String> listHttpEntity2 = new HttpEntity<>(replace, headers2);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
         integers.add(400);
@@ -300,6 +308,7 @@ public class ProductServiceTest {
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                     iniOrderStorage2.decrementAndGet();
+                    iniOrderStorage3.decrementAndGet();
                 }
                 Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
             }
@@ -311,6 +320,7 @@ public class ProductServiceTest {
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                     iniOrderStorage2.decrementAndGet();
+                    iniOrderStorage3.decrementAndGet();
                 }
                 Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
             }
@@ -324,55 +334,24 @@ public class ProductServiceTest {
             assertConcurrent("", runnables, 30000);
             // get product order count
             ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
-            ResponseEntity<ProductDetail> exchange3 = action.restTemplate.exchange(url + "/" + productId2, HttpMethod.GET, null, ProductDetail.class);
+            ResponseEntity<ProductDetail> exchange4 = action.restTemplate.exchange(url + "/" + productId2, HttpMethod.GET, null, ProductDetail.class);
             assertTrue("remain storage should be " + iniOrderStorage.get(), exchange1.getBody().getOrderStorage().equals(iniOrderStorage.get()));
-            assertTrue("remain storage should be " + iniOrderStorage2.get(), exchange3.getBody().getOrderStorage().equals(iniOrderStorage2.get()));
-            log.info("failed request number is {}", threadCount - (initial - iniOrderStorage.get()));
+            assertTrue("remain storage should be " + iniOrderStorage2.get(), exchange4.getBody().getOrderStorage().equals(iniOrderStorage2.get()));
+            log.info("failed request number is {}", threadCount*2 - (initial - iniOrderStorage.get()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-//
-//    @Test
-//    public void transactionalDecreaseEnough() {
-//        String productId1 = "0";
-//        String productId2 = "1";
-//        Integer decreaseProd1By = 1;
-//        Integer decreaseProd2By = 1;
-//        Integer iniOrderStorage1 = productDetailRepo.findById(Long.parseLong(productId1)).get().getOrderStorage();
-//        Integer iniOrderStorage2 = productDetailRepo.findById(Long.parseLong(productId2)).get().getOrderStorage();
-//        Integer expected1 = iniOrderStorage1 - decreaseProd1By;
-//        Integer expected2 = iniOrderStorage2 - decreaseProd1By;
-//        HashMap<String, String> stringStringHashMap = new HashMap<>();
-//        stringStringHashMap.put(productId1, String.valueOf(decreaseProd1By));
-//        stringStringHashMap.put(productId2, String.valueOf(decreaseProd2By));
-//        try {
-//
-//            productService.decreaseOrderStorageForMappedProducts.accept(stringStringHashMap);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        assertTrue("storage should not match", productDetailRepo.findById(Long.parseLong(productId1)).get().getOrderStorage().equals(expected1));
-//        assertTrue("storage should not match", productDetailRepo.findById(Long.parseLong(productId2)).get().getOrderStorage().equals(expected2));
-//    }
-//
-//    @Test
-//    public void transactionalDecreaseNotEnough() {
-//        String productId1 = "0";
-//        String productId2 = "1";
-//        Integer iniOrderStorage1 = productDetailRepo.findById(Long.parseLong(productId1)).get().getOrderStorage();
-//        Integer iniOrderStorage2 = productDetailRepo.findById(Long.parseLong(productId2)).get().getOrderStorage();
-//        HashMap<String, String> stringStringHashMap = new HashMap<>();
-//        stringStringHashMap.put(productId1, String.valueOf(iniOrderStorage1 - 1));
-//        stringStringHashMap.put(productId2, String.valueOf(iniOrderStorage2 + 1));
-//        try {
-//            productServiceTransactional.decreaseOrderStorageForMappedProducts(stringStringHashMap);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        assertTrue("storage should not change", productDetailRepo.findById(Long.parseLong(productId1)).get().getOrderStorage().equals(iniOrderStorage1));
-//        assertTrue("storage should not change", productDetailRepo.findById(Long.parseLong(productId2)).get().getOrderStorage().equals(iniOrderStorage2));
-//    }
+
+    @Test
+    public void transactionalDecreaseEnough() {
+        create_three_product_then_concurrent_decrease_diff_product_concurrent(50, 30);
+    }
+
+    @Test
+    public void transactionalDecreaseNotEnough() {
+        create_three_product_then_concurrent_decrease_diff_product_concurrent(100, 30);
+    }
 
     /**
      * copied from https://www.planetgeek.ch/2009/08/25/how-to-find-a-concurrency-bug-with-java/
@@ -416,29 +395,4 @@ public class ProductServiceTest {
         assertTrue(message + "failed with exception(s)" + exceptions, exceptions.isEmpty());
     }
 
-    private ProductDetail getStoredProductDetail() {
-        OptionItem stored1 = new OptionItem("value1", "-8");
-        OptionItem stored2 = new OptionItem("value2", "+5");
-        OptionItem stored3 = new OptionItem("value1", "+10");
-        ProductOption storedAddOn1 = new ProductOption();
-        storedAddOn1.setTitle("option1");
-        storedAddOn1.setOptions(new ArrayList<>());
-        storedAddOn1.getOptions().add(stored1);
-        storedAddOn1.getOptions().add(stored2);
-        ProductOption storedAddOn2 = new ProductOption();
-        storedAddOn2.setTitle("option2");
-        storedAddOn2.setOptions(new ArrayList<>());
-        storedAddOn2.getOptions().add(stored3);
-
-
-        ProductDetail productDetail = new ProductDetail();
-        productDetail.setActualStorage(50);
-        productDetail.setOrderStorage(50);
-        productDetail.setPrice(BigDecimal.valueOf(100));
-        productDetail.setSelectedOptions(new ArrayList<>());
-
-        productDetail.getSelectedOptions().add(storedAddOn1);
-        productDetail.getSelectedOptions().add(storedAddOn2);
-        return productDetail;
-    }
 }
