@@ -72,10 +72,10 @@ public class ProductTest {
 
     @Test
     public void shop_create_product() {
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
         int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
+        CategorySummaryCardRepresentation category = body.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
 
         String s = null;
@@ -98,10 +98,10 @@ public class ProductTest {
 
     @Test
     public void shop_update_product() {
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
         int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
+        CategorySummaryCardRepresentation category = body.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
 
         String s = null;
@@ -138,10 +138,10 @@ public class ProductTest {
 
     @Test
     public void shop_update_product_w_wrong_field() {
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
         int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
+        CategorySummaryCardRepresentation category = body.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
 
         String s = null;
@@ -182,10 +182,10 @@ public class ProductTest {
 
     @Test
     public void shop_update_product_storage() {
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
         int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
+        CategorySummaryCardRepresentation category = body.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
 
         String s = null;
@@ -223,10 +223,10 @@ public class ProductTest {
 
     @Test
     public void shop_delete_product() {
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
         int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
+        CategorySummaryCardRepresentation category = body.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
 
         String s = null;

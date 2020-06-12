@@ -3,7 +3,6 @@ package com.hw;
 import com.hw.entity.TestResult;
 import com.hw.helper.UserAction;
 import com.hw.longrun.LongRunTest;
-import com.hw.repo.TestResultRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.junit.runner.JUnitCore;
@@ -11,7 +10,6 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -22,8 +20,8 @@ import javax.annotation.PreDestroy;
 //@SpringBootApplication
 @EnableScheduling
 public class LongTestRunner {
-    @Autowired
-    TestResultRepo testResultRepo;
+//    @Autowired
+//    TestResultRepo testResultRepo;
 
     @Autowired
     UserAction userAction;
@@ -43,7 +41,7 @@ public class LongTestRunner {
         TestResult testResult = new TestResult();
         testResult.setStatus("just started");
         StringBuilder stringBuilder = new StringBuilder();
-        testResultRepo.save(testResult);
+//        testResultRepo.save(testResult);
         Result result = JUnitCore.runClasses(LongRunTest.class);
         for (Failure failure : result.getFailures()) {
             log.error(failure.toString());
@@ -62,7 +60,7 @@ public class LongTestRunner {
             testResult.setStatus("failed");
             log.error("Long run tests failed, check log");
         }
-        testResultRepo.save(testResult);
+//        testResultRepo.save(testResult);
     }
 
     @PreDestroy

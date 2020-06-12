@@ -4,13 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.entity.FailedRecord;
-import com.hw.repo.FailedRecordRepo;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.Description;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -26,8 +23,8 @@ import java.util.*;
 @Component
 @Slf4j
 public class UserAction {
-    @Autowired
-    FailedRecordRepo failedRecordRepo;
+    //    @Autowired
+//    FailedRecordRepo failedRecordRepo;
     public List<ResourceOwner> testUser = new ArrayList<>();
     public static String PASSWORD = "password";
     public static String CLIENT_CREDENTIALS = "client_credentials";
@@ -59,10 +56,10 @@ public class UserAction {
     public static String PROXY_URL_TOKEN = proxyUrl + AUTH_SVC + "/oauth/token";
 
     public void saveResult(Description description, UUID uuid) {
-        FailedRecord failedRecord = new FailedRecord();
-        failedRecord.setFailedTestMethod(description.getMethodName());
-        failedRecord.setUuid(uuid.toString());
-        failedRecordRepo.save(failedRecord);
+//        FailedRecord failedRecord = new FailedRecord();
+//        failedRecord.setFailedTestMethod(description.getMethodName());
+//        failedRecord.setUuid(uuid.toString());
+//        failedRecordRepo.save(failedRecord);
     }
 
     public UserAction() {
@@ -98,6 +95,12 @@ public class UserAction {
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse();
         registerResourceOwner(randomResourceOwner, registerTokenResponse.getBody().getValue());
         return randomResourceOwner;
+    }
+
+    public String getOrderId(String jwt, String profileId) {
+        String url2 = proxyUrl + PROFILE_SVC + "/profiles/" + profileId + "/orders/id";
+        ResponseEntity<String> exchange = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(jwt), String.class);
+        return exchange.getHeaders().getLocation().toString();
     }
 
     public OrderDetail createOrderDetailForUser(String defaultUserToken, String profileId1) {
@@ -138,10 +141,10 @@ public class UserAction {
     }
 
     public ResponseEntity<List<ProductSimple>> getRandomProducts() {
-        ResponseEntity<List<Category>> categories = getCategories();
-        List<Category> body = categories.getBody();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = getCategories();
+        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
         int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
+        CategorySummaryCardRepresentation category = body.get(i);
         String url = proxyUrl + PRODUCT_SVC + "/categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
         ParameterizedTypeReference<List<ProductSimple>> responseType = new ParameterizedTypeReference<>() {
         };
@@ -192,11 +195,9 @@ public class UserAction {
         return snapshotProduct;
     }
 
-    public ResponseEntity<List<Category>> getCategories() {
+    public ResponseEntity<CategorySummaryCustomerRepresentation> getCategories() {
         String url = proxyUrl + PRODUCT_SVC + "/categories";
-        ParameterizedTypeReference<List<Category>> responseType = new ParameterizedTypeReference<>() {
-        };
-        return restTemplate.exchange(url, HttpMethod.GET, null, responseType);
+        return restTemplate.exchange(url, HttpMethod.GET, null, CategorySummaryCustomerRepresentation.class);
     }
 
     public String getDefaultRootToken() {

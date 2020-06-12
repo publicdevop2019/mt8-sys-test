@@ -1,17 +1,13 @@
 package com.hw;
 
 import com.hw.entity.TestResult;
-import com.hw.helper.UserAction;
-import com.hw.repo.TestResultRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -21,8 +17,8 @@ import javax.annotation.PreDestroy;
 @SpringBootApplication
 @EnableScheduling
 public class TestRunner {
-    @Autowired
-    TestResultRepo testResultRepo;
+//    @Autowired
+//    TestResultRepo testResultRepo;
 
     public static void main(String[] args) {
         SpringApplication.run(TestRunner.class, args);
@@ -34,7 +30,7 @@ public class TestRunner {
         TestResult testResult = new TestResult();
         testResult.setStatus("just started");
         StringBuilder stringBuilder = new StringBuilder();
-        testResultRepo.save(testResult);
+//        testResultRepo.save(testResult);
         Result result = JUnitCore.runClasses(IntegrationTestSuite.class);
         for (Failure failure : result.getFailures()) {
             log.error(failure.toString());
@@ -53,8 +49,9 @@ public class TestRunner {
             testResult.setStatus("failed");
             log.error("Tests failed, check log");
         }
-        testResultRepo.save(testResult);
+//        testResultRepo.save(testResult);
     }
+
     @PreDestroy
     public void onExit() {
         log.info("Closing application..");

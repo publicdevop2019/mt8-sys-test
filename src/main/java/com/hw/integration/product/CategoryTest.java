@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.Category;
+import com.hw.helper.CategorySummaryCustomerRepresentation;
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,7 @@ public class CategoryTest {
 
     @Test
     public void shop_get_all_category() {
-        ResponseEntity<List<Category>> categories = action.getCategories();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
         Assert.assertEquals(HttpStatus.OK, categories.getStatusCode());
     }
 

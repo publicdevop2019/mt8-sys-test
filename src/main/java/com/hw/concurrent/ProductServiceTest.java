@@ -121,11 +121,11 @@ public class ProductServiceTest {
     public void create_product_then_concurrent_decrease() {
         AtomicInteger iniOrderStorage = new AtomicInteger(1000);
         String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=";
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
-        int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
-        ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> categoryList = categories.getBody().getCategoryList();
+        int i = new Random().nextInt(categoryList.size());
+        CategorySummaryCardRepresentation categorySummaryCardRepresentation = categoryList.get(i);
+        ProductDetail randomProduct = action.getRandomProduct(categorySummaryCardRepresentation.getTitle());
         randomProduct.setOrderStorage(iniOrderStorage.get());
         String s = null;
         try {
@@ -181,11 +181,11 @@ public class ProductServiceTest {
         Integer iniOrderStorage = 1000;
         String s2 = UUID.randomUUID().toString();
         String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=" + s2;
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
-        int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
-        ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> categoryList = categories.getBody().getCategoryList();
+        int i = new Random().nextInt(categoryList.size());
+        CategorySummaryCardRepresentation categorySummaryCardRepresentation = categoryList.get(i);
+        ProductDetail randomProduct = action.getRandomProduct(categorySummaryCardRepresentation.getTitle());
         randomProduct.setOrderStorage(iniOrderStorage);
         String s = null;
         try {
@@ -243,10 +243,10 @@ public class ProductServiceTest {
         AtomicInteger iniOrderStorage2 = new AtomicInteger(initial);
         AtomicInteger iniOrderStorage3 = new AtomicInteger(initial);
         String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=";
-        ResponseEntity<List<Category>> categories = action.getCategories();
-        List<Category> body = categories.getBody();
-        int i = new Random().nextInt(body.size());
-        Category category = body.get(i);
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        List<CategorySummaryCardRepresentation> categoryList = categories.getBody().getCategoryList();
+        int i = new Random().nextInt(categoryList.size());
+        CategorySummaryCardRepresentation category = categoryList.get(i);
         ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
         ProductDetail randomProduct2 = action.getRandomProduct(category.getTitle());
         ProductDetail randomProduct3 = action.getRandomProduct(category.getTitle());

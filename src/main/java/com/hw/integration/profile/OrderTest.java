@@ -51,11 +51,12 @@ public class OrderTest {
     }
 
     @Test
-    public void shop_create_an_order_but_not_confrim() {
+    public void shop_create_an_order_but_not_confirm() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
+        String orderId = action.getOrderId(defaultUserToken, profileId1);
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
@@ -66,12 +67,12 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
+        String preorderId = action.getOrderId(defaultUserToken, profileId1);
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-        String orderId = action.getOrderId(exchange.getHeaders());
-        String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId + "/confirm";
+        String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId + "/confirm";
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
         Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
@@ -83,8 +84,8 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-
-        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
+        String preorderId = action.getOrderId(defaultUserToken, profileId1);
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
@@ -93,9 +94,8 @@ public class OrderTest {
         BeanUtils.copyProperties(action.getRandomAddress(), snapshotAddress);
         orderDetailForUser.setAddress(snapshotAddress);
 
-        String orderId = action.getOrderId(exchange.getHeaders());
-        String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + orderId+"/replace";
-        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken,orderDetailForUser), String.class);
+        String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId + "/replace";
+        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
     }
 
@@ -104,11 +104,12 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
-        action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        String preorderId = action.getOrderId(defaultUserToken, profileId1);
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
-        Assert.assertNotNull(exchange7.getHeaders().getLocation().toString());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange7.getStatusCode());
     }
 
     @Test
@@ -127,10 +128,10 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
+        String preorderId = action.getOrderId(defaultUserToken, profileId1);
+        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
-        String orderId = action.getOrderId(exchange.getHeaders());
-        ResponseEntity<OrderDetail> exchange2 = action.restTemplate.exchange(url3 + "/" + orderId, HttpMethod.GET, action.getHttpRequest(defaultUserToken), OrderDetail.class);
+        ResponseEntity<OrderDetail> exchange2 = action.restTemplate.exchange(url3, HttpMethod.GET, action.getHttpRequest(defaultUserToken), OrderDetail.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
         Assert.assertNotNull(exchange2.getBody());
 

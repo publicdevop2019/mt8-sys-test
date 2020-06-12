@@ -2,27 +2,25 @@ package com.hw.entity;
 
 import lombok.Data;
 
-import javax.persistence.*;
-
-@Entity
+//@Entity
 @Data
-@Table(name = "TestResult")
-@SequenceGenerator(name = "entityId_gen", sequenceName = "entityId_seq", initialValue = 1)
+//@Table(name = "TestResult")
+//@SequenceGenerator(name = "entityId_gen", sequenceName = "entityId_seq", initialValue = 1)
 public class TestResult {
-    @Id
-    @GeneratedValue(generator = "entityId_gen")
+    //    @Id
+//    @GeneratedValue(generator = "entityId_gen")
     private Long id;
-    @Column
+    //    @Column
     private Integer testExecuted;
-    @Column
+    //    @Column
     private Integer ignored;
-    @Column
+    //    @Column
     private Integer failed;
-    @Column
+    //    @Column
     private Long elapse;
-    @Column
+    //    @Column
     private String status;
-    @Column(length = 100000)
+    //    @Column(length = 100000)
     private String failedMsg;
 
 }
