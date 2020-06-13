@@ -131,6 +131,28 @@ public class UserAction {
         orderDetail.setPaymentAmt(reduce);
         return orderDetail;
     }
+    public OrderDetail createBizOrderForUserAndProduct(String defaultUserToken, String profileId1, ProductSimple productSimple) {
+        String url = proxyUrl + PRODUCT_SVC + "/productDetails/" + productSimple.getId();
+        ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
+        ProductDetail body = exchange.getBody();
+        SnapshotProduct snapshotProduct = selectProduct(body);
+        String url2 = proxyUrl + PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
+        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+
+        ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
+        };
+        ResponseEntity<List<SnapshotProduct>> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), responseType);
+
+        OrderDetail orderDetail = new OrderDetail();
+        SnapshotAddress snapshotAddress = new SnapshotAddress();
+        BeanUtils.copyProperties(getRandomAddress(), snapshotAddress);
+        orderDetail.setAddress(snapshotAddress);
+        orderDetail.setProductList(exchange5.getBody());
+        orderDetail.setPaymentType("wechatpay");
+        BigDecimal reduce = orderDetail.getProductList().stream().map(e -> BigDecimal.valueOf(Double.parseDouble(e.getFinalPrice()))).reduce(BigDecimal.valueOf(0), BigDecimal::add);
+        orderDetail.setPaymentAmt(reduce);
+        return orderDetail;
+    }
 
     public String registerResourceOwnerThenLogin() {
         ResourceOwner randomResourceOwner = getRandomResourceOwner();

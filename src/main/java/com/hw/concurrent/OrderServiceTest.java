@@ -57,7 +57,8 @@ public class OrderServiceTest {
                 String defaultUserToken = action.registerResourceOwnerThenLogin();
                 String profileId1 = action.getProfileId(defaultUserToken);
                 OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
-                String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders";
+                String preorderId = action.getOrderId(defaultUserToken, profileId1);
+                String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
                 ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
                 Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
