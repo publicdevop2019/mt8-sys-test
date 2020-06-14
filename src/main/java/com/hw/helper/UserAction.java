@@ -171,7 +171,7 @@ public class UserAction {
         ParameterizedTypeReference<List<ProductSimple>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<ProductSimple>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
-        while (exchange.getBody().size() == 0 || exchange.getBody().size() == 1) {
+        while (exchange.getBody().size() == 0) {
             exchange = getRandomProducts();
         }
         return exchange;
