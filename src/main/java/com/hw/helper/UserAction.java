@@ -131,6 +131,7 @@ public class UserAction {
         orderDetail.setPaymentAmt(reduce);
         return orderDetail;
     }
+
     public OrderDetail createBizOrderForUserAndProduct(String defaultUserToken, String profileId1, ProductSimple productSimple) {
         String url = proxyUrl + PRODUCT_SVC + "/productDetails/" + productSimple.getId();
         ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
@@ -163,11 +164,11 @@ public class UserAction {
     }
 
     public ResponseEntity<List<ProductSimple>> getRandomProducts() {
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = getCategories();
-        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
+        ResponseEntity<CategorySummaryCustomerRepresentation> catalog = getCatalog();
+        List<CategorySummaryCardRepresentation> body = catalog.getBody().getData();
         int i = new Random().nextInt(body.size());
         CategorySummaryCardRepresentation category = body.get(i);
-        String url = proxyUrl + PRODUCT_SVC + "/categories/" + category.getTitle() + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
+        String url = proxyUrl + PRODUCT_SVC + "/public/productDetails?tags=" + category.getName() + "&pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
         ParameterizedTypeReference<List<ProductSimple>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<ProductSimple>> exchange = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
@@ -217,8 +218,8 @@ public class UserAction {
         return snapshotProduct;
     }
 
-    public ResponseEntity<CategorySummaryCustomerRepresentation> getCategories() {
-        String url = proxyUrl + PRODUCT_SVC + "/categories";
+    public ResponseEntity<CategorySummaryCustomerRepresentation> getCatalog() {
+        String url = proxyUrl + PRODUCT_SVC + "/public/catalogs";
         return restTemplate.exchange(url, HttpMethod.GET, null, CategorySummaryCustomerRepresentation.class);
     }
 
@@ -284,10 +285,13 @@ public class UserAction {
         return resourceOwner;
     }
 
-    public Category getRandomCategory() {
-        Category category = new Category();
-        category.setTitle(UUID.randomUUID().toString().replace("-", ""));
-        category.setUrl(UUID.randomUUID().toString().replace("-", ""));
+    public Catalog generateRandomFrontendCatalog() {
+        Catalog category = new Catalog();
+        category.setName(UUID.randomUUID().toString().replace("-", ""));
+        category.setCatalogType(CatalogType.FRONTEND);
+        HashSet<String> strings = new HashSet<>();
+        strings.add(UUID.randomUUID().toString().replace("-", ""));
+        category.setTags(strings);
         return category;
     }
 
@@ -304,7 +308,7 @@ public class UserAction {
         return address;
     }
 
-    public ProductDetail getRandomProduct(String category) {
+    public ProductDetail getRandomProduct(String catalog) {
         ProductDetail productDetail = new ProductDetail();
         productDetail.setImageUrlSmall(UUID.randomUUID().toString().replace("-", ""));
         HashSet<String> objects = new HashSet<>();
@@ -312,7 +316,7 @@ public class UserAction {
         objects.add(UUID.randomUUID().toString().replace("-", ""));
         productDetail.setSpecification(objects);
         productDetail.setName(UUID.randomUUID().toString().replace("-", ""));
-        productDetail.setCategory(category);
+        productDetail.setCatalog(catalog);
         int i = new Random().nextInt(2000);
         productDetail.setOrderStorage(i);
         productDetail.setActualStorage(i + new Random().nextInt(1000));

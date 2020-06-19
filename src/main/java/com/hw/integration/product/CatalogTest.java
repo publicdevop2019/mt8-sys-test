@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.helper.Category;
+import com.hw.helper.Catalog;
 import com.hw.helper.CategorySummaryCustomerRepresentation;
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
@@ -22,13 +22,12 @@ import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class CategoryTest {
+public class CatalogTest {
     @Autowired
     UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -50,10 +49,10 @@ public class CategoryTest {
 
     @Test
     public void shop_create_category() {
-        Category randomCategory = action.getRandomCategory();
+        Catalog catalog = action.generateRandomFrontendCatalog();
         String s = null;
         try {
-            s = mapper.writeValueAsString(randomCategory);
+            s = mapper.writeValueAsString(catalog);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -63,7 +62,7 @@ public class CategoryTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/categories";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/catalogs";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
@@ -71,13 +70,14 @@ public class CategoryTest {
 
     @Test
     public void shop_get_all_category() {
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalog();
         Assert.assertEquals(HttpStatus.OK, categories.getStatusCode());
+        Assert.assertNotNull( categories.getBody().getData());
     }
 
     @Test
     public void shop_create_then_update_then_delete_category() {
-        Category randomCategory = action.getRandomCategory();
+        Catalog randomCategory = action.generateRandomFrontendCatalog();
         String s = null;
         try {
             s = mapper.writeValueAsString(randomCategory);
@@ -90,10 +90,10 @@ public class CategoryTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/categories";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/catalogs";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
-        Category randomCategory2 = action.getRandomCategory();
+        Catalog randomCategory2 = action.generateRandomFrontendCatalog();
         String s21 = null;
         try {
             s21 = mapper.writeValueAsString(randomCategory2);

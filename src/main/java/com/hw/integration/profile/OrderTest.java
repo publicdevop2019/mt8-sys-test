@@ -141,11 +141,11 @@ public class OrderTest {
     @Test
     public void shop_place_order_but_insufficient_actual_storage() {
         //create a product with 100 order storage & 0 actual storage
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCategories();
-        List<CategorySummaryCardRepresentation> body = categories.getBody().getCategoryList();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalog();
+        List<CategorySummaryCardRepresentation> body = categories.getBody().getData();
         int i = new Random().nextInt(body.size());
         CategorySummaryCardRepresentation category = body.get(i);
-        ProductDetail randomProduct = action.getRandomProduct(category.getTitle());
+        ProductDetail randomProduct = action.getRandomProduct(category.getName());
         randomProduct.setOrderStorage(100);
         randomProduct.setActualStorage(0);
         String s = null;

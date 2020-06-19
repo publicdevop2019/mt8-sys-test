@@ -8,5 +8,5 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class CategorySummaryCustomerRepresentation {
-    private List<CategorySummaryCardRepresentation> categoryList;
+    private List<CategorySummaryCardRepresentation> data;
 }

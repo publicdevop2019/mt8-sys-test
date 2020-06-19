@@ -33,6 +33,6 @@ public class ProductSimple {
 
     private Integer sales;
 
-    private String category;
+    private String catalog;
 
 }

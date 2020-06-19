@@ -3,7 +3,7 @@ package com.hw;
 import com.hw.concurrent.OrderServiceTest;
 import com.hw.concurrent.ProductServiceTest;
 import com.hw.integration.oauth2.*;
-import com.hw.integration.product.CategoryTest;
+import com.hw.integration.product.CatalogTest;
 import com.hw.integration.product.ProductTest;
 import com.hw.integration.profile.AddressTest;
 import com.hw.integration.profile.CartTest;
@@ -21,7 +21,7 @@ import org.junit.runners.Suite;
         PasswordFlowTest.class,
         ResourceOwnerControllerTest.class,
         ProductServiceTest.class,
-        CategoryTest.class,
+        CatalogTest.class,
         ProductTest.class,
         AddressTest.class,
         CartTest.class,
