@@ -2,7 +2,7 @@ package com.hw;
 
 import com.hw.entity.TestResult;
 import com.hw.helper.UserAction;
-import com.hw.longrun.LongRunTest;
+import com.hw.chaos.ChaosTest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.junit.runner.JUnitCore;
@@ -10,7 +10,6 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -20,7 +19,7 @@ import javax.annotation.PreDestroy;
 @Slf4j
 //@SpringBootApplication
 @EnableScheduling
-public class LongTestRunner {
+public class ChaosTestRunner {
 //    @Autowired
 //    TestResultRepo testResultRepo;
 
@@ -33,7 +32,7 @@ public class LongTestRunner {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(LongTestRunner.class, args);
+        SpringApplication.run(ChaosTestRunner.class, args);
     }
 
     @Scheduled(fixedRate = 20 * 1000)
@@ -43,7 +42,7 @@ public class LongTestRunner {
         testResult.setStatus("just started");
         StringBuilder stringBuilder = new StringBuilder();
 //        testResultRepo.save(testResult);
-        Result result = JUnitCore.runClasses(LongRunTest.class);
+        Result result = JUnitCore.runClasses(ChaosTest.class);
         for (Failure failure : result.getFailures()) {
             log.error(failure.toString());
             stringBuilder.append(failure.toString());

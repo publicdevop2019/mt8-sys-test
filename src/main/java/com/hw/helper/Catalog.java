@@ -13,7 +13,7 @@ public class Catalog {
 
     private Long parentId;
 
-    private Set<String> tags;
+    private Set<String> attributesSearch;
 
     private CatalogType catalogType;
 }

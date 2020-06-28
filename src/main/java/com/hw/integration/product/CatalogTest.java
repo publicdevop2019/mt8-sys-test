@@ -50,17 +50,11 @@ public class CatalogTest {
     @Test
     public void shop_create_front_category() {
         Catalog catalog = action.generateRandomFrontendCatalog();
-        String s = null;
-        try {
-            s = mapper.writeValueAsString(catalog);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
         String s1 = action.getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
+        HttpEntity<Catalog> request = new HttpEntity<>(catalog, headers);
 
         String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/catalogs";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);

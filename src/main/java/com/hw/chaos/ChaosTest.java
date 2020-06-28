@@ -1,4 +1,4 @@
-package com.hw.longrun;
+package com.hw.chaos;
 
 import com.hw.helper.*;
 import com.jayway.jsonpath.JsonPath;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
  * UPDATE product_detail SET sales = NULL ;
  * DELETE FROM change_record ;
  */
-public class LongRunTest {
+public class ChaosTest {
     @Autowired
     UserAction action;
     UUID uuid;

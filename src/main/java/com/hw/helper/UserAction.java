@@ -313,7 +313,7 @@ public class UserAction {
         category.setCatalogType(CatalogType.FRONTEND);
         HashSet<String> strings = new HashSet<>();
         strings.add(UUID.randomUUID().toString().replace("-", ""));
-        category.setTags(strings);
+        category.setAttributesSearch(strings);
         return category;
     }
 
