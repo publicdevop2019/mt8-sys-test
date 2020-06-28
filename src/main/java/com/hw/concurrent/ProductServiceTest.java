@@ -1,6 +1,5 @@
 package com.hw.concurrent;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
 import lombok.extern.slf4j.Slf4j;
@@ -24,14 +23,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import static com.hw.helper.UserAction.USER_PROFILE_ID;
-import static com.hw.helper.UserAction.USER_PROFILE_SECRET;
+import static com.hw.helper.UserAction.*;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
 public class ProductServiceTest {
+    public static final String URL_2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/shared/productDetails/storageOrder/decrease";
     @Autowired
     UserAction action;
     ObjectMapper mapper = new ObjectMapper();
@@ -52,109 +51,28 @@ public class ProductServiceTest {
     }
 
     @Test
-    public void concurrentValidation() {
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/validate";
-        OptionItem optionItem1 = new OptionItem("scoj", "+8.41");
-        OptionItem optionItem2 = new OptionItem("yla", "+7.39");
-        OptionItem optionItem3 = new OptionItem("azqv", "-2.79");
-        OptionItem optionItem4 = new OptionItem("1", "*1");
-
-        ProductOption reqAddOn1 = new ProductOption();
-        reqAddOn1.setTitle("pp");
-        reqAddOn1.setOptions(new ArrayList<>());
-        reqAddOn1.getOptions().add(optionItem1);
-
-        ProductOption reqAddOn2 = new ProductOption();
-        reqAddOn2.setTitle("uqjcpae");
-        reqAddOn2.setOptions(new ArrayList<>());
-        reqAddOn2.getOptions().add(optionItem2);
-
-        ProductOption reqAddOn3 = new ProductOption();
-        reqAddOn3.setTitle("wpufhar");
-        reqAddOn3.setOptions(new ArrayList<>());
-        reqAddOn3.getOptions().add(optionItem3);
-
-        ProductOption reqAddOn4 = new ProductOption();
-        reqAddOn4.setTitle("Qty");
-        reqAddOn4.setOptions(new ArrayList<>());
-        reqAddOn4.getOptions().add(optionItem4);
-
-        SnapshotProduct snapshotProduct = new SnapshotProduct();
-
-        snapshotProduct.setFinalPrice("23.27");
-        snapshotProduct.setProductId("15370");
-
-        snapshotProduct.setSelectedOptions(new ArrayList<>());
-        snapshotProduct.getSelectedOptions().add(reqAddOn1);
-        snapshotProduct.getSelectedOptions().add(reqAddOn2);
-        snapshotProduct.getSelectedOptions().add(reqAddOn3);
-        snapshotProduct.getSelectedOptions().add(reqAddOn4);
-
-        ArrayList<SnapshotProduct> products = new ArrayList<>();
-        products.add(snapshotProduct);
-        products.add(snapshotProduct);
-        products.add(snapshotProduct);
-        products.add(snapshotProduct);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
-        HttpEntity<List<SnapshotProduct>> listHttpEntity = new HttpEntity<>(products, headers);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.POST, listHttpEntity, Object.class);
-                Assert.assertEquals(200, exchange.getStatusCodeValue());
-            }
-        };
-        ArrayList<Runnable> runnables = new ArrayList<>();
-        IntStream.range(0, 5).forEach(e -> {
-            runnables.add(runnable);
-        });
-        try {
-            assertConcurrent("", runnables, 30000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void create_product_then_concurrent_decrease() {
+    public void create_product_then_concurrent_decrease_order_storage() {
         AtomicInteger iniOrderStorage = new AtomicInteger(1000);
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=";
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalog();
-        List<CategorySummaryCardRepresentation> categoryList = categories.getBody().getData();
-        int i = new Random().nextInt(categoryList.size());
-        CategorySummaryCardRepresentation categorySummaryCardRepresentation = categoryList.get(i);
-        ProductDetail randomProduct = action.getRandomProduct(categorySummaryCardRepresentation.getName());
-        randomProduct.setOrderStorage(iniOrderStorage.get());
-        String s = null;
-        try {
-            s = mapper.writeValueAsString(randomProduct);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        String s1 = action.getDefaultAdminToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(s1);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-        String productId = exchange.getHeaders().getLocation().toString();
-
+        ResponseEntity<String> exchange = action.createRandomProductDetail(null, iniOrderStorage.get());
+        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
+        StorageChangeCommon storageChangeCommon = new StorageChangeCommon();
+        StorageChangeDetail storageChangeDetail = new StorageChangeDetail();
+        storageChangeDetail.setAmount(1);
+        storageChangeDetail.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+        storageChangeDetail.setProductId(productId);
+        storageChangeCommon.setChangeList(List.of(storageChangeDetail));
         Integer threadCount = 50;
-        HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put(productId, "1");
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
-        HttpEntity<Object> listHttpEntity = new HttpEntity<>(stringStringHashMap, headers2);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
         integers.add(400);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(url2 + UUID.randomUUID().toString(), HttpMethod.PUT, listHttpEntity, Object.class);
+                storageChangeCommon.setTxId(UUID.randomUUID().toString());
+                HttpEntity<StorageChangeCommon> listHttpEntity = new HttpEntity<>(storageChangeCommon, headers2);
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity, Object.class);
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                 }
@@ -168,8 +86,8 @@ public class ProductServiceTest {
         try {
             assertConcurrent("", runnables, 30000);
             // get product order count
-            ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
-            assertTrue("remain storage should be " + iniOrderStorage.get(), exchange1.getBody().getOrderStorage().equals(iniOrderStorage.get()));
+            ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
+            assertTrue("remain storage should be " + iniOrderStorage.get(), productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -178,44 +96,27 @@ public class ProductServiceTest {
     @Test
     public void create_product_then_concurrent_decrease_same_opt() {
         Integer iniOrderStorage = 1000;
-        String s2 = UUID.randomUUID().toString();
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=" + s2;
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalog();
-        List<CategorySummaryCardRepresentation> categoryList = categories.getBody().getData();
-        int i = new Random().nextInt(categoryList.size());
-        CategorySummaryCardRepresentation categorySummaryCardRepresentation = categoryList.get(i);
-        ProductDetail randomProduct = action.getRandomProduct(categorySummaryCardRepresentation.getName());
-        randomProduct.setOrderStorage(iniOrderStorage);
-        String s = null;
-        try {
-            s = mapper.writeValueAsString(randomProduct);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        String s1 = action.getDefaultAdminToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(s1);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-        String productId = exchange.getHeaders().getLocation().toString();
-
+        ResponseEntity<String> exchange = action.createRandomProductDetail(null, iniOrderStorage);
+        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
+        StorageChangeCommon storageChangeCommon = new StorageChangeCommon();
+        StorageChangeDetail storageChangeDetail = new StorageChangeDetail();
+        storageChangeDetail.setAmount(1);
+        storageChangeDetail.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+        storageChangeDetail.setProductId(productId);
+        storageChangeCommon.setChangeList(List.of(storageChangeDetail));
+        storageChangeCommon.setTxId(UUID.randomUUID().toString());
         Integer threadCount = 20;
         Integer expected = iniOrderStorage - 1;
-        HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put(productId, "1");
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
-        HttpEntity<Object> listHttpEntity = new HttpEntity<>(stringStringHashMap, headers2);
+        HttpEntity<StorageChangeCommon> listHttpEntity = new HttpEntity<>(storageChangeCommon, headers2);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
         integers.add(400);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(url2, HttpMethod.PUT, listHttpEntity, Object.class);
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity, Object.class);
                 Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
             }
         };
@@ -226,8 +127,8 @@ public class ProductServiceTest {
         try {
             assertConcurrent("", runnables, 30000);
             // get product order count
-            ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
-            assertTrue("remain storage should be " + expected, exchange1.getBody().getOrderStorage().equals(expected));
+            ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
+            assertTrue("remain storage should be " + expected, productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(expected));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -237,65 +138,38 @@ public class ProductServiceTest {
      * if lock is pessimistic then deadlock exception will detected
      */
     public void create_three_product_then_concurrent_decrease_diff_product_concurrent(Integer initialStorage, Integer threads) {
-        Integer initial = initialStorage;
-        AtomicInteger iniOrderStorage = new AtomicInteger(initial);
-        AtomicInteger iniOrderStorage2 = new AtomicInteger(initial);
-        AtomicInteger iniOrderStorage3 = new AtomicInteger(initial);
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/decreaseStorageBy?optToken=";
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalog();
-        List<CategorySummaryCardRepresentation> categoryList = categories.getBody().getData();
-        int i = new Random().nextInt(categoryList.size());
-        CategorySummaryCardRepresentation category = categoryList.get(i);
-        ProductDetail randomProduct = action.getRandomProduct(category.getName());
-        ProductDetail randomProduct2 = action.getRandomProduct(category.getName());
-        ProductDetail randomProduct3 = action.getRandomProduct(category.getName());
-        randomProduct.setOrderStorage(iniOrderStorage.get());
-        randomProduct2.setOrderStorage(iniOrderStorage2.get());
-        randomProduct3.setOrderStorage(iniOrderStorage3.get());
-        String s = null;
-        String s2 = null;
-        String s3 = null;
-        try {
-            s = mapper.writeValueAsString(randomProduct);
-            s2 = mapper.writeValueAsString(randomProduct2);
-            s3 = mapper.writeValueAsString(randomProduct3);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        String s1 = action.getDefaultAdminToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(s1);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-        HttpEntity<String> request2 = new HttpEntity<>(s2, headers);
-        HttpEntity<String> request3 = new HttpEntity<>(s3, headers);
+        AtomicInteger iniOrderStorage = new AtomicInteger(initialStorage);
+        AtomicInteger iniOrderStorage2 = new AtomicInteger(initialStorage);
+        AtomicInteger iniOrderStorage3 = new AtomicInteger(initialStorage);
+        ResponseEntity<String> exchange = action.createRandomProductDetail(null, initialStorage);
+        ResponseEntity<String> exchange2 = action.createRandomProductDetail(null, initialStorage);
+        ResponseEntity<String> exchange3 = action.createRandomProductDetail(null, initialStorage);
+        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
+        Long productId2 = Long.parseLong(exchange2.getHeaders().getLocation().toString());
+        Long productId3 = Long.parseLong(exchange3.getHeaders().getLocation().toString());
 
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.POST, request2, String.class);
-        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url, HttpMethod.POST, request3, String.class);
-        String productId = exchange.getHeaders().getLocation().toString();
-        String productId2 = exchange2.getHeaders().getLocation().toString();
-        String productId3 = exchange3.getHeaders().getLocation().toString();
+        StorageChangeCommon storageChangeCommon = new StorageChangeCommon();
+        StorageChangeCommon storageChangeCommon2 = new StorageChangeCommon();
+        StorageChangeDetail storageChangeDetail = new StorageChangeDetail();
+        storageChangeDetail.setAmount(1);
+        storageChangeDetail.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+        storageChangeDetail.setProductId(productId);
 
-        Integer threadCount = threads;
-        HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put(productId, "1");
-        stringStringHashMap.put(productId2, "1");
-        stringStringHashMap.put(productId3, "1");
+        StorageChangeDetail storageChangeDetail2 = new StorageChangeDetail();
+        storageChangeDetail2.setAmount(1);
+        storageChangeDetail2.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+        storageChangeDetail2.setProductId(productId2);
+
+        StorageChangeDetail storageChangeDetail3 = new StorageChangeDetail();
+        storageChangeDetail3.setAmount(1);
+        storageChangeDetail3.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+        storageChangeDetail3.setProductId(productId3);
+
+        storageChangeCommon.setChangeList(List.of(storageChangeDetail3, storageChangeDetail, storageChangeDetail2));
+        storageChangeCommon2.setChangeList(List.of(storageChangeDetail, storageChangeDetail2, storageChangeDetail3));
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         headers2.setContentType(MediaType.APPLICATION_JSON);
-        String swappedProduct = null;
-        String replace = null;
-        try {
-            swappedProduct = mapper.writeValueAsString(stringStringHashMap);
-            replace = swappedProduct.replace(productId3, "temp").replace(productId, productId3).replace("temp", productId);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        HttpEntity<String> listHttpEntity = new HttpEntity<>(swappedProduct, headers2);
-        HttpEntity<String> listHttpEntity2 = new HttpEntity<>(replace, headers2);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
         integers.add(400);
@@ -303,7 +177,9 @@ public class ProductServiceTest {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(url2 + UUID.randomUUID().toString(), HttpMethod.PUT, listHttpEntity, Object.class);
+                storageChangeCommon.setTxId(UUID.randomUUID().toString());
+                HttpEntity<StorageChangeCommon> listHttpEntity = new HttpEntity<>(storageChangeCommon, headers2);
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity, Object.class);
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                     iniOrderStorage2.decrementAndGet();
@@ -315,7 +191,9 @@ public class ProductServiceTest {
         Runnable runnable2 = new Runnable() {
             @Override
             public void run() {
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(url2 + UUID.randomUUID().toString(), HttpMethod.PUT, listHttpEntity2, Object.class);
+                storageChangeCommon2.setTxId(UUID.randomUUID().toString());
+                HttpEntity<StorageChangeCommon> listHttpEntity2 = new HttpEntity<>(storageChangeCommon2, headers2);
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity2, Object.class);
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                     iniOrderStorage2.decrementAndGet();
@@ -325,18 +203,19 @@ public class ProductServiceTest {
             }
         };
         ArrayList<Runnable> runnables = new ArrayList<>();
-        IntStream.range(0, threadCount).forEach(e -> {
+        IntStream.range(0, threads).forEach(e -> {
             runnables.add(runnable);
             runnables.add(runnable2);
         });
         try {
             assertConcurrent("", runnables, 30000);
             // get product order count
-            ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url + "/" + productId, HttpMethod.GET, null, ProductDetail.class);
-            ResponseEntity<ProductDetail> exchange4 = action.restTemplate.exchange(url + "/" + productId2, HttpMethod.GET, null, ProductDetail.class);
-            assertTrue("remain storage should be " + iniOrderStorage.get(), exchange1.getBody().getOrderStorage().equals(iniOrderStorage.get()));
-            assertTrue("remain storage should be " + iniOrderStorage2.get(), exchange4.getBody().getOrderStorage().equals(iniOrderStorage2.get()));
-            log.info("failed request number is {}", threadCount*2 - (initial - iniOrderStorage.get()));
+            ResponseEntity<ProductDetailAdminRepresentation> ex = action.readProductDetailByIdAdmin(productId);
+            assertTrue("remain storage should be " + iniOrderStorage.get(), ex.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
+            ResponseEntity<ProductDetailAdminRepresentation> ex2 = action.readProductDetailByIdAdmin(productId2);
+            assertTrue("remain storage should be " + iniOrderStorage2.get(), ex2.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage2.get()));
+            ResponseEntity<ProductDetailAdminRepresentation> ex3 = action.readProductDetailByIdAdmin(productId3);
+            assertTrue("remain storage should be " + iniOrderStorage3.get(), ex3.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage3.get()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

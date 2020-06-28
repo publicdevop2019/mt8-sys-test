@@ -23,6 +23,7 @@ import java.util.*;
 @Component
 @Slf4j
 public class UserAction {
+    public static final String TEST_TEST_VALUE = "test:testValue";
     //    @Autowired
 //    FailedRecordRepo failedRecordRepo;
     public List<ResourceOwner> testUser = new ArrayList<>();
@@ -226,8 +227,12 @@ public class UserAction {
     }
 
     public ResponseEntity<String> createRandomProductDetail(Integer actualStorage) {
+        return createRandomProductDetail(actualStorage, null);
+    }
+
+    public ResponseEntity<String> createRandomProductDetail(Integer actualStorage, Integer orderStorage) {
         CategorySummaryCardRepresentation catalogFromList = getCatalogFromList();
-        ProductDetail randomProduct = getRandomProduct(catalogFromList, actualStorage);
+        ProductDetail randomProduct = getRandomProduct(catalogFromList, actualStorage, orderStorage);
         CreateProductAdminCommand createProductAdminCommand = new CreateProductAdminCommand();
         BeanUtils.copyProperties(randomProduct, createProductAdminCommand);
         createProductAdminCommand.setSkus(randomProduct.getProductSkuList());
@@ -325,7 +330,7 @@ public class UserAction {
         return address;
     }
 
-    public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage) {
+    public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage, Integer orderStorage) {
         ProductDetail productDetail = new ProductDetail();
         productDetail.setImageUrlSmall(UUID.randomUUID().toString().replace("-", ""));
         HashSet<String> objects = new HashSet<>();
@@ -337,15 +342,28 @@ public class UserAction {
         int i = new Random().nextInt(2000);
         ProductSku productSku = new ProductSku();
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
-        productSku.setAttributesSales(new HashSet<>(List.of("test:testValue")));
-        productSku.setStorageOrder(i);
+        productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+
         if (actualStorage == null) {
             productSku.setStorageActual(i + new Random().nextInt(1000));
         } else {
-            productSku.setStorageActual(0);
+            productSku.setStorageActual(actualStorage);
+        }
+        if (orderStorage == null) {
+            productSku.setStorageOrder(i);
+        } else {
+            productSku.setStorageOrder(orderStorage);
         }
         productDetail.setProductSkuList(new ArrayList<>(List.of(productSku)));
         return productDetail;
+    }
+
+    public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog) {
+        return getRandomProduct(catalog, null, null);
+    }
+
+    public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage) {
+        return getRandomProduct(catalog, actualStorage, null);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse() {
@@ -523,5 +541,14 @@ public class UserAction {
     public ResponseEntity<ProductDetailCustomRepresentation> readProductDetailById(Long id) {
         String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/public/productDetails/" + id;
         return restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
+    }
+    public ResponseEntity<ProductDetailAdminRepresentation> readProductDetailByIdAdmin(Long id) {
+        String defaultAdminToken = getDefaultAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(defaultAdminToken);
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + id;
+        return restTemplate.exchange(url, HttpMethod.GET, request, ProductDetailAdminRepresentation.class);
     }
 }
