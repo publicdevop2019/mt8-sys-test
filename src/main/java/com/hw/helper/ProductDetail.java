@@ -10,10 +10,23 @@ public class ProductDetail extends ProductSimple {
 
     private Long id;
 
-    private List<ProductOption> selectedOptions;
+    private String imageUrlSmall;
 
+    private String name;
+
+    private String description;
+
+    private List<ProductOption> selectedOptions;
 
     private Set<String> imageUrlLarge;
 
     private Set<String> specification;
+
+    private Set<String> attrKey;
+
+    private Set<String> attrProd;
+
+    private Set<String> attrGen;
+
+    private List<ProductSku> productSkuList;
 }

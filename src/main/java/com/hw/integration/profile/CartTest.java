@@ -52,12 +52,8 @@ public class CartTest {
     public void shop_add_product_cart() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
-        ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + productSimple.getId();
-        ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
-        ProductDetail body = exchange.getBody();
-        SnapshotProduct snapshotProduct = action.selectProduct(body);
+        ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
+        SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
         String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
@@ -68,12 +64,8 @@ public class CartTest {
     public void shop_add_same_product_cart_multiple_times() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
-        ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + productSimple.getId();
-        ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
-        ProductDetail body = exchange.getBody();
-        SnapshotProduct snapshotProduct = action.selectProduct(body);
+        ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
+        SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
         String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
@@ -100,12 +92,8 @@ public class CartTest {
     public void shop_delete_cart_item_by_id() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        ResponseEntity<List<ProductSimple>> randomProducts = action.getRandomProducts();
-        ProductSimple productSimple = randomProducts.getBody().get(new Random().nextInt(randomProducts.getBody().size()));
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails/" + productSimple.getId();
-        ResponseEntity<ProductDetail> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
-        ProductDetail body = exchange.getBody();
-        SnapshotProduct snapshotProduct = action.selectProduct(body);
+        ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
+        SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
         String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         String s = exchange3.getHeaders().getLocation().toString();

@@ -141,32 +141,11 @@ public class OrderTest {
     @Test
     public void shop_place_order_but_insufficient_actual_storage() {
         //create a product with 100 order storage & 0 actual storage
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalog();
-        List<CategorySummaryCardRepresentation> body = categories.getBody().getData();
-        int i = new Random().nextInt(body.size());
-        CategorySummaryCardRepresentation category = body.get(i);
-        ProductDetail randomProduct = action.getRandomProduct(category.getName());
-        randomProduct.setOrderStorage(100);
-        randomProduct.setActualStorage(0);
-        String s = null;
-        try {
-            s = mapper.writeValueAsString(randomProduct);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        String s1 = action.getDefaultAdminToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(s1);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/productDetails";
-        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-        randomProduct.setId(Long.parseLong(exchange1.getHeaders().get("Location").get(0)));
+        ResponseEntity<String> exchange1 = action.createRandomProductDetail(0);
         // place an order for this product
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        OrderDetail orderDetailForUser = action.createBizOrderForUserAndProduct(defaultUserToken, profileId1, randomProduct);
+        OrderDetail orderDetailForUser = action.createBizOrderForUserAndProduct(defaultUserToken, profileId1, Long.parseLong(exchange1.getHeaders().get("Location").get(0)));
         String preorderId = action.getOrderId(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);

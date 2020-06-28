@@ -48,7 +48,7 @@ public class CatalogTest {
     }
 
     @Test
-    public void shop_create_category() {
+    public void shop_create_front_category() {
         Catalog catalog = action.generateRandomFrontendCatalog();
         String s = null;
         try {
@@ -70,7 +70,7 @@ public class CatalogTest {
 
     @Test
     public void shop_get_all_category() {
-        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalog();
+        ResponseEntity<CategorySummaryCustomerRepresentation> categories = action.getCatalogs();
         Assert.assertEquals(HttpStatus.OK, categories.getStatusCode());
         Assert.assertNotNull( categories.getBody().getData());
     }
