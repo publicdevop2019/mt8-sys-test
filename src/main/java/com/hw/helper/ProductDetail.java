@@ -29,4 +29,6 @@ public class ProductDetail extends ProductSimple {
     private Set<String> attrGen;
 
     private List<ProductSku> productSkuList;
+
+    private ProductStatus status;
 }

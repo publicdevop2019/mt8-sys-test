@@ -153,7 +153,7 @@ public class OrderTest {
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
         String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId + "/confirm";
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
-        Assert.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exchange7.getStatusCode());
+        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
     }
 
 

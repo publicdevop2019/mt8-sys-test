@@ -104,6 +104,7 @@ public class ProductTest {
         productSku.setStorageActual(i + new Random().nextInt(1000));
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
+        command.setStatus(ProductStatus.UNAVAILABLE);
         String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);

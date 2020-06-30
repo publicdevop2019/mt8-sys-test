@@ -339,6 +339,7 @@ public class UserAction {
         productDetail.setSpecification(objects);
         productDetail.setName(UUID.randomUUID().toString().replace("-", ""));
         productDetail.setAttrKey(catalog.getAttributesKey());
+        productDetail.setStatus(ProductStatus.AVAILABLE);
         int i = new Random().nextInt(2000);
         ProductSku productSku = new ProductSku();
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
