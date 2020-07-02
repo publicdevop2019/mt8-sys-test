@@ -16,6 +16,6 @@ public class UpdateProductAdminCommand {
     private Set<String> attributesKey;
     private Set<String> attributesProd;
     private Set<String> attributesGen;
-    private List<ProductSku> skus;
+    private List<UpdateProductAdminSkuCommand> skus;
     private ProductStatus status;
 }
