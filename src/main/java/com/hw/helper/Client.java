@@ -8,15 +8,11 @@ import java.util.Set;
 @Data
 public class Client {
 
-    private Long id;
-
-    private String clientId;
-
     private String clientSecret;
 
     private Set<GrantTypeEnum> grantTypeEnums;
 
-    private List<GrantedAuthorityImpl<ClientAuthorityEnum>> grantedAuthorities;
+    private List<ClientAuthorityEnum> grantedAuthorities;
 
     private Set<ScopeEnum> scopeEnums;
 

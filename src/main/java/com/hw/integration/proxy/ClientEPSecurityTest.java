@@ -76,19 +76,16 @@ public class ClientEPSecurityTest {
      */
     private Client getClientAsNonResource(String... resourceIds) {
         Client client = getClientRaw(resourceIds);
-        GrantedAuthorityImpl<ClientAuthorityEnum> clientAuthorityEnumGrantedAuthority = new GrantedAuthorityImpl<>();
-        clientAuthorityEnumGrantedAuthority.setGrantedAuthority(ClientAuthorityEnum.ROLE_BACKEND);
-        client.setGrantedAuthorities(Arrays.asList(clientAuthorityEnumGrantedAuthority));
+        client.setGrantedAuthorities(Arrays.asList(ClientAuthorityEnum.ROLE_BACKEND));
         client.setResourceIndicator(false);
         return client;
     }
 
     private Client getClientRaw(String... resourceIds) {
         Client client = new Client();
-        client.setClientId(UUID.randomUUID().toString().replace("-", ""));
         client.setClientSecret(UUID.randomUUID().toString().replace("-", ""));
-        client.setGrantTypeEnums(new HashSet<>(Arrays.asList(GrantTypeEnum.password)));
-        client.setScopeEnums(new HashSet<>(Arrays.asList(ScopeEnum.read)));
+        client.setGrantTypeEnums(new HashSet<>(Arrays.asList(GrantTypeEnum.PASSWORD)));
+        client.setScopeEnums(new HashSet<>(Arrays.asList(ScopeEnum.READ)));
         client.setAccessTokenValiditySeconds(1800);
         client.setRefreshTokenValiditySeconds(null);
         client.setHasSecret(true);

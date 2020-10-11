@@ -6,10 +6,7 @@ import com.hw.helper.ServiceUtility;
 import com.hw.helper.UserAction;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -32,8 +29,8 @@ public class AuthorizationCodeTest {
 
     private String password = "password";
     private String authorization_code = "authorization_code";
-    private String valid_clientId = "login-id";
-    private String valid_third_party = "mgfb-id";
+    private String valid_clientId = "838330249904133";
+    private String valid_third_party = "838330249904136";
     private String invalid_third_party = UUID.randomUUID().toString();
     private String valid_empty_secret = "";
     private String valid_username_root = "haolinwei2015@gmail.com";

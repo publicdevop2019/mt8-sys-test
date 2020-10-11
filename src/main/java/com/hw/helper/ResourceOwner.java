@@ -16,7 +16,7 @@ public class ResourceOwner {
 
     private Boolean locked;
 
-    private List<GrantedAuthorityImpl<ResourceOwnerAuthorityEnum>> grantedAuthorities;
+    private List<ResourceOwnerAuthorityEnum> grantedAuthorities;
 
     private Set<String> resourceId;
 

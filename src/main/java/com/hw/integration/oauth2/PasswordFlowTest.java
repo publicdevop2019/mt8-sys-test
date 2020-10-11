@@ -31,9 +31,9 @@ import java.util.UUID;
 public class PasswordFlowTest {
     private String password = "password";
     private String client_credentials = "client_credentials";
-    private String valid_clientId = "login-id";
-    private String valid_register_clientId = "register-id";
-    private String valid_clientId_no_refersh = "test-id";
+    private String valid_clientId = "838330249904133";
+    private String valid_register_clientId = "838330249904135";
+    private String valid_clientId_no_refresh = "838330249904153";
     private String valid_empty_secret = "";
     private String valid_username_root = "haolinwei2015@gmail.com";
     private String valid_username_admin = "haolinwei2017@gmail.com";
@@ -78,7 +78,7 @@ public class PasswordFlowTest {
 
     @Test
     public void get_access_token_only_for_clients_without_refresh_configured() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId_no_refersh, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId_no_refresh, valid_empty_secret);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNull(tokenResponse.getBody().getRefreshToken());
     }
@@ -120,7 +120,7 @@ public class PasswordFlowTest {
     @Test
     public void should_not_get_token_when_user_credentials_are_wrong_even_client_is_valid() {
         ResponseEntity<?> tokenResponse = getTokenResponse(password, invalid_username, valid_pwd, valid_clientId, valid_empty_secret);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenResponse.getStatusCode());
+        Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
     }
 
     @Test

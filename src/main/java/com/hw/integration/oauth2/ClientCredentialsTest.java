@@ -28,8 +28,8 @@ import java.util.UUID;
 public class ClientCredentialsTest {
     private String password = "password";
     private String client_credentials = "client_credentials";
-    private String valid_clientId = "oauth2-id";
-    private String valid_clientId_no_secret = "register-id";
+    private String valid_clientId = "838330249904134";
+    private String valid_clientId_no_secret = "838330249904135";
     private String valid_clientSecret = "root";
     private String valid_empty_secret = "";
     @Autowired

@@ -2,8 +2,8 @@ package com.hw.helper;
 
 
 public enum GrantTypeEnum {
-    client_credentials,
-    password,
-    refresh_token,
-    authorization_code;
+    CLIENT_CREDENTIALS,
+    PASSWORD,
+    REFRESH_TOKEN,
+    AUTHORIZATION_CODE;
 }

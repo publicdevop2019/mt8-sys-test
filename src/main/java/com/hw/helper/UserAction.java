@@ -19,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -30,9 +31,9 @@ public class UserAction {
     public static String PASSWORD = "password";
     public static String CLIENT_CREDENTIALS = "client_credentials";
     public static String AUTHORIZATION_CODE = "authorization_code";
-    public static String LOGIN_ID = "login-id";
-    public static String REGISTER_ID = "register-id";
-    public static String USER_PROFILE_ID = "user-profile";
+    public static String LOGIN_ID = "838330249904133";
+    public static String REGISTER_ID = "838330249904135";
+    public static String USER_PROFILE_ID = "838330249904145";
     public static String USER_PROFILE_SECRET = "root";
     public static String CLIENT_SECRET = "";
     public static String AUTHORIZE_STATE = "login";
@@ -165,7 +166,7 @@ public class UserAction {
         List<CategorySummaryCardRepresentation> body = catalog.getBody().getData();
         int i = new Random().nextInt(body.size());
         CategorySummaryCardRepresentation category = body.get(i);
-        String url = proxyUrl + PRODUCT_SVC + "/public/productDetails?attributes=" + String.join(",", category.getAttributesKey()) + "&pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
+        String url = proxyUrl + PRODUCT_SVC + "/public/productDetails?query=attr:" + String.join(",", category.getAttributesKey().stream().map(e -> e.replace(":", "-")).collect(Collectors.toSet())) + "&page=num:0,size=20,by:price,order:asc";
         ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductCustomerSummaryPaginatedRepresentation.class);
         while (exchange.getBody().getData().size() == 0) {
             exchange = readRandomProducts();
@@ -377,7 +378,7 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> registerResourceOwner(ResourceOwner user, String registerToken) {
-        String urlRegister = proxyUrl + AUTH_SVC + "/resourceOwners/register";
+        String urlRegister = proxyUrl + AUTH_SVC + "/pending-users/public";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(registerToken);
@@ -392,7 +393,7 @@ public class UserAction {
         HttpEntity<String> request = new HttpEntity<>(s, headers);
         restTemplate.exchange(urlRegister, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
 
-        String url = proxyUrl + AUTH_SVC + "/resourceOwners";
+        String url = proxyUrl + AUTH_SVC + "/users/public";
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setContentType(MediaType.APPLICATION_JSON);
         headers1.setBearerAuth(registerToken);
@@ -543,6 +544,7 @@ public class UserAction {
         String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/public/productDetails/" + id;
         return restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
     }
+
     public ResponseEntity<ProductDetailAdminRepresentation> readProductDetailByIdAdmin(Long id) {
         String defaultAdminToken = getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
