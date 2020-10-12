@@ -127,7 +127,7 @@ public class OrderTest {
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
     }
 
-    private String getOrderIdFromPaymentLink(String link){
+    public static String getOrderIdFromPaymentLink(String link){
         Optional<String> product_id = Arrays.stream(link.split("&")).filter(e -> e.contains("product_id=")).findFirst();
         return product_id.get().replace("product_id=","");
     }

@@ -83,16 +83,6 @@ public class UserAction {
             testUser.add(resourceOwner3);
             testUser.add(resourceOwner4);
             testUser.add(resourceOwner5);
-            String defaultUserToken1 = getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
-            String defaultUserToken2 = getPasswordFlowTokenResponse(resourceOwner2.getEmail(), resourceOwner2.getPassword()).getBody().getValue();
-            String defaultUserToken3 = getPasswordFlowTokenResponse(resourceOwner3.getEmail(), resourceOwner3.getPassword()).getBody().getValue();
-            String defaultUserToken4 = getPasswordFlowTokenResponse(resourceOwner4.getEmail(), resourceOwner4.getPassword()).getBody().getValue();
-            String defaultUserToken5 = getPasswordFlowTokenResponse(resourceOwner5.getEmail(), resourceOwner5.getPassword()).getBody().getValue();
-            getProfileId(defaultUserToken1);
-            getProfileId(defaultUserToken2);
-            getProfileId(defaultUserToken3);
-            getProfileId(defaultUserToken4);
-            getProfileId(defaultUserToken5);
         }
     }
 
@@ -386,6 +376,7 @@ public class UserAction {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(registerToken);
+        headers.set("changeId",UUID.randomUUID().toString());
         String s = null;
         PendingResourceOwner pendingResourceOwner = new PendingResourceOwner();
         pendingResourceOwner.setEmail(user.getEmail());
@@ -401,6 +392,7 @@ public class UserAction {
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setContentType(MediaType.APPLICATION_JSON);
         headers1.setBearerAuth(registerToken);
+        headers1.set("changeId",UUID.randomUUID().toString());
         String s2 = null;
         pendingResourceOwner.setPassword(user.getPassword());
         pendingResourceOwner.setActivationCode("123456");

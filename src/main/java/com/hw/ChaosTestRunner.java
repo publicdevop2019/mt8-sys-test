@@ -10,6 +10,7 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -17,7 +18,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 @Slf4j
-//@SpringBootApplication
+@SpringBootApplication
 @EnableScheduling
 public class ChaosTestRunner {
 //    @Autowired
@@ -35,7 +36,7 @@ public class ChaosTestRunner {
         SpringApplication.run(ChaosTestRunner.class, args);
     }
 
-    @Scheduled(fixedRate = 20 * 1000)
+    @Scheduled(fixedRate = 200 * 1000)
     public void runTest() {
         log.info("long run test started");
         TestResult testResult = new TestResult();
