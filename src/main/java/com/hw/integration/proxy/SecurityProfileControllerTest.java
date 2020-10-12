@@ -2,6 +2,7 @@ package com.hw.integration.proxy;
 
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.SecurityProfile;
+import com.hw.helper.SumTotalProfile;
 import com.hw.helper.UserAction;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -13,7 +14,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -21,8 +21,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
+
+import static com.hw.helper.UserAction.ACCESS_ROLE_ROOT;
 
 /**
  * this integration auth requires oauth2service to be running
@@ -31,8 +32,10 @@ import java.util.UUID;
 @Slf4j
 @SpringBootTest
 public class SecurityProfileControllerTest {
+    public static final String PROXY_SECURITY = "/proxy";
+    public static final String ENDPOINTS = "/endpoints";
     private String password = "password";
-    private String login_clientId = "login-id";
+    private String login_clientId = "838330249904133";
     private String username_admin = "haolinwei2017@gmail.com";
     private String username_root = "haolinwei2015@gmail.com";
     private String userPwd = "root";
@@ -56,7 +59,7 @@ public class SecurityProfileControllerTest {
 
     @Test
     public void modify_existing_profile_to_prevent_access() {
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners";
+        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + "/users/admin";
         /**
          * before modify, admin is able to access resourceOwner apis
          */
@@ -71,9 +74,9 @@ public class SecurityProfileControllerTest {
         /**
          * modify profile to prevent admin access
          */
-        ResponseEntity<List<SecurityProfile>> listResponseEntity = readProfile();
-        SecurityProfile securityProfile = listResponseEntity.getBody().get(6);
-        securityProfile.setExpression("hasRole('ROLE_ROOT') and #oauth2.hasScope('trust') and #oauth2.isUser()");
+        ResponseEntity<SumTotalProfile> listResponseEntity = readProfile();
+        SecurityProfile securityProfile = listResponseEntity.getBody().getData().get(6);
+        securityProfile.setExpression("hasRole('ROLE_ROOT') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
         ResponseEntity<String> stringResponseEntity = updateProfile(securityProfile, 6L);
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity.getStatusCode());
 
@@ -86,7 +89,7 @@ public class SecurityProfileControllerTest {
         /**
          * modify profile to allow access
          */
-        securityProfile.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('trust') and #oauth2.isUser()");
+        securityProfile.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
         ResponseEntity<String> stringResponseEntity1 = updateProfile(securityProfile, 6L);
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity1.getStatusCode());
 
@@ -105,22 +108,20 @@ public class SecurityProfileControllerTest {
         return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
-    private ResponseEntity<List<SecurityProfile>> readProfile() {
+    private ResponseEntity<SumTotalProfile> readProfile() {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + "/proxy/security" + "/profiles";
+        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS+ACCESS_ROLE_ROOT;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(headers1);
-        ParameterizedTypeReference<List<SecurityProfile>> responseType = new ParameterizedTypeReference<>() {
-        };
-        return action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, responseType);
+        return action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, SumTotalProfile.class);
     }
 
     private ResponseEntity<String> createProfile(SecurityProfile securityProfile) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + "/proxy/security" + "/profile";
+        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS+ACCESS_ROLE_ROOT;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
@@ -130,7 +131,7 @@ public class SecurityProfileControllerTest {
     private ResponseEntity<String> updateProfile(SecurityProfile securityProfile, Long id) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + "/proxy/security" + "/profile/" + id;
+        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS +ACCESS_ROLE_ROOT+ "/" + id;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
@@ -140,7 +141,7 @@ public class SecurityProfileControllerTest {
     private ResponseEntity<String> deleteProfile(Long id) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = getPwdTokenResponse(password, login_clientId, "", username_root, userPwd);
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + "/proxy/security" + "/profile/" + id;
+        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS+ACCESS_ROLE_ROOT + "/" + id;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);

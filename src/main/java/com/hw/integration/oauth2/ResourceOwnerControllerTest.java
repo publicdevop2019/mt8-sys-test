@@ -28,10 +28,6 @@ import java.util.UUID;
 @Slf4j
 @SpringBootTest
 public class ResourceOwnerControllerTest {
-    private static final String ACCESS_ROLE_USER = "/user";
-    private static final String ACCESS_ROLE_PUBLIC = "/public";
-    private static final String ACCESS_ROLE_ADMIN = "/admin";
-    private static final String ACCESS_ROLE_ROOT = "/root";
     public static final String RESOURCE_OWNER = "/users";
     private String valid_register_clientId = "838330249904135";
     private String valid_empty_secret = "";
@@ -93,7 +89,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = action.getRandomResourceOwner();
         createUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_USER + "/pwd";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_USER + "/pwd";
         String newPassword = UUID.randomUUID().toString().replace("-", "");
         /** Login */
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(user.getEmail(), user.getPassword());
@@ -115,7 +111,7 @@ public class ResourceOwnerControllerTest {
         String value = registerTokenResponse.getBody().getValue();
         ResourceOwner user = action.getRandomResourceOwner();
         createUser(user);
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_PUBLIC + "/forgetPwd";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_PUBLIC + "/forgetPwd";
         ForgetPasswordRequest forgetPasswordRequest = new ForgetPasswordRequest();
         forgetPasswordRequest.setEmail(user.getEmail());
         HttpHeaders headers = new HttpHeaders();
@@ -126,7 +122,7 @@ public class ResourceOwnerControllerTest {
         ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, Object.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_PUBLIC + "/resetPwd";
+        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_PUBLIC + "/resetPwd";
         forgetPasswordRequest.setToken("123456789");
         forgetPasswordRequest.setNewPassword(UUID.randomUUID().toString());
         String s2 = mapper.writeValueAsString(forgetPasswordRequest);
@@ -152,7 +148,7 @@ public class ResourceOwnerControllerTest {
         resourceOwnerUpdatePwd.setPassword(UUID.randomUUID().toString());
         createUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_USER + "/pwd";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_USER + "/pwd";
         /** Login */
         String oldPassword = user.getPassword();
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(user.getEmail(), user.getPassword());
@@ -181,7 +177,7 @@ public class ResourceOwnerControllerTest {
     public void read_all_users_with_root_account() {
         ParameterizedTypeReference<List<ResourceOwner>> responseType = new ParameterizedTypeReference<>() {
         };
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN;
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(valid_username_root, valid_pwd);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(tokenResponse.getBody().getValue());
@@ -197,7 +193,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = action.getRandomResourceOwner();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN + "/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN + "/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(valid_username_root, valid_pwd);
         String bearer = tokenResponse.getBody().getValue();
@@ -224,7 +220,7 @@ public class ResourceOwnerControllerTest {
     @Test
     public void should_not_able_to_update_user_authority_to_root_with_admin_account() throws JsonProcessingException {
         ResourceOwner user = action.getRandomResourceOwner();
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN + "/" + root_index;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN + "/" + root_index;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(valid_username_admin, valid_pwd);
         String bearer = tokenResponse.getBody().getValue();
@@ -246,7 +242,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = action.getRandomResourceOwner();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN + "/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN + "/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(valid_username_root, valid_pwd);
         String bearer = tokenResponse.getBody().getValue();
@@ -267,7 +263,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = action.getRandomResourceOwner();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN + "/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN + "/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(valid_username_admin, valid_pwd);
         String bearer = tokenResponse.getBody().getValue();
@@ -288,7 +284,7 @@ public class ResourceOwnerControllerTest {
         ResourceOwner user = action.getRandomResourceOwner();
         ResponseEntity<DefaultOAuth2AccessToken> createResp = createUser(user);
         String s = createResp.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN + "/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN + "/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getPasswordFlowTokenResponse(valid_username_root, valid_pwd);
         String bearer = tokenResponse.getBody().getValue();
@@ -329,7 +325,7 @@ public class ResourceOwnerControllerTest {
         ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user);
 
         String s = user1.getHeaders().getLocation().toString();
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN + "/" + s;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN + "/" + s;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = action.getPasswordFlowTokenResponse(user.getEmail(), user.getPassword());
 
@@ -352,7 +348,7 @@ public class ResourceOwnerControllerTest {
     @Test
     public void should_not_able_to_delete_root_user() {
 
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + ACCESS_ROLE_ADMIN + "/" + root_index;
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + RESOURCE_OWNER + UserAction.ACCESS_ROLE_ADMIN + "/" + root_index;
 
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse12 = action.getPasswordFlowTokenResponse(valid_username_root, valid_pwd);
 

@@ -25,6 +25,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserAction {
     public static final String TEST_TEST_VALUE = "test:testValue";
+    public static final String ACCESS_ROLE_USER = "/user";
+    public static final String ACCESS_ROLE_PUBLIC = "/public";
+    public static final String ACCESS_ROLE_ADMIN = "/admin";
+    public static final String ACCESS_ROLE_ROOT = "/root";
+    public static final String ACCESS_ROLE_APP = "/app";
     //    @Autowired
 //    FailedRecordRepo failedRecordRepo;
     public List<ResourceOwner> testUser = new ArrayList<>();

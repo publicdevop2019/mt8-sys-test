@@ -34,7 +34,7 @@ import java.util.UUID;
 @SpringBootTest
 public class ResourceOwnerEPSecurityTest {
     private String client_credentials = "client_credentials";
-    private String invalid_clientId = "rightRoleNotSufficientResourceId";
+    private String invalid_clientId = "838330249904138";
     private String valid_empty_secret = "";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     @Autowired
@@ -71,7 +71,7 @@ public class ResourceOwnerEPSecurityTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) throws JsonProcessingException {
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners";
+        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/pending-users/public";
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();

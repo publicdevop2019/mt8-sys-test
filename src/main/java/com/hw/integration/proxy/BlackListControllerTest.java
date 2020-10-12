@@ -24,6 +24,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
 
+import static com.hw.helper.UserAction.ACCESS_ROLE_APP;
+import static com.hw.helper.UserAction.ACCESS_ROLE_ROOT;
+
 /**
  * this integration auth requires oauth2service to be running
  */
@@ -31,13 +34,15 @@ import java.util.UUID;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class BlackListControllerTest {
+    public static final String PROXY_BLACKLIST = "/proxy/revoke-tokens";
+    public static final String USERS_ADMIN = "/users/admin";
     private String client_credentials = "client_credentials";
     private String password = "password";
-    private String valid_clientId = "oauth2-id";
-    private String should_block_clientId_root = "block-id";
-    private String should_block_clientId_non_root = "login-id";
-    private String wrong_clientId = "register-id";
-    private String login_clientId = "login-id";
+    private String valid_clientId = "838330249904134";
+    private String should_block_clientId_root = "838330249904134";
+    private String should_block_clientId_non_root = "838330249904133";
+    private String wrong_clientId = "838330249904135";
+    private String login_clientId = "838330249904133";
     private String valid_clientSecret = "root";
 
     private ObjectMapper mapper = new ObjectMapper();
@@ -63,21 +68,19 @@ public class BlackListControllerTest {
 
     @Test
     public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_internal_endpoints() throws JsonProcessingException, InterruptedException {
-        String url = UserAction.proxyUrl + "/proxy/blacklist" + "/client";
+        String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
+        String url2 = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_APP;
         /**
          * before client get blacklisted, client is able to access proxy endpoints
          */
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(client_credentials, should_block_clientId_root, valid_clientSecret);
         String bearer1 = tokenResponse1.getBody().getValue();
 
-        HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("name", UUID.randomUUID().toString());
-        String s = mapper.writeValueAsString(stringStringHashMap);
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         headers1.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> hashMapHttpEntity1 = new HttpEntity<>(s, headers1);
-        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
+        HttpEntity<String> hashMapHttpEntity1 = new HttpEntity<>(null, headers1);
+        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
 
 
@@ -88,13 +91,14 @@ public class BlackListControllerTest {
         String bearer = tokenResponse.getBody().getValue();
 
         HashMap<String, String> blockBody = new HashMap<>();
-        blockBody.put("name", should_block_clientId_root);
+        blockBody.put("id", should_block_clientId_root);
+        blockBody.put("type", "CLIENT");
         String body = mapper.writeValueAsString(blockBody);
         HttpHeaders blockCallHeader = new HttpHeaders();
         blockCallHeader.setBearerAuth(bearer);
         blockCallHeader.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> blockReqEntity = new HttpEntity<>(body, blockCallHeader);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, blockReqEntity, String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.POST, blockReqEntity, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         /**
@@ -111,16 +115,16 @@ public class BlackListControllerTest {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = getTokenResponse(client_credentials, should_block_clientId_root, valid_clientSecret);
         String bearer3 = tokenResponse3.getBody().getValue();
         headers1.setBearerAuth(bearer3);
-        HttpEntity<String> hashMapHttpEntity3 = new HttpEntity<>(s, headers1);
-        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity3, String.class);
+        HttpEntity<String> hashMapHttpEntity3 = new HttpEntity<>(null, headers1);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity3, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
     }
 
     @Test
     public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_external_endpoints() throws JsonProcessingException, InterruptedException {
 
-        String url = UserAction.proxyUrl + "/proxy/blacklist" + "/client";
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners";
+        String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
+        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + USERS_ADMIN;
         /**
          * before client get blacklisted, client is able to access auth server non token endpoint
          */
@@ -140,7 +144,8 @@ public class BlackListControllerTest {
         String bearer = tokenResponse.getBody().getValue();
 
         HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("name", should_block_clientId_non_root);
+        stringStringHashMap.put("id", should_block_clientId_non_root);
+        stringStringHashMap.put("type", "CLIENT");
         String s = mapper.writeValueAsString(stringStringHashMap);
 
         HttpHeaders headers = new HttpHeaders();
@@ -174,9 +179,10 @@ public class BlackListControllerTest {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, wrong_clientId, "");
         String bearer = tokenResponse.getBody().getValue();
 
-        String url = UserAction.proxyUrl + "/proxy/blacklist" + "/client";
+        String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
         HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("name", UUID.randomUUID().toString());
+        stringStringHashMap.put("id", should_block_clientId_non_root);
+        stringStringHashMap.put("type", "CLIENT");
         String s = mapper.writeValueAsString(stringStringHashMap);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
@@ -188,7 +194,7 @@ public class BlackListControllerTest {
 
     @Test
     public void receive_request_blacklist_resourceOwner_then_block_resourceOwner_old_request() throws JsonProcessingException, InterruptedException {
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners";
+        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + USERS_ADMIN;
         /**
          * admin user can login & call resourceOwner api
          */
@@ -209,9 +215,10 @@ public class BlackListControllerTest {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_clientSecret);
         String bearer = tokenResponse.getBody().getValue();
 
-        String url = UserAction.proxyUrl + "/proxy/blacklist" + "/resourceOwner";
+        String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
         HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("name", userId);
+        stringStringHashMap.put("id", userId);
+        stringStringHashMap.put("type", "USER");
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         headers.setContentType(MediaType.APPLICATION_JSON);

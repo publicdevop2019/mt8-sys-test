@@ -162,7 +162,7 @@ public class CORSTest {
         Assert.assertEquals("*", res.getHeaders().getAccessControlAllowOrigin());
         Assert.assertEquals("[POST, PATCH, GET, DELETE, PUT, OPTIONS]", res.getHeaders().getAccessControlAllowMethods().toString());
         Assert.assertEquals("[authorization, x-requested-with]", res.getHeaders().getAccessControlAllowHeaders().toString());
-        Assert.assertEquals(3600, res.getHeaders().getAccessControlMaxAge());
+        Assert.assertEquals(86400, res.getHeaders().getAccessControlMaxAge());
     }
 
     private ResponseEntity<?> sendValidCorsForNonTokenUri(String uri, HttpMethod method) {
@@ -185,7 +185,7 @@ public class CORSTest {
         Assert.assertEquals("*", res.getHeaders().getAccessControlAllowOrigin());
         Assert.assertEquals("[POST, PATCH, GET, DELETE, PUT, OPTIONS]", res.getHeaders().getAccessControlAllowMethods().toString());
         Assert.assertEquals("[authorization]", res.getHeaders().getAccessControlAllowHeaders().toString());
-        Assert.assertEquals(3600, res.getHeaders().getAccessControlMaxAge());
+        Assert.assertEquals(86400, res.getHeaders().getAccessControlMaxAge());
     }
 
 }
