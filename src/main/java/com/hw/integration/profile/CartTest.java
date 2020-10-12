@@ -14,21 +14,21 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 import java.util.UUID;
+
+import static com.hw.helper.UserAction.ACCESS_ROLE_USER;
 
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
 public class CartTest {
+    public static final String CART = "/cart";
     @Autowired
     UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -51,10 +51,9 @@ public class CartTest {
     @Test
     public void shop_add_product_cart() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String profileId1 = action.getProfileId(defaultUserToken);
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
-        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + CART + ACCESS_ROLE_USER;
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
@@ -63,10 +62,9 @@ public class CartTest {
     @Test
     public void shop_add_same_product_cart_multiple_times() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String profileId1 = action.getProfileId(defaultUserToken);
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
-        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + CART + ACCESS_ROLE_USER;
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
@@ -78,36 +76,24 @@ public class CartTest {
     @Test
     public void shop_read_all_carts() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
-        ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
-        };
-        ResponseEntity<List<SnapshotProduct>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), responseType);
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + CART + ACCESS_ROLE_USER;
+        ResponseEntity<SumTotalSnapshotProduct> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-        Assert.assertNotEquals(-1, exchange.getBody().size());
+        Assert.assertNotEquals(-1, exchange.getBody().getData().size());
     }
 
 
     @Test
     public void shop_delete_cart_item_by_id() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String profileId1 = action.getProfileId(defaultUserToken);
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
-        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
+        String url2 = UserAction.proxyUrl + UserAction.PROFILE_SVC + CART + ACCESS_ROLE_USER;
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         String s = exchange3.getHeaders().getLocation().toString();
         ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2 + "/" + s, HttpMethod.DELETE, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
     }
 
-//    @Test
-//    public void shop_read_carts_details() {
-//    }
-//
-//    @Test
-//    public void shop_update_cart_details() {
-//
-//    }
 
 }

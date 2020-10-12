@@ -19,12 +19,11 @@ import org.springframework.util.MultiValueMap;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class UserAction {
-    public static final String TEST_TEST_VALUE = "test:testValue";
+    public static final String TEST_TEST_VALUE = "835606767755264:S";
     public static final String ACCESS_ROLE_USER = "/user";
     public static final String ACCESS_ROLE_PUBLIC = "/public";
     public static final String ACCESS_ROLE_ADMIN = "/admin";
@@ -110,48 +109,50 @@ public class UserAction {
         return exchange.getHeaders().getLocation().toString();
     }
 
-    public OrderDetail createOrderDetailForUser(String defaultUserToken, String profileId1) {
+    public OrderDetail createOrderDetailForUser(String defaultUserToken) {
         ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = readRandomProducts();
         List<ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation> data = randomProducts.getBody().getData();
 
         ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple = data.get(new Random().nextInt(data.size()));
-        String url = proxyUrl + PRODUCT_SVC + "/productDetails/" + productSimple.getId();
-        ResponseEntity<ProductDetail> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetail.class);
-        ProductDetail body = exchange.getBody();
-//        SnapshotProduct snapshotProduct = selectProduct(body);
-        String url2 = proxyUrl + PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
-//        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        String url = proxyUrl + PRODUCT_SVC + "/products/public/" + productSimple.getId();
+        ResponseEntity<ProductDetailCustomRepresentation> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
+        while (exchange.getBody().getSkus().stream().anyMatch(e -> e.getStorage().equals(0))) {
+            ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts2 = readRandomProducts();
 
-        ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
-        };
-        ResponseEntity<List<SnapshotProduct>> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), responseType);
+            ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple2 = data.get(new Random().nextInt(randomProducts2.getBody().getData().size()));
+            String url3 = proxyUrl + PRODUCT_SVC + "/products/public/" + productSimple2.getId();
+            exchange = restTemplate.exchange(url3, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
+        }
+        SnapshotProduct snapshotProduct = selectProduct(exchange.getBody());
+        String url2 = proxyUrl + PROFILE_SVC + "/cart/user";
+        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+
+        ResponseEntity<SumTotalSnapshotProduct> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
 
         OrderDetail orderDetail = new OrderDetail();
         SnapshotAddress snapshotAddress = new SnapshotAddress();
         BeanUtils.copyProperties(getRandomAddress(), snapshotAddress);
         orderDetail.setAddress(snapshotAddress);
-        orderDetail.setProductList(exchange5.getBody());
+        orderDetail.setProductList(exchange5.getBody().getData());
         orderDetail.setPaymentType("wechatpay");
         BigDecimal reduce = orderDetail.getProductList().stream().map(e -> BigDecimal.valueOf(Double.parseDouble(e.getFinalPrice()))).reduce(BigDecimal.valueOf(0), BigDecimal::add);
         orderDetail.setPaymentAmt(reduce);
         return orderDetail;
     }
 
-    public OrderDetail createBizOrderForUserAndProduct(String defaultUserToken, String profileId1, Long productId) {
+    public OrderDetail createBizOrderForUserAndProduct(String defaultUserToken, Long productId) {
         ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = readProductDetailById(productId);
         SnapshotProduct snapshotProduct = selectProduct(productDetailCustomRepresentationResponseEntity.getBody());
-        String url2 = proxyUrl + PROFILE_SVC + "/profiles/" + profileId1 + "/cart";
+        String url2 = proxyUrl + PROFILE_SVC + "/cart/user";
         restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
 
-        ParameterizedTypeReference<List<SnapshotProduct>> responseType = new ParameterizedTypeReference<>() {
-        };
-        ResponseEntity<List<SnapshotProduct>> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), responseType);
+        ResponseEntity<SumTotalSnapshotProduct> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
 
         OrderDetail orderDetail = new OrderDetail();
         SnapshotAddress snapshotAddress = new SnapshotAddress();
         BeanUtils.copyProperties(getRandomAddress(), snapshotAddress);
         orderDetail.setAddress(snapshotAddress);
-        orderDetail.setProductList(exchange5.getBody());
+        orderDetail.setProductList(exchange5.getBody().getData());
         orderDetail.setPaymentType("wechatpay");
         BigDecimal reduce = orderDetail.getProductList().stream().map(e -> BigDecimal.valueOf(Double.parseDouble(e.getFinalPrice()))).reduce(BigDecimal.valueOf(0), BigDecimal::add);
         orderDetail.setPaymentAmt(reduce);
@@ -167,11 +168,8 @@ public class UserAction {
     }
 
     public ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> readRandomProducts() {
-        ResponseEntity<CategorySummaryCustomerRepresentation> catalog = getCatalogs();
-        List<CategorySummaryCardRepresentation> body = catalog.getBody().getData();
-        int i = new Random().nextInt(body.size());
-        CategorySummaryCardRepresentation category = body.get(i);
-        String url = proxyUrl + PRODUCT_SVC + "/public/productDetails?query=attr:" + String.join(",", category.getAttributesKey().stream().map(e -> e.replace(":", "-")).collect(Collectors.toSet())) + "&page=num:0,size=20,by:price,order:asc";
+        String query = "query=attr:835604081303552-服装$835602958278656-女&page=num:0,size:20,by:lowestPrice,order:asc";
+        String url = proxyUrl + PRODUCT_SVC + "/products/public?" + query;
         ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductCustomerSummaryPaginatedRepresentation.class);
         while (exchange.getBody().getData().size() == 0) {
             exchange = readRandomProducts();
@@ -216,12 +214,12 @@ public class UserAction {
         // pick first option
         List<ProductSkuCustomerRepresentation> productSkuList = productDetail.getSkus();
         snapshotProduct.setFinalPrice(calc.add(productSkuList.get(0).getPrice()).toString());
-        snapshotProduct.setAttributesSales(productSkuList.get(0).getAttributeSales());
+        snapshotProduct.setAttributesSales(productSkuList.get(0).getAttributesSales());
         return snapshotProduct;
     }
 
     public ResponseEntity<CategorySummaryCustomerRepresentation> getCatalogs() {
-        String url = proxyUrl + PRODUCT_SVC + "/public/catalogs";
+        String url = proxyUrl + PRODUCT_SVC + "/catalogs/public";
         return restTemplate.exchange(url, HttpMethod.GET, null, CategorySummaryCustomerRepresentation.class);
     }
 
@@ -242,12 +240,13 @@ public class UserAction {
         CreateProductAdminCommand createProductAdminCommand = new CreateProductAdminCommand();
         BeanUtils.copyProperties(randomProduct, createProductAdminCommand);
         createProductAdminCommand.setSkus(randomProduct.getProductSkuList());
+        createProductAdminCommand.setStartAt(new Date().getTime());
         String s1 = getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
         HttpEntity<CreateProductAdminCommand> request = new HttpEntity<>(createProductAdminCommand, headers);
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/products/admin";
         return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 
@@ -546,7 +545,7 @@ public class UserAction {
     }
 
     public ResponseEntity<ProductDetailCustomRepresentation> readProductDetailById(Long id) {
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/public/productDetails/" + id;
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/products/public/" + id;
         return restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
     }
 
@@ -556,7 +555,7 @@ public class UserAction {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(defaultAdminToken);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + id;
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/products/admin/" + id;
         return restTemplate.exchange(url, HttpMethod.GET, request, ProductDetailAdminRepresentation.class);
     }
 }

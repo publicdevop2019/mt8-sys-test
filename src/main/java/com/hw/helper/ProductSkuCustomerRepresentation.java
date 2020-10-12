@@ -7,7 +7,7 @@ import java.util.Set;
 
 @Data
 public class ProductSkuCustomerRepresentation {
-    private Set<String> attributeSales;
-    private Integer storageOrder;
+    private Set<String> attributesSales;
+    private Integer storage;
     private BigDecimal price;
 }

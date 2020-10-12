@@ -56,7 +56,7 @@ public class OrderServiceTest {
             public void run() {
                 String defaultUserToken = action.registerResourceOwnerThenLogin();
                 String profileId1 = action.getProfileId(defaultUserToken);
-                OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+                OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
                 String preorderId = action.getOrderId(defaultUserToken, profileId1);
                 String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
                 ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
@@ -93,7 +93,7 @@ public class OrderServiceTest {
     public void place_order_then_confirm_pay_and_reserve_at_same_time() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String profileId1 = action.getProfileId(defaultUserToken);
-        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String preorderId = action.getOrderId(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);

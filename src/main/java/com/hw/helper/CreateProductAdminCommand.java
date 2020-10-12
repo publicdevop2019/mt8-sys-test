@@ -18,4 +18,5 @@ public class CreateProductAdminCommand {
     private Set<String> attributesGen;
     private List<ProductSku> skus;
     private ProductStatus status;
+    private Long startAt;
 }

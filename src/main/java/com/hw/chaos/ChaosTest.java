@@ -60,7 +60,7 @@ public class ChaosTest {
         ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
         String defaultUserToken = action.getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
         String profileId1 = action.getProfileId(defaultUserToken);
-        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String preorderId = action.getOrderId(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
@@ -74,7 +74,7 @@ public class ChaosTest {
         ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
         String defaultUserToken = action.getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
         String profileId1 = action.getProfileId(defaultUserToken);
-        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String preorderId = action.getOrderId(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
@@ -100,7 +100,7 @@ public class ChaosTest {
         String profileId1 = action.getProfileId(defaultUserToken);
 
 
-        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+        OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String preorderId = action.getOrderId(defaultUserToken, profileId1);
         String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
@@ -172,7 +172,7 @@ public class ChaosTest {
                 ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
                 String defaultUserToken = action.getPasswordFlowTokenResponse(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
                 String profileId1 = action.getProfileId(defaultUserToken);
-                OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken, profileId1);
+                OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
                 String preorderId = action.getOrderId(defaultUserToken, profileId1);
                 String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/orders/" + preorderId;
                 ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
