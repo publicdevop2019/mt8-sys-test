@@ -45,27 +45,14 @@ public class SecurityTest {
     @Test
     public void user_modify_jwt_token_after_login() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC +  "/addresses/user";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken+"valueChange"), String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange.getStatusCode());
     }
 
     @Test
-    public void user_after_login_trying_to_access_other_profile() {
-        String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String defaultUserToken2 = action.registerResourceOwnerThenLogin();
-        String profileId2 = action.getProfileId(defaultUserToken2);
-        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId2 + "/addresses";
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), String.class);
-        Assert.assertEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
-    }
-
-    @Test
     public void trying_access_protected_api_without_jwt_token() {
-        String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String profileId1 = action.getProfileId(defaultUserToken);
-        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC + "/profiles/" + profileId1 + "/addresses";
+        String url = UserAction.proxyUrl + UserAction.PROFILE_SVC +  "/addresses/user";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(null), String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange.getStatusCode());
     }
