@@ -56,7 +56,7 @@ public class CatalogTest {
         headers.setBearerAuth(s1);
         HttpEntity<Catalog> request = new HttpEntity<>(catalog, headers);
 
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/catalogs";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/catalogs/admin";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
@@ -84,7 +84,7 @@ public class CatalogTest {
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
 
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/catalogs";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/catalogs/admin";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
         Catalog randomCategory2 = action.generateRandomFrontendCatalog();

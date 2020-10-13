@@ -21,10 +21,13 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.*;
 
+import static com.hw.helper.UserAction.TEST_TEST_VALUE;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class ProductTest {
+    public static final String PRODUCTS_ADMIN = "/products/admin";
     @Autowired
     UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -61,7 +64,7 @@ public class ProductTest {
     public void shop_get_product_detail_admin() {
         ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = action.readRandomProducts();
         ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple = randomProducts.getBody().getData().get(new Random().nextInt(randomProducts.getBody().getData().size()));
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + productSimple.getId();
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + PRODUCTS_ADMIN + "/" + productSimple.getId();
         String s1 = action.getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -78,10 +81,10 @@ public class ProductTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails" + "?pageNum=0&pageSize=20&sortBy=price&sortOrder=asc";
+        String url = UserAction.proxyUrl + UserAction.PRODUCT_SVC + PRODUCTS_ADMIN + "?page=num:0,size:20";
         ResponseEntity<ProductTotalResponse> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, ProductTotalResponse.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-        Assert.assertNotEquals(0L, exchange.getBody().getTotalProductCount().longValue());
+        Assert.assertNotEquals(0L, exchange.getBody().getTotalItemCount().longValue());
     }
 
     @Test
@@ -101,11 +104,11 @@ public class ProductTest {
         UpdateProductAdminCommand command = new UpdateProductAdminCommand();
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
-        productSku.setAttributesSales(new HashSet<>(List.of("test:testValue")));
+        productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
@@ -121,14 +124,14 @@ public class ProductTest {
         UpdateProductAdminCommand command = new UpdateProductAdminCommand();
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
-        productSku.setAttributesSales(new HashSet<>(List.of("test:testValue")));
+        productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
         int i = new Random().nextInt(1000);
         productSku.setStorageOrder(i);
         productSku.setStorageActual(i + new Random().nextInt(1000));
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange2.getStatusCode());
@@ -144,14 +147,14 @@ public class ProductTest {
         UpdateProductAdminCommand command = new UpdateProductAdminCommand();
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
-        productSku.setAttributesSales(new HashSet<>(List.of("test:testValue")));
+        productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
         int i = new Random().nextInt(1000);
         productSku.setIncreaseActualStorage(i);
         productSku.setIncreaseOrderStorage(i + new Random().nextInt(1000));
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + exchange.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
@@ -168,12 +171,12 @@ public class ProductTest {
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
         BigDecimal abs = BigDecimal.valueOf(new Random().nextDouble()).abs();
         productSku.setPrice(abs);
-        productSku.setAttributesSales(new HashSet<>(List.of("test:testValue")));
+        productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
-        command.setStatus(ProductStatus.AVAILABLE);
+        command.setStartAt(new Date().getTime());
         String id = exchange.getHeaders().getLocation().toString();
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + id;
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + PRODUCTS_ADMIN + "/" + id;
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
         ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = action.readProductDetailById(Long.parseLong(id));
@@ -190,7 +193,7 @@ public class ProductTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
-        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/admin/productDetails/" + productDetailForCatalog.getHeaders().getLocation().toString();
+        String url2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + PRODUCTS_ADMIN + "/" + productDetailForCatalog.getHeaders().getLocation().toString();
         HttpEntity<String> request2 = new HttpEntity<>(headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.DELETE, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());

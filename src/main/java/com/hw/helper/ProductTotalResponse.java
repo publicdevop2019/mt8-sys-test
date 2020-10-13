@@ -6,7 +6,6 @@ import java.util.List;
 
 @Data
 public class ProductTotalResponse {
-    public List<ProductSimple> productSimpleList;
-    public Integer totalPageCount;
-    public Long totalProductCount;
+    public List<ProductSimple> data;
+    public Integer totalItemCount;
 }

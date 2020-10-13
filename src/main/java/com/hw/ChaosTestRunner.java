@@ -18,7 +18,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 @Slf4j
-@SpringBootApplication
+//@SpringBootApplication
 @EnableScheduling
 public class ChaosTestRunner {
 //    @Autowired

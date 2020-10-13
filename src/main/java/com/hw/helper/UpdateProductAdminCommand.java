@@ -18,4 +18,5 @@ public class UpdateProductAdminCommand {
     private Set<String> attributesGen;
     private List<UpdateProductAdminSkuCommand> skus;
     private ProductStatus status;
+    private Long startAt;
 }
