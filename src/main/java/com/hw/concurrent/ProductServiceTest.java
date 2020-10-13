@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 @SpringBootTest
 public class ProductServiceTest {
-    public static final String URL_2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/shared/productDetails/storageOrder/decrease";
+    public static final String URL_2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/products/app/storageOrder/decrease";
     @Autowired
     UserAction action;
     ObjectMapper mapper = new ObjectMapper();
