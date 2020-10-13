@@ -38,6 +38,7 @@ public class UserAction {
     public static String LOGIN_ID = "838330249904133";
     public static String REGISTER_ID = "838330249904135";
     public static String USER_PROFILE_ID = "838330249904145";
+    public static String SAGA_ID = "838330249904152";
     public static String USER_PROFILE_SECRET = "root";
     public static String CLIENT_SECRET = "";
     public static String AUTHORIZE_STATE = "login";

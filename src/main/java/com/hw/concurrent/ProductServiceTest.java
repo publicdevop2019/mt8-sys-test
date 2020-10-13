@@ -1,7 +1,10 @@
 package com.hw.concurrent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.helper.*;
+import com.hw.helper.OutgoingReqInterceptor;
+import com.hw.helper.PatchCommand;
+import com.hw.helper.ProductDetailAdminRepresentation;
+import com.hw.helper.UserAction;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -15,7 +18,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 @SpringBootTest
 public class ProductServiceTest {
-    public static final String URL_2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/products/app/storageOrder/decrease";
+    public static final String URL_2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/products/app";
     @Autowired
     UserAction action;
     ObjectMapper mapper = new ObjectMapper();
@@ -55,28 +61,29 @@ public class ProductServiceTest {
         AtomicInteger iniOrderStorage = new AtomicInteger(1000);
         ResponseEntity<String> exchange = action.createRandomProductDetail(null, iniOrderStorage.get());
         Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
-        StorageChangeCommon storageChangeCommon = new StorageChangeCommon();
-        StorageChangeDetail storageChangeDetail = new StorageChangeDetail();
-        storageChangeDetail.setAmount(1);
-        storageChangeDetail.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
-        storageChangeDetail.setProductId(productId);
-        storageChangeCommon.setChangeList(List.of(storageChangeDetail));
+        PatchCommand patchCommand = new PatchCommand();
+        patchCommand.setOp("diff");
+        patchCommand.setExpect(1);
+        patchCommand.setValue(1);
+//        /837195323695104/skus?query=attributesSales:835604723556352-淡粉色/storageActual
+        patchCommand.setPath("/" + productId + "/skus?query=" + "attributesSales:" + TEST_TEST_VALUE.replace(":", "-") + "/storageOrder");
+        ArrayList<PatchCommand> patchCommands = new ArrayList<>();
+        patchCommands.add(patchCommand);
         Integer threadCount = 50;
         HttpHeaders headers2 = new HttpHeaders();
-        headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers2.setBearerAuth(action.getClientCredentialFlowResponse(SAGA_ID, USER_PROFILE_SECRET).getBody().getValue());
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
         integers.add(400);
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                storageChangeCommon.setTxId(UUID.randomUUID().toString());
-                HttpEntity<StorageChangeCommon> listHttpEntity = new HttpEntity<>(storageChangeCommon, headers2);
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity, Object.class);
+                HttpEntity<ArrayList<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
+                ResponseEntity<Object> exchange2 = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity, Object.class);
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                 }
-                Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
+                Assert.assertTrue("expected status code but is " + exchange2.getStatusCodeValue(), integers.contains(exchange2.getStatusCodeValue()));
             }
         };
         ArrayList<Runnable> runnables = new ArrayList<>();
@@ -87,48 +94,7 @@ public class ProductServiceTest {
             assertConcurrent("", runnables, 30000);
             // get product order count
             ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
-            assertTrue("remain storage should be " + iniOrderStorage.get(), productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void create_product_then_concurrent_decrease_same_opt() {
-        Integer iniOrderStorage = 1000;
-        ResponseEntity<String> exchange = action.createRandomProductDetail(null, iniOrderStorage);
-        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
-        StorageChangeCommon storageChangeCommon = new StorageChangeCommon();
-        StorageChangeDetail storageChangeDetail = new StorageChangeDetail();
-        storageChangeDetail.setAmount(1);
-        storageChangeDetail.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
-        storageChangeDetail.setProductId(productId);
-        storageChangeCommon.setChangeList(List.of(storageChangeDetail));
-        storageChangeCommon.setTxId(UUID.randomUUID().toString());
-        Integer threadCount = 20;
-        Integer expected = iniOrderStorage - 1;
-        HttpHeaders headers2 = new HttpHeaders();
-        headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
-        HttpEntity<StorageChangeCommon> listHttpEntity = new HttpEntity<>(storageChangeCommon, headers2);
-        ArrayList<Integer> integers = new ArrayList<>();
-        integers.add(200);
-        integers.add(400);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity, Object.class);
-                Assert.assertTrue("expected status code but is " + exchange.getStatusCodeValue(), integers.contains(exchange.getStatusCodeValue()));
-            }
-        };
-        ArrayList<Runnable> runnables = new ArrayList<>();
-        IntStream.range(0, threadCount).forEach(e -> {
-            runnables.add(runnable);
-        });
-        try {
-            assertConcurrent("", runnables, 30000);
-            // get product order count
-            ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
-            assertTrue("remain storage should be " + expected, productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(expected));
+            assertTrue("remain storage should be " + iniOrderStorage.get() + "but is " + productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder(), productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -148,25 +114,26 @@ public class ProductServiceTest {
         Long productId2 = Long.parseLong(exchange2.getHeaders().getLocation().toString());
         Long productId3 = Long.parseLong(exchange3.getHeaders().getLocation().toString());
 
-        StorageChangeCommon storageChangeCommon = new StorageChangeCommon();
-        StorageChangeCommon storageChangeCommon2 = new StorageChangeCommon();
-        StorageChangeDetail storageChangeDetail = new StorageChangeDetail();
-        storageChangeDetail.setAmount(1);
-        storageChangeDetail.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
-        storageChangeDetail.setProductId(productId);
+        ArrayList<PatchCommand> patchCommands = new ArrayList<>();
+        PatchCommand patchCommand = new PatchCommand();
+        patchCommands.add(patchCommand);
+        patchCommand.setOp("diff");
+        patchCommand.setExpect(1);
+        patchCommand.setValue(1);
+        patchCommand.setPath("/" + productId + "/skus?query=" + "attributesSales:" + TEST_TEST_VALUE.replace(":", "-") + "/storageOrder");
+        PatchCommand patchCommand2 = new PatchCommand();
+        patchCommands.add(patchCommand2);
+        patchCommand2.setOp("diff");
+        patchCommand2.setExpect(1);
+        patchCommand2.setValue(1);
+        patchCommand2.setPath("/" + productId2 + "/skus?query=" + "attributesSales:" + TEST_TEST_VALUE.replace(":", "-") + "/storageOrder");
+        PatchCommand patchCommand3 = new PatchCommand();
+        patchCommands.add(patchCommand3);
+        patchCommand3.setOp("diff");
+        patchCommand3.setExpect(1);
+        patchCommand3.setValue(1);
+        patchCommand3.setPath("/" + productId3 + "/skus?query=" + "attributesSales:" + TEST_TEST_VALUE.replace(":", "-") + "/storageOrder");
 
-        StorageChangeDetail storageChangeDetail2 = new StorageChangeDetail();
-        storageChangeDetail2.setAmount(1);
-        storageChangeDetail2.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
-        storageChangeDetail2.setProductId(productId2);
-
-        StorageChangeDetail storageChangeDetail3 = new StorageChangeDetail();
-        storageChangeDetail3.setAmount(1);
-        storageChangeDetail3.setAttributeSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
-        storageChangeDetail3.setProductId(productId3);
-
-        storageChangeCommon.setChangeList(List.of(storageChangeDetail3, storageChangeDetail, storageChangeDetail2));
-        storageChangeCommon2.setChangeList(List.of(storageChangeDetail, storageChangeDetail2, storageChangeDetail3));
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
         headers2.setContentType(MediaType.APPLICATION_JSON);
@@ -177,9 +144,8 @@ public class ProductServiceTest {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                storageChangeCommon.setTxId(UUID.randomUUID().toString());
-                HttpEntity<StorageChangeCommon> listHttpEntity = new HttpEntity<>(storageChangeCommon, headers2);
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity, Object.class);
+                HttpEntity<List<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity, Object.class);
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                     iniOrderStorage2.decrementAndGet();
@@ -191,9 +157,8 @@ public class ProductServiceTest {
         Runnable runnable2 = new Runnable() {
             @Override
             public void run() {
-                storageChangeCommon2.setTxId(UUID.randomUUID().toString());
-                HttpEntity<StorageChangeCommon> listHttpEntity2 = new HttpEntity<>(storageChangeCommon2, headers2);
-                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PUT, listHttpEntity2, Object.class);
+                HttpEntity<List<PatchCommand>> listHttpEntity2 = new HttpEntity<>(patchCommands, headers2);
+                ResponseEntity<Object> exchange = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity2, Object.class);
                 if (exchange.getStatusCodeValue() == 200) {
                     iniOrderStorage.decrementAndGet();
                     iniOrderStorage2.decrementAndGet();
