@@ -35,7 +35,7 @@ import static com.hw.helper.UserAction.EMPTY_CLIENT_SECRET;
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
-public class ResourceOwnerEPSecurityTest {
+public class BizUserApiSecurityTest {
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     @Autowired
     private UserAction action;

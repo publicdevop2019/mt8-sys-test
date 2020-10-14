@@ -14,10 +14,10 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses(value = {
         AuthorizationCodeTest.class,
-        ClientControllerTest.class,
+        BizClientTest.class,
         ClientCredentialsTest.class,
         PasswordFlowTest.class,
-        ResourceOwnerControllerTest.class,
+        BIzUserTest.class,
 //        ProductServiceTest.class,
         CatalogTest.class,
         ProductTest.class,
@@ -26,9 +26,9 @@ import org.junit.runners.Suite;
         OrderTest.class,
 //        OrderServiceTest.class,
         RevokeTokenTest.class,
-        ClientEPSecurityTest.class,
+        BizClientApiSecurityTest.class,
         CORSTest.class,
-        ResourceOwnerEPSecurityTest.class,
+        BizUserApiSecurityTest.class,
         EndpointTest.class,
         SecurityTest.class
 

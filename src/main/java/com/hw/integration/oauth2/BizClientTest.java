@@ -30,7 +30,7 @@ import static com.hw.helper.UserAction.*;
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
-public class ClientControllerTest {
+public class BizClientTest {
 
     public static final String CLIENTS = "/clients";
     public static final String URL2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;

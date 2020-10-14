@@ -32,7 +32,7 @@ import static com.hw.helper.UserAction.*;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class ClientEPSecurityTest {
+public class BizClientApiSecurityTest {
     @Autowired
     private UserAction action;
     public ObjectMapper mapper = new ObjectMapper();

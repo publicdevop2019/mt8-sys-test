@@ -187,13 +187,13 @@ public class UserAction {
         ResponseEntity<String> codeResp = getCodeResp(clientId, accessToken, redirectUri);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
 
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(code, redirectUri, clientId);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(code, redirectUri, clientId,EMPTY_CLIENT_SECRET);
 
         DefaultOAuth2AccessToken body = authorizationToken.getBody();
         return body.getValue();
     }
 
-    private ResponseEntity<String> getCodeResp(String clientId, String bearerToken, String redirectUri) {
+    public ResponseEntity<String> getCodeResp(String clientId, String bearerToken, String redirectUri) {
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", AUTHORIZE_RESPONSE_TYPE);
@@ -206,13 +206,13 @@ public class UserAction {
         return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 
-    private ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationToken(String code, String redirect_uri, String clientId) {
+    public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationToken(String code, String redirect_uri, String clientId,String clientSecret) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", GRANT_TYPE_AUTHORIZATION_CODE);
         params.add("code", code);
         params.add("redirect_uri", redirect_uri);
         HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, EMPTY_CLIENT_SECRET);
+        headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
