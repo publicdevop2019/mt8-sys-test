@@ -34,6 +34,9 @@ public class UserAction {
     public static final String CLIENT_ID_LOGIN_ID = "838330249904133";
     public static final String CLIENT_ID_OAUTH2_ID = "838330249904134";
     public static final String CLIENT_ID_REGISTER_ID = "838330249904135";
+    public static final String CLIENT_ID_MGFB_ID = "838330249904136";
+    public static final String CLIENT_ID_RIGHT_ROLE_NOT_SUFFICIENT_RESOURCE_ID = "838330249904138";
+    public static final String CLIENT_ID_RESOURCE_ID = "838330249904139";
     public static final String CLIENT_ID_USER_PROFILE_ID = "838330249904145";
     public static final String CLIENT_ID_SAGA_ID = "838330249904152";
     public static final String CLIENT_ID_TEST_ID = "838330249904153";
@@ -147,14 +150,26 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getJwtPassword(String username, String userPwd) {
+        return getJwtPasswordWithClient(CLIENT_ID_LOGIN_ID,EMPTY_CLIENT_SECRET,username,userPwd);
+    }
+    public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordWithClient(String clientId,String clientSecret,String username, String userPwd) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", GRANT_TYPE_PASSWORD);
         params.add("username", username);
         params.add("password", userPwd);
         HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
+        headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+    public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordRoot() {
+        return getJwtPassword(ACCOUNT_USERNAME_ROOT,ACCOUNT_PASSWORD_ROOT);
+    }
+    public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordAdmin() {
+        return getJwtPassword(ACCOUNT_USERNAME_ADMIN,ACCOUNT_PASSWORD_ADMIN);
+    }
+    public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordUser() {
+        return getJwtPassword(ACCOUNT_USERNAME_USER,ACCOUNT_PASSWORD_USER);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getJwtClientCredential(String clientId, String clientSecret) {

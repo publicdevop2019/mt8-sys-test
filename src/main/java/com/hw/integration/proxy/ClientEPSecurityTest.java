@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 
+import static com.hw.helper.UserAction.*;
+
 /**
  * this integration auth requires oauth2service to be running
  */
@@ -31,12 +33,6 @@ import java.util.UUID;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ClientEPSecurityTest {
-    private String password = "password";
-    private String valid_clientId = "838330249904133";
-    private String valid_resourceId = "838330249904139";
-    private String valid_empty_secret = "";
-    private String valid_username_admin = "haolinwei2017@gmail.com";
-    private String valid_pwd = "root";
     @Autowired
     private UserAction action;
     public ObjectMapper mapper = new ObjectMapper();
@@ -58,9 +54,9 @@ public class ClientEPSecurityTest {
 
     @Test
     public void should_not_able_to_create_client_w_admin_account_when_going_through_proxy() throws JsonProcessingException {
-        Client client = getClientAsNonResource(valid_resourceId);
+        Client client = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/clients/root";
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ADMIN, ACCOUNT_PASSWORD_ADMIN, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -72,7 +68,7 @@ public class ClientEPSecurityTest {
     }
 
     /**
-     * @return different password client obj
+     * @return different GRANT_TYPE_PASSWORD client obj
      */
     private Client getClientAsNonResource(String... resourceIds) {
         Client client = getClientRaw(resourceIds);

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.OutgoingReqInterceptor;
+import com.hw.helper.PendingResourceOwner;
 import com.hw.helper.ResourceOwner;
 import com.hw.helper.UserAction;
 import lombok.extern.slf4j.Slf4j;
@@ -17,14 +18,16 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 import java.util.UUID;
+
+import static com.hw.helper.UserAction.CLIENT_ID_RIGHT_ROLE_NOT_SUFFICIENT_RESOURCE_ID;
+import static com.hw.helper.UserAction.EMPTY_CLIENT_SECRET;
 
 /**
  * this integration auth requires oauth2service to be running
@@ -33,9 +36,6 @@ import java.util.UUID;
 @Slf4j
 @SpringBootTest
 public class ResourceOwnerEPSecurityTest {
-    private String client_credentials = "client_credentials";
-    private String invalid_clientId = "838330249904138";
-    private String valid_empty_secret = "";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     @Autowired
     private UserAction action;
@@ -57,38 +57,12 @@ public class ResourceOwnerEPSecurityTest {
 
     @Test
     public void should_not_able_to_create_user_w_client_missing_right_role() throws JsonProcessingException {
-        ResourceOwner user = getUser();
-        ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user, invalid_clientId);
-
-        Assert.assertEquals(HttpStatus.FORBIDDEN, user1.getStatusCode());
-    }
-
-    private ResourceOwner getUser() {
-        ResourceOwner resourceOwner = new ResourceOwner();
-        resourceOwner.setPassword(UUID.randomUUID().toString().replace("-", ""));
-        resourceOwner.setEmail(UUID.randomUUID().toString().replace("-", "") + "@gmail.com");
-        return resourceOwner;
-    }
-
-    private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) throws JsonProcessingException {
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/pending-users/public";
-        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
+        ResourceOwner user = action.randomCreateUserDraft();
+        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = action.getJwtClientCredential(CLIENT_ID_RIGHT_ROLE_NOT_SUFFICIENT_RESOURCE_ID, EMPTY_CLIENT_SECRET);
         String value = registerTokenResponse.getBody().getValue();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(value);
-        String s = mapper.writeValueAsString(user);
-        HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+        ResponseEntity<Void> pendingUser = action.createPendingUser(user, value, new PendingResourceOwner());
+        Assert.assertEquals(HttpStatus.FORBIDDEN, pendingUser.getStatusCode());
     }
 
-    private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", grantType);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
-    }
 
 }
