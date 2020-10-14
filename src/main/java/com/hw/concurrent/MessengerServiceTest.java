@@ -66,10 +66,10 @@ public class MessengerServiceTest {
                 ArrayList<Integer> integers = new ArrayList<>();
                 integers.add(200);
                 integers.add(400);
-                ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = action.getClientCredentialFlowResponse(valid_register_clientId, valid_empty_secret);
+                ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = action.getJwtClientCredential(valid_register_clientId, valid_empty_secret);
                 action.testUser.get(0).getEmail();
                 String value = registerTokenResponse.getBody().getValue();
-                String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/resourceOwners/forgetPwd";
+                String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/resourceOwners/forgetPwd";
                 ForgetPasswordRequest forgetPasswordRequest = new ForgetPasswordRequest();
                 forgetPasswordRequest.setEmail(action.testUser.get(0).getEmail());
                 HttpHeaders headers = new HttpHeaders();
@@ -112,13 +112,5 @@ public class MessengerServiceTest {
 
     }
 
-    private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user) {
-        return createUser(user, valid_register_clientId);
-    }
 
-    private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) {
-        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = action.getClientCredentialFlowResponse(clientId, valid_empty_secret);
-        String value = registerTokenResponse.getBody().getValue();
-        return action.registerResourceOwner(user, value);
-    }
 }

@@ -59,7 +59,7 @@ public class SecurityProfileControllerTest {
 
     @Test
     public void modify_existing_profile_to_prevent_access() {
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + "/users/admin";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/users/admin";
         /**
          * before modify, admin is able to access resourceOwner apis
          */

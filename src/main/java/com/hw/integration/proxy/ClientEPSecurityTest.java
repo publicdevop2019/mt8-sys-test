@@ -59,7 +59,7 @@ public class ClientEPSecurityTest {
     @Test
     public void should_not_able_to_create_client_w_admin_account_when_going_through_proxy() throws JsonProcessingException {
         Client client = getClientAsNonResource(valid_resourceId);
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/clients/root";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/clients/root";
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();

@@ -195,7 +195,7 @@ public class AuthorizationCodeTest {
 
 
     private ResponseEntity<String> getCodeResp(String clientId, String bearerToken) {
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/authorize";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/authorize";
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("response_type", response_type);
         params.add("client_id", clientId);

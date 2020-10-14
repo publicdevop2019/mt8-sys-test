@@ -1,7 +1,6 @@
 package com.hw.concurrent;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
@@ -57,11 +56,11 @@ public class OrderServiceTest {
             public void run() {
                 String defaultUserToken = action.registerResourceOwnerThenLogin();
                 OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
-                String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC +  "/orders/user";
+                String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user";
                 ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
                 Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-                String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC +  "/orders/user/" + getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString()) + "/confirm";
+                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user/" + getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString()) + "/confirm";
                 ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
                 Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
@@ -91,7 +90,7 @@ public class OrderServiceTest {
     public void place_order_then_confirm_pay_and_reserve_at_same_time() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
-        String url3 = UserAction.proxyUrl + UserAction.PROFILE_SVC +  "/orders/user";
+        String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
@@ -99,7 +98,7 @@ public class OrderServiceTest {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC +  "/orders/user/" + orderIdFromPaymentLink + "/confirm";
+                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user/" + orderIdFromPaymentLink + "/confirm";
                 ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
                 Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
@@ -118,7 +117,7 @@ public class OrderServiceTest {
                 BeanUtils.copyProperties(action.getRandomAddress(), snapshotAddress);
                 orderDetailForUser.setAddress(snapshotAddress);
 
-                String url4 = UserAction.proxyUrl + UserAction.PROFILE_SVC +  "/orders/user/" + orderIdFromPaymentLink + "/reserve";
+                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user/" + orderIdFromPaymentLink + "/reserve";
                 ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
             }

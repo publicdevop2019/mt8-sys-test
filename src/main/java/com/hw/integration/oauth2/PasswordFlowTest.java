@@ -24,23 +24,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static com.hw.helper.UserAction.*;
+
 
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
 public class PasswordFlowTest {
-    private String password = "password";
-    private String client_credentials = "client_credentials";
-    private String valid_clientId = "838330249904133";
-    private String valid_register_clientId = "838330249904135";
-    private String valid_clientId_no_refresh = "838330249904153";
-    private String valid_empty_secret = "";
-    private String valid_username_root = "haolinwei2015@gmail.com";
-    private String valid_username_admin = "haolinwei2017@gmail.com";
-    private String valid_username_user = "haolinwei2018@gmail.com";
-    private String valid_pwd = "root";
-    private String invalid_username = "root2@gmail.com";
-    private String invalid_clientId = "root2";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     @Autowired
     private UserAction action;
@@ -62,30 +52,30 @@ public class PasswordFlowTest {
 
     @Test
     public void create_user_then_login() {
-        ResourceOwner user = getUser();
-        ResponseEntity<DefaultOAuth2AccessToken> user1 = createUser(user, valid_register_clientId);
+        ResourceOwner user = action.randomCreateUserDraft();
+        ResponseEntity<DefaultOAuth2AccessToken> user1 = action.registerAnUser(user);
         Assert.assertEquals(HttpStatus.OK, user1.getStatusCode());
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword(ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
         Assert.assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
     }
 
     @Test
     public void get_access_token_and_refresh_token_for_clients_with_refresh_configured() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword( ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
     }
 
     @Test
     public void get_access_token_only_for_clients_without_refresh_configured() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId_no_refresh, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD,ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_TEST_ID, EMPTY_CLIENT_SECRET);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNull(tokenResponse.getBody().getRefreshToken());
     }
 
     @Test
     public void check_jwt_authorities_for_root_account() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword( ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
         List<String> authorities = ServiceUtility.getAuthority(tokenResponse.getBody().getValue());
@@ -96,7 +86,7 @@ public class PasswordFlowTest {
 
     @Test
     public void check_jwt_authorities_for_admin_account() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_admin, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword( ACCOUNT_USERNAME_ADMIN, ACCOUNT_PASSWORD_ROOT);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
         List<String> authorities = ServiceUtility.getAuthority(tokenResponse.getBody().getValue());
@@ -107,7 +97,7 @@ public class PasswordFlowTest {
 
     @Test
     public void check_jwt_authorities_for_user_account() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_user, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword(ACCOUNT_USERNAME_USER, ACCOUNT_PASSWORD_ROOT);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
         Assert.assertNotNull(tokenResponse.getBody().getRefreshToken().getValue());
         List<String> authorities = ServiceUtility.getAuthority(tokenResponse.getBody().getValue());
@@ -119,19 +109,19 @@ public class PasswordFlowTest {
 
     @Test
     public void should_not_get_token_when_user_credentials_are_wrong_even_client_is_valid() {
-        ResponseEntity<?> tokenResponse = getTokenResponse(password, invalid_username, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<?> tokenResponse = action.getJwtPassword("root2@gmail.com", ACCOUNT_PASSWORD_ROOT);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
     }
 
     @Test
     public void should_not_get_token_when_user_credentials_are_valid_but_client_is_wrong() {
-        ResponseEntity<?> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, invalid_clientId, valid_empty_secret);
+        ResponseEntity<?> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, "root2", EMPTY_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
     }
 
     @Test
     public void should_not_get_token_when_user_credentials_are_valid_and_client_is_valid_but_grant_type_is_wrong() {
-        ResponseEntity<?> tokenResponse = getTokenResponse(client_credentials, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<?> tokenResponse = getTokenResponse(GRANT_TYPE_CLIENT_CREDENTIALS, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
     }
 
@@ -140,28 +130,6 @@ public class PasswordFlowTest {
         params.add("grant_type", grantType);
         params.add("username", username);
         params.add("password", userPwd);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
-    }
-
-    private ResourceOwner getUser() {
-        ResourceOwner resourceOwner = new ResourceOwner();
-        resourceOwner.setPassword(UUID.randomUUID().toString().replace("-", ""));
-        resourceOwner.setEmail(UUID.randomUUID().toString().replace("-", "") + "@gmail.com");
-        return resourceOwner;
-    }
-
-    private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) {
-        ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
-        String value = registerTokenResponse.getBody().getValue();
-        return action.registerResourceOwner(user, value);
-    }
-
-    private ResponseEntity<DefaultOAuth2AccessToken> getRegisterTokenResponse(String grantType, String clientId, String clientSecret) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", grantType);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);

@@ -71,7 +71,7 @@ public class ResourceOwnerEPSecurityTest {
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> createUser(ResourceOwner user, String clientId) throws JsonProcessingException {
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + "/pending-users/public";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/pending-users/public";
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterTokenResponse(client_credentials, clientId, valid_empty_secret);
         String value = registerTokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();

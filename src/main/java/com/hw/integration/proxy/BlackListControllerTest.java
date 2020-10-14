@@ -124,7 +124,7 @@ public class BlackListControllerTest {
     public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_external_endpoints() throws JsonProcessingException, InterruptedException {
 
         String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + USERS_ADMIN;
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
         /**
          * before client get blacklisted, client is able to access auth server non token endpoint
          */
@@ -194,7 +194,7 @@ public class BlackListControllerTest {
 
     @Test
     public void receive_request_blacklist_resourceOwner_then_block_resourceOwner_old_request() throws JsonProcessingException, InterruptedException {
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + USERS_ADMIN;
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
         /**
          * admin user can login & call resourceOwner api
          */

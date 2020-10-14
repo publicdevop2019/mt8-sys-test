@@ -22,16 +22,12 @@ import org.springframework.util.MultiValueMap;
 import java.util.Collections;
 import java.util.UUID;
 
+import static com.hw.helper.UserAction.*;
+
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
 public class ClientCredentialsTest {
-    private String password = "password";
-    private String client_credentials = "client_credentials";
-    private String valid_clientId = "838330249904134";
-    private String valid_clientId_no_secret = "838330249904135";
-    private String valid_clientSecret = "root";
-    private String valid_empty_secret = "";
     @Autowired
     private UserAction action;
     UUID uuid;
@@ -51,34 +47,34 @@ public class ClientCredentialsTest {
     }
     @Test
     public void use_client_with_secret() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_CLIENT_CREDENTIALS, CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
     }
 
     @Test
     public void use_client_with_empty_secret() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId_no_secret, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_CLIENT_CREDENTIALS, CLIENT_ID_REGISTER_ID, EMPTY_CLIENT_SECRET);
         Assert.assertNotNull(tokenResponse.getBody().getValue());
 
     }
 
     @Test
     public void use_client_with_wrong_credentials() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_CLIENT_CREDENTIALS, CLIENT_ID_OAUTH2_ID, EMPTY_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
 
     }
 
     @Test
     public void use_client_with_wrong_grant_type() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_clientId, valid_clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse.getStatusCode());
 
     }
 
     @Test
     public void trying_to_login_with_not_exist_client() {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Assert.assertEquals(tokenResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
 
     }

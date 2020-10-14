@@ -49,14 +49,14 @@ public class CORSTest {
     }
     @Test
     public void cors_oauthToken() {
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + corsUris[0];
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + corsUris[0];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
     }
 
     @Test
     public void cors_oauthTokenKey() {
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + corsUris[1];
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + corsUris[1];
         ResponseEntity<?> res = sendValidCorsForTokenUri(url);
         corsAssertToken(res);
 

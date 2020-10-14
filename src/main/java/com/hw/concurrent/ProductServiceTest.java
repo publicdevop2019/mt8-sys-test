@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 @SpringBootTest
 public class ProductServiceTest {
-    public static final String URL_2 = UserAction.proxyUrl + UserAction.PRODUCT_SVC + "/products/app";
+    public static final String URL_2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + "/products/app";
     @Autowired
     UserAction action;
     ObjectMapper mapper = new ObjectMapper();
@@ -71,7 +71,7 @@ public class ProductServiceTest {
         patchCommands.add(patchCommand);
         Integer threadCount = 50;
         HttpHeaders headers2 = new HttpHeaders();
-        headers2.setBearerAuth(action.getClientCredentialFlowResponse(SAGA_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers2.setBearerAuth(action.getJwtClientCredential(CLIENT_ID_SAGA_ID, COMMON_CLIENT_SECRET).getBody().getValue());
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
         integers.add(400);
@@ -135,7 +135,7 @@ public class ProductServiceTest {
         patchCommand3.setPath("/" + productId3 + "/skus?query=" + "attributesSales:" + TEST_TEST_VALUE.replace(":", "-") + "/storageOrder");
 
         HttpHeaders headers2 = new HttpHeaders();
-        headers2.setBearerAuth(action.getClientCredentialFlowResponse(USER_PROFILE_ID, USER_PROFILE_SECRET).getBody().getValue());
+        headers2.setBearerAuth(action.getJwtClientCredential(CLIENT_ID_USER_PROFILE_ID, COMMON_CLIENT_SECRET).getBody().getValue());
         headers2.setContentType(MediaType.APPLICATION_JSON);
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
