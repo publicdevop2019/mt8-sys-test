@@ -20,25 +20,20 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.UUID;
 
-import static com.hw.helper.UserAction.ACCESS_ROLE_ROOT;
+import static com.hw.helper.UserAction.*;
 
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
-public class ClientControllerTest {
+public class BizClientTest {
 
     public static final String CLIENTS = "/clients";
-    private String password = "password";
-    private String valid_clientId = "838330249904133";
-    private String valid_resourceId = "838330249904139";
-    private String invalid_resourceId = "test-id";
-    private String invalid_resourceId_not_found = "test-idasdf";
-    private String valid_empty_secret = "";
-    private String valid_username_root = "haolinwei2015@gmail.com";
-    private String valid_username_admin = "haolinwei2017@gmail.com";
-    private String valid_pwd = "root";
+    public static final String URL2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false);
     @Autowired
     private UserAction action;
@@ -68,13 +63,13 @@ public class ClientControllerTest {
 
     @Test
     public void create_non_resource_client_with_valid_resource_ids_then_able_to_use_this_client_to_login() throws JsonProcessingException {
-        Client client = getClientAsNonResource(valid_resourceId);
+        Client client = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> exchange = createClient(client);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, exchange.getHeaders().getLocation().toString(), client.getClientSecret());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, exchange.getHeaders().getLocation().toString(), client.getClientSecret());
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse1.getStatusCode());
         Assert.assertNotNull(tokenResponse1.getBody().getValue());
@@ -82,13 +77,13 @@ public class ClientControllerTest {
 
     @Test
     public void create_client_which_is_resource_itself_with_valid_resource_ids_then_able_to_use_this_client_to_login() throws JsonProcessingException {
-        Client client = getClientAsResource(valid_resourceId);
+        Client client = getClientAsResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> exchange = createClient(client);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, exchange.getHeaders().getLocation().toString(), client.getClientSecret());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, exchange.getHeaders().getLocation().toString(), client.getClientSecret());
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse1.getStatusCode());
         Assert.assertNotNull(tokenResponse1.getBody().getValue());
@@ -96,22 +91,22 @@ public class ClientControllerTest {
 
     @Test
     public void should_not_able_to_create_client_which_is_resource_itself_with_wrong_resource_ids() throws JsonProcessingException {
-        Client client = getClientAsResource(invalid_resourceId);
+        Client client = getClientAsResource(CLIENT_ID_TEST_ID);
         ResponseEntity<String> exchange = createClient(client);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
 
     @Test
     public void should_not_able_to_create_client_which_is_resource_itself_with_wrong_not_existing_resource_ids() throws JsonProcessingException {
-        Client client = getClientAsNonResource(invalid_resourceId_not_found);
+        Client client = getClientAsNonResource(UUID.randomUUID().toString());
         ResponseEntity<String> exchange = createClient(client);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
 
     @Test
     public void root_account_can_create_client() {
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT;
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
@@ -122,12 +117,12 @@ public class ClientControllerTest {
 
     @Test
     public void create_client_then_replace_it_with_different_client_only_password_is_empty_then_login_with_new_client_but_password_should_be_old_one() throws JsonProcessingException {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
-        Client oldClient = getClientAsNonResource(valid_resourceId);
+        Client oldClient = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
-        Client newClient = getClientAsNonResource(valid_resourceId);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
+        Client newClient = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         newClient.setClientSecret(" ");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -137,7 +132,7 @@ public class ClientControllerTest {
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd,client1.getHeaders().getLocation().toString(), oldClient.getClientSecret());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, client1.getHeaders().getLocation().toString(), oldClient.getClientSecret());
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse1.getStatusCode());
         Assert.assertNotNull(tokenResponse1.getBody().getValue());
@@ -146,11 +141,11 @@ public class ClientControllerTest {
 
     @Test
     public void create_client_then_update_it_tobe_resource() throws JsonProcessingException {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
-        Client oldClient = getClientAsResource(valid_resourceId);
+        Client oldClient = getClientAsResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
         String clientSecret = oldClient.getClientSecret();
         oldClient.setResourceIndicator(true);
         oldClient.setClientSecret(" ");
@@ -162,7 +157,7 @@ public class ClientControllerTest {
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, client1.getHeaders().getLocation().toString(), clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, client1.getHeaders().getLocation().toString(), clientSecret);
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse1.getStatusCode());
         Assert.assertNotNull(tokenResponse1.getBody().getValue());
@@ -171,12 +166,12 @@ public class ClientControllerTest {
 
     @Test
     public void should_not_be_able_to_create_client_then_replace_it_with_different_client_which_cannot_be_resource() throws JsonProcessingException {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
-        Client oldClient = getClientAsNonResource(valid_resourceId);
+        Client oldClient = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
-        Client newClient = getInvalidClientAsResource(valid_resourceId);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
+        Client newClient = getInvalidClientAsResource(CLIENT_ID_RESOURCE_ID);
         newClient.setClientSecret(" ");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -190,12 +185,12 @@ public class ClientControllerTest {
 
     @Test
     public void create_client_then_update_it_secret() throws JsonProcessingException {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
-        Client oldClient = getClientAsNonResource(valid_resourceId);
+        Client oldClient = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
-        Client newClient = getClientAsNonResource(valid_resourceId);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
+        Client newClient = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bearer);
@@ -204,7 +199,7 @@ public class ClientControllerTest {
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, client1.getHeaders().getLocation().toString(), newClient.getClientSecret());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, client1.getHeaders().getLocation().toString(), newClient.getClientSecret());
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse1.getStatusCode());
         Assert.assertNotNull(tokenResponse1.getBody().getValue());
@@ -212,11 +207,11 @@ public class ClientControllerTest {
 
     @Test
     public void delete_client() throws JsonProcessingException {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
-        Client oldClient = getClientAsNonResource(valid_resourceId);
+        Client oldClient = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = createClient(oldClient);
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
@@ -224,23 +219,23 @@ public class ClientControllerTest {
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, client1.getHeaders().getLocation().toString(), oldClient.getClientSecret());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, client1.getHeaders().getLocation().toString(), oldClient.getClientSecret());
 
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, tokenResponse1.getStatusCode());
     }
 
     @Test
     public void root_client_is_not_deletable() throws JsonProcessingException {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
-        Client oldClient = getClientAsNonResource(valid_resourceId);
+        Client oldClient = getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
         /**
          * add ROLE_ROOT so it can not be deleted
          */
         oldClient.setGrantedAuthorities(Arrays.asList(ClientAuthorityEnum.ROLE_BACKEND, ClientAuthorityEnum.ROLE_ROOT));
         ResponseEntity<String> client1 = createClient(oldClient);
 
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearer);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
@@ -248,7 +243,7 @@ public class ClientControllerTest {
 
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(password, valid_username_root, valid_pwd, client1.getHeaders().getLocation().toString(), oldClient.getClientSecret());
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, client1.getHeaders().getLocation().toString(), oldClient.getClientSecret());
 
         Assert.assertEquals(HttpStatus.OK, tokenResponse1.getStatusCode());
     }
@@ -266,7 +261,7 @@ public class ClientControllerTest {
     }
 
     /**
-     * @return different password client obj
+     * @return different GRANT_TYPE_PASSWORD client obj
      */
     private Client getClientAsNonResource(String... resourceIds) {
         Client client = getClientRaw(resourceIds);
@@ -277,7 +272,7 @@ public class ClientControllerTest {
 
     private Client getClientAsResource(String... resourceIds) {
         Client client = getClientRaw(resourceIds);
-        client.setGrantedAuthorities(Arrays.asList(ClientAuthorityEnum.ROLE_BACKEND,ClientAuthorityEnum.ROLE_FIRST_PARTY));
+        client.setGrantedAuthorities(Arrays.asList(ClientAuthorityEnum.ROLE_BACKEND, ClientAuthorityEnum.ROLE_FIRST_PARTY));
         client.setResourceIndicator(true);
         return client;
     }
@@ -302,14 +297,13 @@ public class ClientControllerTest {
     }
 
     public ResponseEntity<String> createClient(Client client) throws JsonProcessingException {
-        String url = UserAction.proxyUrl + UserAction.AUTH_SVC + CLIENTS + ACCESS_ROLE_ROOT;
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(password, valid_username_root, valid_pwd, valid_clientId, valid_empty_secret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bearer);
         String s = mapper.writeValueAsString(client);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
-        return action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        return action.restTemplate.exchange(URL2, HttpMethod.POST, request, String.class);
     }
 }

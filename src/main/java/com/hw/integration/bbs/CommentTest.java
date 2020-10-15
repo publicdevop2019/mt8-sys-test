@@ -49,7 +49,7 @@ public class CommentTest {
         CreateCommentCommand createCommentCommand = new CreateCommentCommand();
         createCommentCommand.setContent(randomStr2);
         String post = action.createPost(randomStr);
-        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/comments";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts/" + post + "/comments";
         String s1 = action.getBbsRootToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -70,7 +70,7 @@ public class CommentTest {
         String randomStr2 = action.getRandomStr();
         CreateCommentCommand createCommentCommand = new CreateCommentCommand();
         createCommentCommand.setContent(randomStr2);
-        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + new Random().nextInt(100) + "/comments";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts/" + new Random().nextInt(100) + "/comments";
         String s1 = action.getBbsRootToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -92,7 +92,7 @@ public class CommentTest {
         String post = action.createPost(randomStr);
         action.createCommentForPost(post);
 
-        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
         HttpHeaders headers = new HttpHeaders();
         String s1 = action.getBbsRootToken();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -104,7 +104,7 @@ public class CommentTest {
 
         Long id = exchange.getBody().get(0).getId();
 
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/comments/"+id;
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/comments/"+id;
 
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
@@ -117,7 +117,7 @@ public class CommentTest {
         String bbsRootToken = action.getBbsRootToken();
         String post = action.createPost(randomStr);
         action.createCommentForPost(post,bbsAdminToken);
-        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bbsAdminToken);
@@ -128,7 +128,7 @@ public class CommentTest {
 
         Long id = exchange.getBody().get(0).getId();
 
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/comments/"+id;
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/comments/"+id;
         HttpHeaders headers2 = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bbsRootToken);
@@ -143,7 +143,7 @@ public class CommentTest {
         String randomStr = action.getRandomStr();
         String post = action.createPost(randomStr);
         action.createCommentForPost(post);
-        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/public/posts/" + post + "/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/public/posts/" + post + "/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> request = new HttpEntity<>(null, headers);
@@ -161,7 +161,7 @@ public class CommentTest {
         String post2 = action.createPost(randomStr);
         action.createCommentForPost(post);
         action.createCommentForPost(post2);
-        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/comments?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
         HttpHeaders headers = new HttpHeaders();
         String s1 = action.getBbsRootToken();
         headers.setContentType(MediaType.APPLICATION_JSON);

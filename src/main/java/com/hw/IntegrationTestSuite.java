@@ -1,7 +1,5 @@
 package com.hw;
 
-import com.hw.concurrent.OrderServiceTest;
-import com.hw.concurrent.ProductServiceTest;
 import com.hw.integration.oauth2.*;
 import com.hw.integration.product.CatalogTest;
 import com.hw.integration.product.ProductTest;
@@ -16,10 +14,10 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses(value = {
         AuthorizationCodeTest.class,
-        ClientControllerTest.class,
+        BizClientTest.class,
         ClientCredentialsTest.class,
         PasswordFlowTest.class,
-        ResourceOwnerControllerTest.class,
+        BIzUserTest.class,
 //        ProductServiceTest.class,
         CatalogTest.class,
         ProductTest.class,
@@ -27,11 +25,11 @@ import org.junit.runners.Suite;
         CartTest.class,
         OrderTest.class,
 //        OrderServiceTest.class,
-        BlackListControllerTest.class,
-        ClientEPSecurityTest.class,
+        RevokeTokenTest.class,
+        BizClientApiSecurityTest.class,
         CORSTest.class,
-        ResourceOwnerEPSecurityTest.class,
-        SecurityProfileControllerTest.class,
+        BizUserApiSecurityTest.class,
+        EndpointTest.class,
         SecurityTest.class
 
 })

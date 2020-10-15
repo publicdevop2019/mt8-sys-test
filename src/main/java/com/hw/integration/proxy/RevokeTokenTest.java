@@ -24,8 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
 
-import static com.hw.helper.UserAction.ACCESS_ROLE_APP;
-import static com.hw.helper.UserAction.ACCESS_ROLE_ROOT;
+import static com.hw.helper.UserAction.*;
 
 /**
  * this integration auth requires oauth2service to be running
@@ -33,23 +32,13 @@ import static com.hw.helper.UserAction.ACCESS_ROLE_ROOT;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class BlackListControllerTest {
+public class RevokeTokenTest {
     public static final String PROXY_BLACKLIST = "/proxy/revoke-tokens";
     public static final String USERS_ADMIN = "/users/admin";
-    private String client_credentials = "client_credentials";
-    private String password = "password";
-    private String valid_clientId = "838330249904134";
-    private String should_block_clientId_root = "838330249904134";
-    private String should_block_clientId_non_root = "838330249904133";
-    private String wrong_clientId = "838330249904135";
-    private String login_clientId = "838330249904133";
-    private String valid_clientSecret = "root";
 
     private ObjectMapper mapper = new ObjectMapper();
     @Autowired
     private UserAction action;
-    private String username = "haolinwei2017@gmail.com";
-    private String userPwd = "root";
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
@@ -73,7 +62,7 @@ public class BlackListControllerTest {
         /**
          * before client get blacklisted, client is able to access proxy endpoints
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getTokenResponse(client_credentials, should_block_clientId_root, valid_clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
         String bearer1 = tokenResponse1.getBody().getValue();
 
         HttpHeaders headers1 = new HttpHeaders();
@@ -87,11 +76,11 @@ public class BlackListControllerTest {
         /**
          * block client
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
 
         HashMap<String, String> blockBody = new HashMap<>();
-        blockBody.put("id", should_block_clientId_root);
+        blockBody.put("id", CLIENT_ID_OAUTH2_ID);
         blockBody.put("type", "CLIENT");
         String body = mapper.writeValueAsString(blockBody);
         HttpHeaders blockCallHeader = new HttpHeaders();
@@ -112,7 +101,7 @@ public class BlackListControllerTest {
          * add thread sleep to prevent token get revoked and generate within a second
          */
         Thread.sleep(1000);
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = getTokenResponse(client_credentials, should_block_clientId_root, valid_clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
         String bearer3 = tokenResponse3.getBody().getValue();
         headers1.setBearerAuth(bearer3);
         HttpEntity<String> hashMapHttpEntity3 = new HttpEntity<>(null, headers1);
@@ -124,11 +113,12 @@ public class BlackListControllerTest {
     public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_external_endpoints() throws JsonProcessingException, InterruptedException {
 
         String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + USERS_ADMIN;
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
         /**
          * before client get blacklisted, client is able to access auth server non token endpoint
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = getPwdTokenResponse(password, should_block_clientId_non_root, "", username, userPwd);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 =
+                action.getJwtPasswordWithClient(CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET, ACCOUNT_USERNAME_ADMIN, ACCOUNT_PASSWORD_ADMIN);
         String bearer1 = tokenResponse1.getBody().getValue();
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
@@ -140,11 +130,11 @@ public class BlackListControllerTest {
         /**
          * block client
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
 
         HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("id", should_block_clientId_non_root);
+        stringStringHashMap.put("id", CLIENT_ID_LOGIN_ID);
         stringStringHashMap.put("type", "CLIENT");
         String s = mapper.writeValueAsString(stringStringHashMap);
 
@@ -166,7 +156,7 @@ public class BlackListControllerTest {
          * add thread sleep to prevent token get revoked and generate within a second
          */
         Thread.sleep(1000);
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = getPwdTokenResponse(password, should_block_clientId_non_root, "", username, userPwd);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = action.getJwtPasswordWithClient(CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET, ACCOUNT_USERNAME_ADMIN, ACCOUNT_PASSWORD_ADMIN);
         String bearer3 = tokenResponse3.getBody().getValue();
         headers1.setBearerAuth(bearer3);
         HttpEntity<Object> hashMapHttpEntity3 = new HttpEntity<>(headers1);
@@ -176,12 +166,12 @@ public class BlackListControllerTest {
 
     @Test
     public void only_root_client_and_trusted_client_can_add_blacklist() throws JsonProcessingException {
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, wrong_clientId, "");
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtClientCredential(CLIENT_ID_REGISTER_ID, "");
         String bearer = tokenResponse.getBody().getValue();
 
         String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
         HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("id", should_block_clientId_non_root);
+        stringStringHashMap.put("id", CLIENT_ID_LOGIN_ID);
         stringStringHashMap.put("type", "CLIENT");
         String s = mapper.writeValueAsString(stringStringHashMap);
         HttpHeaders headers = new HttpHeaders();
@@ -194,11 +184,11 @@ public class BlackListControllerTest {
 
     @Test
     public void receive_request_blacklist_resourceOwner_then_block_resourceOwner_old_request() throws JsonProcessingException, InterruptedException {
-        String url2 = UserAction.proxyUrl + UserAction.AUTH_SVC + USERS_ADMIN;
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
         /**
          * admin user can login & call resourceOwner api
          */
-        ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = getPwdTokenResponse(password, login_clientId, "", username, userPwd);
+        ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordAdmin();
 
         String bearer0 = pwdTokenResponse.getBody().getValue();
         String refreshToken = pwdTokenResponse.getBody().getRefreshToken().getValue();
@@ -212,7 +202,7 @@ public class BlackListControllerTest {
         /**
          * blacklist admin account
          */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(client_credentials, valid_clientId, valid_clientSecret);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
 
         String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
@@ -232,7 +222,7 @@ public class BlackListControllerTest {
         ResponseEntity<String> exchange1 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange1.getStatusCode());
 
-        ResponseEntity<DefaultOAuth2AccessToken> refreshTokenResponse = getRefreshTokenResponse(refreshToken, login_clientId, "");
+        ResponseEntity<DefaultOAuth2AccessToken> refreshTokenResponse = getRefreshTokenResponse(refreshToken, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, refreshTokenResponse.getStatusCode());
 
         /**
@@ -240,23 +230,13 @@ public class BlackListControllerTest {
          * add thread sleep to prevent token get revoked and generate within a second
          */
         Thread.sleep(1000);
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = getPwdTokenResponse(password, login_clientId, "", username, userPwd);
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = action.getJwtPasswordAdmin();
         String bearer3 = tokenResponse3.getBody().getValue();
         headers1.setBearerAuth(bearer3);
         HttpEntity<Object> hashMapHttpEntity3 = new HttpEntity<>(headers1);
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity3, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
 
-    }
-
-
-    private ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String clientId, String clientSecret) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", grantType);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
     private ResponseEntity<DefaultOAuth2AccessToken> getRefreshTokenResponse(String refreshToken, String clientId, String clientSecret) {
@@ -269,14 +249,4 @@ public class BlackListControllerTest {
         return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
 
-    private ResponseEntity<DefaultOAuth2AccessToken> getPwdTokenResponse(String grantType, String clientId, String clientSecret, String username, String pwd) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", grantType);
-        params.add("username", username);
-        params.add("password", pwd);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(clientId, clientSecret);
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
-    }
 }

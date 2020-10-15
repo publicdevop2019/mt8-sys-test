@@ -50,7 +50,7 @@ public class PostTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
         HttpEntity<String> request = new HttpEntity<>(s, headers);
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(0, exchange.getHeaders().get("Location"));
@@ -60,7 +60,7 @@ public class PostTest {
     public void read_post_by_topic() {
         String randomStr = action.getRandomStr();
         action.createPost(randomStr);
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/public/posts?topic=" + randomStr + "&pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/public/posts?topic=" + randomStr + "&pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
         ParameterizedTypeReference<List<PostCard>> responseType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<PostCard>> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, responseType);
@@ -72,7 +72,7 @@ public class PostTest {
     public void read_post_by_user() {
         String randomStr = action.getRandomStr();
         action.createPost(randomStr);
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts?pageNum=0&pageSize=20&sortBy=id&sortOrder=asc";
         ParameterizedTypeReference<List<PostCard>> responseType = new ParameterizedTypeReference<>() {
         };
         String s1 = action.getBbsRootToken();
@@ -89,7 +89,7 @@ public class PostTest {
     public void read_post_by_id() {
         String randomStr = action.getRandomStr();
         String post = action.createPost(randomStr);
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/public/posts/" + post;
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/public/posts/" + post;
         ResponseEntity<PostDetailRepresentation> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, PostDetailRepresentation.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals("", exchange.getBody().getContent());
@@ -102,7 +102,7 @@ public class PostTest {
         UpdatePostCommand updatePostCommand = new UpdatePostCommand();
         updatePostCommand.setContent(randomStr2);
         String post = action.createPost(randomStr);
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post;
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts/" + post;
         String s1 = action.getBbsRootToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -116,7 +116,7 @@ public class PostTest {
         HttpEntity<String> request = new HttpEntity<>(s, headers);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-        String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/public/posts/" + post;
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/public/posts/" + post;
         ResponseEntity<PostDetailRepresentation> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, null, PostDetailRepresentation.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
         Assert.assertEquals(randomStr2, exchange2.getBody().getContent());
@@ -126,7 +126,7 @@ public class PostTest {
     public void delete_post() {
         String randomStr = action.getRandomStr();
         String post = action.createPost(randomStr);
-        String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post;
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts/" + post;
         String s1 = action.getBbsRootToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

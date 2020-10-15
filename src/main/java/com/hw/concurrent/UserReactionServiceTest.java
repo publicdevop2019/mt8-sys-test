@@ -57,7 +57,7 @@ public class UserReactionServiceTest {
         integers.add(200);
         integers.add(400);
         Runnable runnable = () -> {
-            String url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/likes";
+            String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts/" + post + "/likes";
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(s1);
@@ -72,7 +72,7 @@ public class UserReactionServiceTest {
         });
         try {
             assertConcurrent("", runnables, 30000);
-            String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/public/posts/" + post;
+            String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/public/posts/" + post;
             ResponseEntity<PostDetailRepresentation> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, PostDetailRepresentation.class);
             Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
             Assert.assertEquals("1", exchange.getBody().getLikeNum().toString());
@@ -93,9 +93,9 @@ public class UserReactionServiceTest {
             int i = new Random().nextInt(20);
             String url2;
             if (i >= 10) {
-                url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/likes";
+                url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts/" + post + "/likes";
             } else {
-                url2 = UserAction.proxyUrl + UserAction.BBS_SVC + "/private/posts/" + post + "/dislikes";
+                url2 = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/private/posts/" + post + "/dislikes";
             }
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -111,7 +111,7 @@ public class UserReactionServiceTest {
         });
         try {
             assertConcurrent("", runnables, 30000);
-            String url = UserAction.proxyUrl + UserAction.BBS_SVC + "/public/posts/" + post;
+            String url = UserAction.proxyUrl + UserAction.SVC_NAME_BBS + "/public/posts/" + post;
             ResponseEntity<PostDetailRepresentation> exchange = action.restTemplate.exchange(url, HttpMethod.GET, null, PostDetailRepresentation.class);
             Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
             Assert.assertTrue("only one like or dislike", oneOneLikeOrDislike(exchange.getBody()));
