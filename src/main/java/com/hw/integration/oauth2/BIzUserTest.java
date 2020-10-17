@@ -108,7 +108,7 @@ public class BIzUserTest {
         String value = registerTokenResponse.getBody().getValue();
         ResourceOwner user = action.randomCreateUserDraft();
         action.registerAnUser(user);
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + RESOURCE_OWNER + UserAction.ACCESS_ROLE_PUBLIC + "/forgetPwd";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + RESOURCE_OWNER + ACCESS_ROLE_APP + "/forgetPwd";
         ForgetPasswordRequest forgetPasswordRequest = new ForgetPasswordRequest();
         forgetPasswordRequest.setEmail(user.getEmail());
         HttpHeaders headers = new HttpHeaders();
@@ -119,7 +119,7 @@ public class BIzUserTest {
         ResponseEntity<Object> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, Object.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + RESOURCE_OWNER + UserAction.ACCESS_ROLE_PUBLIC + "/resetPwd";
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + RESOURCE_OWNER + ACCESS_ROLE_APP + "/resetPwd";
         forgetPasswordRequest.setToken("123456789");
         forgetPasswordRequest.setNewPassword(UUID.randomUUID().toString());
         String s2 = mapper.writeValueAsString(forgetPasswordRequest);

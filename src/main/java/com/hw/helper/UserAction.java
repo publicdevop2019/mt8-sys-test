@@ -62,8 +62,8 @@ public class UserAction {
     public TestRestTemplate restTemplate = new TestRestTemplate();
     //        public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
     public static String proxyUrl = "http://localhost:" + 8111;
-    public static final String URL1 = proxyUrl + SVC_NAME_AUTH + "/users/public";
-    public static final String URL_REGISTER = proxyUrl + SVC_NAME_AUTH + "/pending-users/public";
+    public static final String URL1 = proxyUrl + SVC_NAME_AUTH + "/users/app";
+    public static final String URL_REGISTER = proxyUrl + SVC_NAME_AUTH + "/pending-users/app";
     public static final String URL = UserAction.proxyUrl + SVC_NAME_AUTH + "/oauth/token";
     public static String PROXY_URL_TOKEN = proxyUrl + SVC_NAME_AUTH + "/oauth/token";
 
