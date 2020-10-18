@@ -22,7 +22,7 @@ public class OutgoingReqInterceptor implements ClientHttpRequestInterceptor {
 
     @Override
     public ClientHttpResponse intercept(HttpRequest httpRequest, byte[] bytes, ClientHttpRequestExecution clientHttpRequestExecution) throws IOException {
-        httpRequest.getHeaders().set("UUID", testId.toString());
+        httpRequest.getHeaders().set("testId", testId.toString());
         httpRequest.getHeaders().set("changeId", UUID.randomUUID().toString());
         return clientHttpRequestExecution.execute(httpRequest, bytes);
     }

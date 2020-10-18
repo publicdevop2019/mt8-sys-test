@@ -57,6 +57,7 @@ public class UserAction {
     public static final String SVC_NAME_BBS = "/bbs-svc";
     public static final String OBJECT_MARKET_REDIRECT_URI = "http://localhost:4200";
     public static final String BBS_REDIRECT_URI = "http://localhost:3000/account";
+    public static final String CLIENTS = "/clients";
     public List<ResourceOwner> testUser = new ArrayList<>();
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
@@ -66,6 +67,7 @@ public class UserAction {
     public static final String URL_REGISTER = proxyUrl + SVC_NAME_AUTH + "/pending-users/app";
     public static final String URL = UserAction.proxyUrl + SVC_NAME_AUTH + "/oauth/token";
     public static String PROXY_URL_TOKEN = proxyUrl + SVC_NAME_AUTH + "/oauth/token";
+    public static final String URL2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;
 
     public void saveResult(Description description, UUID uuid) {
 //        FailedRecord failedRecord = new FailedRecord();
@@ -92,6 +94,74 @@ public class UserAction {
         }
     }
 
+    /**
+     * @return different GRANT_TYPE_PASSWORD client obj
+     */
+    public Client getClientAsNonResource(String... resourceIds) {
+        Client client = getClientRaw(resourceIds);
+        client.setGrantedAuthorities(Collections.singletonList(ClientAuthorityEnum.ROLE_BACKEND));
+        client.setResourceIndicator(false);
+        return client;
+    }
+
+    public Client getClientAsResource(String... resourceIds) {
+        Client client = getClientRaw(resourceIds);
+        client.setGrantedAuthorities(Arrays.asList(ClientAuthorityEnum.ROLE_BACKEND, ClientAuthorityEnum.ROLE_FIRST_PARTY));
+        client.setResourceIndicator(true);
+        return client;
+    }
+
+    public Client getInvalidClientAsResource(String... resourceIds) {
+        Client client = getClientRaw(resourceIds);
+        client.setGrantedAuthorities(Arrays.asList(ClientAuthorityEnum.ROLE_THIRD_PARTY));
+        client.setResourceIndicator(true);
+        return client;
+    }
+
+    public Client getClientRaw(String... resourceIds) {
+        Client client = new Client();
+        client.setClientSecret(UUID.randomUUID().toString().replace("-", ""));
+        client.setGrantTypeEnums(new HashSet<>(Arrays.asList(GrantTypeEnum.PASSWORD)));
+        client.setScopeEnums(new HashSet<>(Arrays.asList(ScopeEnum.READ)));
+        client.setAccessTokenValiditySeconds(1800);
+        client.setRefreshTokenValiditySeconds(null);
+        client.setHasSecret(true);
+        client.setResourceIds(new HashSet<>(Arrays.asList(resourceIds)));
+        return client;
+    }
+
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getTokenResponse(String grantType, String username, String userPwd, String clientId, String clientSecret) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", grantType);
+        params.add("username", username);
+        params.add("password", userPwd);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(clientId, clientSecret);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        return restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
+    }
+
+
+    public ResponseEntity<String> createClient(Client client){
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
+        String bearer = tokenResponse.getBody().getValue();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(bearer);
+        HttpEntity<Client> request = new HttpEntity<>(client, headers);
+        return restTemplate.exchange(URL2, HttpMethod.POST, request, String.class);
+    }
+    public ResponseEntity<String> createClient(Client client,String changeId){
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
+        String bearer = tokenResponse.getBody().getValue();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(bearer);
+        headers.set("changeId",changeId);
+        HttpEntity<Client> request = new HttpEntity<>(client, headers);
+        return restTemplate.exchange(URL2, HttpMethod.POST, request, String.class);
+    }
 
     public ResourceOwner randomCreateUserDraft() {
         return userCreateDraft(UUID.randomUUID().toString().replace("-", "") + "@gmail.com", UUID.randomUUID().toString().replace("-", ""));
@@ -150,9 +220,10 @@ public class UserAction {
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getJwtPassword(String username, String userPwd) {
-        return getJwtPasswordWithClient(CLIENT_ID_LOGIN_ID,EMPTY_CLIENT_SECRET,username,userPwd);
+        return getJwtPasswordWithClient(CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET, username, userPwd);
     }
-    public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordWithClient(String clientId,String clientSecret,String username, String userPwd) {
+
+    public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordWithClient(String clientId, String clientSecret, String username, String userPwd) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", GRANT_TYPE_PASSWORD);
         params.add("username", username);
@@ -162,14 +233,17 @@ public class UserAction {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
+
     public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordRoot() {
-        return getJwtPassword(ACCOUNT_USERNAME_ROOT,ACCOUNT_PASSWORD_ROOT);
+        return getJwtPassword(ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
     }
+
     public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordAdmin() {
-        return getJwtPassword(ACCOUNT_USERNAME_ADMIN,ACCOUNT_PASSWORD_ADMIN);
+        return getJwtPassword(ACCOUNT_USERNAME_ADMIN, ACCOUNT_PASSWORD_ADMIN);
     }
+
     public ResponseEntity<DefaultOAuth2AccessToken> getJwtPasswordUser() {
-        return getJwtPassword(ACCOUNT_USERNAME_USER,ACCOUNT_PASSWORD_USER);
+        return getJwtPassword(ACCOUNT_USERNAME_USER, ACCOUNT_PASSWORD_USER);
     }
 
     public ResponseEntity<DefaultOAuth2AccessToken> getJwtClientCredential(String clientId, String clientSecret) {
@@ -187,7 +261,7 @@ public class UserAction {
         ResponseEntity<String> codeResp = getCodeResp(clientId, accessToken, redirectUri);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
 
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(code, redirectUri, clientId,EMPTY_CLIENT_SECRET);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(code, redirectUri, clientId, EMPTY_CLIENT_SECRET);
 
         DefaultOAuth2AccessToken body = authorizationToken.getBody();
         return body.getValue();
@@ -206,7 +280,7 @@ public class UserAction {
         return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 
-    public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationToken(String code, String redirect_uri, String clientId,String clientSecret) {
+    public ResponseEntity<DefaultOAuth2AccessToken> getAuthorizationToken(String code, String redirect_uri, String clientId, String clientSecret) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", GRANT_TYPE_AUTHORIZATION_CODE);
         params.add("code", code);
