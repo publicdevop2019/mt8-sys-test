@@ -49,7 +49,7 @@ public class ProductTest {
 
     @Test
     public void shop_get_products_by_catalog() {
-        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = action.readRandomProducts();
+        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = action.readProductsByQuery();
         Assert.assertEquals(HttpStatus.OK, randomProducts.getStatusCode());
     }
 
@@ -62,7 +62,7 @@ public class ProductTest {
 
     @Test
     public void shop_get_product_detail_admin() {
-        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = action.readRandomProducts();
+        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = action.readProductsByQuery();
         ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple = randomProducts.getBody().getData().get(new Random().nextInt(randomProducts.getBody().getData().size()));
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + productSimple.getId();
         String s1 = action.getDefaultAdminToken();

@@ -143,7 +143,7 @@ public class UserAction {
     }
 
 
-    public ResponseEntity<String> createClient(Client client){
+    public ResponseEntity<String> createClient(Client client) {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
@@ -152,13 +152,14 @@ public class UserAction {
         HttpEntity<Client> request = new HttpEntity<>(client, headers);
         return restTemplate.exchange(URL2, HttpMethod.POST, request, String.class);
     }
-    public ResponseEntity<String> createClient(Client client,String changeId){
+
+    public ResponseEntity<String> createClient(Client client, String changeId) {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = getTokenResponse(GRANT_TYPE_PASSWORD, ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bearer);
-        headers.set("changeId",changeId);
+        headers.set("changeId", changeId);
         HttpEntity<Client> request = new HttpEntity<>(client, headers);
         return restTemplate.exchange(URL2, HttpMethod.POST, request, String.class);
     }
@@ -293,14 +294,14 @@ public class UserAction {
 
 
     public OrderDetail createOrderDetailForUser(String defaultUserToken) {
-        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = readRandomProducts();
+        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = readProductsByQuery();
         List<ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation> data = randomProducts.getBody().getData();
 
         ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple = data.get(new Random().nextInt(data.size()));
         String url = proxyUrl + SVC_NAME_PRODUCT + "/products/public/" + productSimple.getId();
         ResponseEntity<ProductDetailCustomRepresentation> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
         while (exchange.getBody().getSkus().stream().anyMatch(e -> e.getStorage().equals(0))) {
-            ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts2 = readRandomProducts();
+            ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts2 = readProductsByQuery();
 
             ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple2 = data.get(new Random().nextInt(randomProducts2.getBody().getData().size()));
             String url3 = proxyUrl + SVC_NAME_PRODUCT + "/products/public/" + productSimple2.getId();
@@ -343,13 +344,14 @@ public class UserAction {
     }
 
 
-    public ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> readRandomProducts() {
+    public ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> readProductsByQuery() {
         String query = "query=attr:835604081303552-服装$835602958278656-女&page=num:0,size:20,by:lowestPrice,order:asc";
+        return readProductsByQuery(query);
+    }
+
+    public ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> readProductsByQuery(String query) {
         String url = proxyUrl + SVC_NAME_PRODUCT + "/products/public?" + query;
         ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductCustomerSummaryPaginatedRepresentation.class);
-        while (exchange.getBody().getData().size() == 0) {
-            exchange = readRandomProducts();
-        }
         return exchange;
     }
 
@@ -426,6 +428,24 @@ public class UserAction {
         return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 
+    public ResponseEntity<String> createRandomProductDetail(Set<String> attrKeys, Set<String> attrProd,BigDecimal price) {
+        CategorySummaryCardRepresentation catalogFromList = getCatalogFromList();
+        ProductDetail randomProduct = getRandomProduct(catalogFromList, 10, 10,price);
+        CreateProductAdminCommand createProductAdminCommand = new CreateProductAdminCommand();
+        BeanUtils.copyProperties(randomProduct, createProductAdminCommand);
+        createProductAdminCommand.setSkus(randomProduct.getProductSkuList());
+        createProductAdminCommand.setStartAt(new Date().getTime());
+        createProductAdminCommand.setAttributesKey(attrKeys);
+        createProductAdminCommand.setAttributesProd(attrProd);
+        String s1 = getDefaultAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<CreateProductAdminCommand> request = new HttpEntity<>(createProductAdminCommand, headers);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + "/products/admin";
+        return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+    }
+
     public String getDefaultRootToken() {
         ResponseEntity<DefaultOAuth2AccessToken> loginTokenResponse = getJwtPassword(ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
         return loginTokenResponse.getBody().getValue();
@@ -487,7 +507,7 @@ public class UserAction {
         return address;
     }
 
-    public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage, Integer orderStorage) {
+    public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage, Integer orderStorage, BigDecimal price) {
         ProductDetail productDetail = new ProductDetail();
         productDetail.setImageUrlSmall(UUID.randomUUID().toString().replace("-", ""));
         HashSet<String> objects = new HashSet<>();
@@ -499,7 +519,10 @@ public class UserAction {
         productDetail.setStatus(ProductStatus.AVAILABLE);
         int i = new Random().nextInt(2000);
         ProductSku productSku = new ProductSku();
-        productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
+        if (price == null)
+            productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
+        else
+            productSku.setPrice(price);
         productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
 
         if (actualStorage == null) {
@@ -516,6 +539,10 @@ public class UserAction {
         return productDetail;
     }
 
+    public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage, Integer orderStorage) {
+        return getRandomProduct(catalog, actualStorage, orderStorage, null);
+    }
+
     public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog) {
         return getRandomProduct(catalog, null, null);
     }
@@ -530,7 +557,7 @@ public class UserAction {
     }
 
     public ResponseEntity<ProductDetailCustomRepresentation> readRandomProductDetail() {
-        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = readRandomProducts();
+        ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts = readProductsByQuery();
         ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple = randomProducts.getBody().getData().get(new Random().nextInt(randomProducts.getBody().getData().size()));
         return readProductDetailById(productSimple.getId());
     }
