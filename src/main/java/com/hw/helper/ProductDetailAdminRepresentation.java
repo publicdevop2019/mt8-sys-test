@@ -28,5 +28,5 @@ public class ProductDetailAdminRepresentation {
     private Set<String> attributesGen;
 
     private List<ProductSku> skus;
-
+    private Integer totalSales;
 }

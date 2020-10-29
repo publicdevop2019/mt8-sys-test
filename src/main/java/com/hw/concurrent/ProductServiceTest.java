@@ -1,10 +1,7 @@
 package com.hw.concurrent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.helper.OutgoingReqInterceptor;
-import com.hw.helper.PatchCommand;
-import com.hw.helper.ProductDetailAdminRepresentation;
-import com.hw.helper.UserAction;
+import com.hw.helper.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -18,10 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static com.hw.helper.UserAction.*;
+import static com.hw.integration.product.ProductTest.PRODUCTS_ADMIN;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
@@ -194,6 +190,66 @@ public class ProductServiceTest {
     @Test
     public void transactionalDecreaseNotEnough() {
         create_three_product_then_concurrent_decrease_diff_product_concurrent(100, 30);
+    }
+
+    @Test
+    public void admin_update_product_while_product_total_sales_change_by_order_confirm() {
+        ResponseEntity<String> exchange = action.createRandomProductDetail(100);
+        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
+        PatchCommand patchCommand = new PatchCommand();
+        patchCommand.setOp("sum");
+        patchCommand.setExpect(1);
+        patchCommand.setValue(1);
+        patchCommand.setPath("/" + productId + "/totalSales");
+        ArrayList<PatchCommand> patchCommands = new ArrayList<>();
+        patchCommands.add(patchCommand);
+        Integer threadCount = 50;
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.setBearerAuth(action.getJwtClientCredential(CLIENT_ID_SAGA_ID, COMMON_CLIENT_SECRET).getBody().getValue());
+        ArrayList<Integer> integers = new ArrayList<>();
+        integers.add(200);
+        integers.add(400);
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                HttpEntity<ArrayList<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
+                ResponseEntity<Object> exchange2 = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity, Object.class);
+                Assert.assertTrue("expected status code but is " + exchange2.getStatusCodeValue(), integers.contains(exchange2.getStatusCodeValue()));
+            }
+        };
+        String s1 = action.getDefaultAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        UpdateProductAdminCommand command = new UpdateProductAdminCommand();
+        UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
+        productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
+        productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+        command.setDescription(action.getRandomStr());
+        command.setSkus(new ArrayList<>(List.of(productSku)));
+        command.setStatus(ProductStatus.AVAILABLE);
+        Runnable runnable2 = new Runnable() {
+            @Override
+            public void run() {
+                String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
+                HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
+                ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
+                Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
+            }
+        };
+        ArrayList<Runnable> runnables = new ArrayList<>();
+        IntStream.range(0, threadCount).forEach(e -> {
+            runnables.add(runnable);
+            runnables.add(runnable2);
+        });
+        try {
+            assertConcurrent("", runnables, 30000);
+            // get product order count
+            ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
+            assertTrue("total sales should be " + threadCount + "but is " + productDetailAdminRepresentationResponseEntity.getBody().getTotalSales(), productDetailAdminRepresentationResponseEntity.getBody().getTotalSales().equals(threadCount));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
