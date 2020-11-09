@@ -41,7 +41,7 @@ public class BizClientIdempotentTest {
         Client oldClient = action.getClientAsResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = action.createClient(oldClient, s);
         Assert.assertEquals(HttpStatus.OK, client1.getStatusCode());
-        oldClient.setAccessTokenValiditySeconds(100);
+        oldClient.setAccessTokenValiditySeconds(120);
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -63,7 +63,7 @@ public class BizClientIdempotentTest {
         Client oldClient = action.getClientAsResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = action.createClient(oldClient, s);
         Assert.assertEquals(HttpStatus.OK, client1.getStatusCode());
-        oldClient.setAccessTokenValiditySeconds(100);
+        oldClient.setAccessTokenValiditySeconds(120);
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -103,7 +103,7 @@ public class BizClientIdempotentTest {
         Client oldClient = action.getClientAsResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = action.createClient(oldClient, s);
         Assert.assertEquals(HttpStatus.OK, client1.getStatusCode());
-        oldClient.setAccessTokenValiditySeconds(100);
+        oldClient.setAccessTokenValiditySeconds(120);
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -134,7 +134,7 @@ public class BizClientIdempotentTest {
         Client oldClient = action.getClientAsResource(CLIENT_ID_RESOURCE_ID);
         ResponseEntity<String> client1 = action.createClient(oldClient, s);
         Assert.assertEquals(HttpStatus.OK, client1.getStatusCode());
-        oldClient.setAccessTokenValiditySeconds(100);
+        oldClient.setAccessTokenValiditySeconds(120);
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

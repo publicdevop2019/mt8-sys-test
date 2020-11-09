@@ -120,6 +120,7 @@ public class UserAction {
 
     public Client getClientRaw(String... resourceIds) {
         Client client = new Client();
+        client.setName(UUID.randomUUID().toString().replace("-", ""));
         client.setClientSecret(UUID.randomUUID().toString().replace("-", ""));
         client.setGrantTypeEnums(new HashSet<>(Arrays.asList(GrantTypeEnum.PASSWORD)));
         client.setScopeEnums(new HashSet<>(Arrays.asList(ScopeEnum.READ)));
