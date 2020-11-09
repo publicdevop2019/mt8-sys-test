@@ -402,11 +402,10 @@ public class UserAction {
         return restTemplate.exchange(url, HttpMethod.GET, null, CategorySummaryCustomerRepresentation.class);
     }
 
-    public CategorySummaryCardRepresentation getCatalogFromList() {
+    public CategorySummaryCardRepresentation getFixedCatalogFromList() {
         ResponseEntity<CategorySummaryCustomerRepresentation> categories = getCatalogs();
         List<CategorySummaryCardRepresentation> body = categories.getBody().getData();
-        int i = new Random().nextInt(body.size());
-        return body.get(i);
+        return body.get(0);
     }
 
     public ResponseEntity<String> createRandomProductDetail(Integer actualStorage) {
@@ -414,7 +413,7 @@ public class UserAction {
     }
 
     public ResponseEntity<String> createRandomProductDetail(Integer actualStorage, Integer orderStorage) {
-        CategorySummaryCardRepresentation catalogFromList = getCatalogFromList();
+        CategorySummaryCardRepresentation catalogFromList = getFixedCatalogFromList();
         ProductDetail randomProduct = getRandomProduct(catalogFromList, actualStorage, orderStorage);
         CreateProductAdminCommand createProductAdminCommand = new CreateProductAdminCommand();
         BeanUtils.copyProperties(randomProduct, createProductAdminCommand);
@@ -430,7 +429,7 @@ public class UserAction {
     }
 
     public ResponseEntity<String> createRandomProductDetail(Set<String> attrKeys, Set<String> attrProd,BigDecimal price) {
-        CategorySummaryCardRepresentation catalogFromList = getCatalogFromList();
+        CategorySummaryCardRepresentation catalogFromList = getFixedCatalogFromList();
         ProductDetail randomProduct = getRandomProduct(catalogFromList, 10, 10,price);
         CreateProductAdminCommand createProductAdminCommand = new CreateProductAdminCommand();
         BeanUtils.copyProperties(randomProduct, createProductAdminCommand);
@@ -491,7 +490,7 @@ public class UserAction {
         category.setCatalogType(CatalogType.FRONTEND);
         HashSet<String> strings = new HashSet<>();
         strings.add(UUID.randomUUID().toString().replace("-", ""));
-        category.setAttributesSearch(strings);
+        category.setAttributes(strings);
         return category;
     }
 
@@ -510,13 +509,13 @@ public class UserAction {
 
     public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage, Integer orderStorage, BigDecimal price) {
         ProductDetail productDetail = new ProductDetail();
-        productDetail.setImageUrlSmall(UUID.randomUUID().toString().replace("-", ""));
+        productDetail.setImageUrlSmall("http://www.test.com/"+UUID.randomUUID().toString().replace("-", ""));
         HashSet<String> objects = new HashSet<>();
         objects.add(UUID.randomUUID().toString().replace("-", ""));
         objects.add(UUID.randomUUID().toString().replace("-", ""));
         productDetail.setSpecification(objects);
         productDetail.setName(UUID.randomUUID().toString().replace("-", ""));
-        productDetail.setAttrKey(catalog.getAttributesKey());
+        productDetail.setAttributesKey(catalog.getAttributes());
         productDetail.setStatus(ProductStatus.AVAILABLE);
         int i = new Random().nextInt(2000);
         ProductSku productSku = new ProductSku();

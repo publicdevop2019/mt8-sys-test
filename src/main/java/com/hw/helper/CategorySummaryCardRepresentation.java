@@ -9,5 +9,5 @@ import java.util.Set;
 @NoArgsConstructor
 public class CategorySummaryCardRepresentation {
     private String name;
-    private Set<String> attributesKey;
+    private Set<String> attributes;
 }

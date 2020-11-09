@@ -22,11 +22,11 @@ public class ProductDetail extends ProductSimple {
 
     private Set<String> specification;
 
-    private Set<String> attrKey;
+    private Set<String> attributesKey;
 
-    private Set<String> attrProd;
+    private Set<String> attributesProd;
 
-    private Set<String> attrGen;
+    private Set<String> attributesGen;
 
     private List<ProductSku> productSkuList;
 

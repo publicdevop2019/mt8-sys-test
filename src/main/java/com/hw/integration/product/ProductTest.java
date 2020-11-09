@@ -108,6 +108,11 @@ public class ProductTest {
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
+        command.setName(action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        Set<String> strings = new HashSet<>();
+        strings.add(TEST_TEST_VALUE);
+        command.setAttributesKey(strings);
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
@@ -154,6 +159,11 @@ public class ProductTest {
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
+        command.setName(action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        Set<String> strings = new HashSet<>();
+        strings.add(TEST_TEST_VALUE);
+        command.setAttributesKey(strings);
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
@@ -175,6 +185,11 @@ public class ProductTest {
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStartAt(new Date().getTime());
+        command.setName(action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        Set<String> strings = new HashSet<>();
+        strings.add(TEST_TEST_VALUE);
+        command.setAttributesKey(strings);
         String id = exchange.getHeaders().getLocation().toString();
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + id;
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
