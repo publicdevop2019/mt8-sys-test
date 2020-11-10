@@ -228,6 +228,11 @@ public class ProductServiceTest {
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.AVAILABLE);
+        command.setName(action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        Set<String> strings = new HashSet<>();
+        strings.add(TEST_TEST_VALUE);
+        command.setAttributesKey(strings);
         Runnable runnable2 = new Runnable() {
             @Override
             public void run() {
