@@ -121,7 +121,7 @@ public class BIzUserTest {
 
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + RESOURCE_OWNER + ACCESS_ROLE_APP + "/resetPwd";
         forgetPasswordRequest.setToken("123456789");
-        forgetPasswordRequest.setNewPassword(UUID.randomUUID().toString());
+        forgetPasswordRequest.setNewPassword(UUID.randomUUID().toString().replaceAll("-",""));
         String s2 = mapper.writeValueAsString(forgetPasswordRequest);
         HttpHeaders header2 = new HttpHeaders();
         header2.setContentType(MediaType.APPLICATION_JSON);
@@ -142,7 +142,7 @@ public class BIzUserTest {
         ResourceOwnerUpdatePwd resourceOwnerUpdatePwd = new ResourceOwnerUpdatePwd();
         resourceOwnerUpdatePwd.setCurrentPwd(user.getPassword());
         resourceOwnerUpdatePwd.setEmail(user.getEmail());
-        resourceOwnerUpdatePwd.setPassword(UUID.randomUUID().toString());
+        resourceOwnerUpdatePwd.setPassword(UUID.randomUUID().toString().replaceAll("-",""));
         action.registerAnUser(user);
         /** Location is not used in this case, root/admin/user can only update their password */
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + RESOURCE_OWNER + UserAction.ACCESS_ROLE_USER + "/pwd";
