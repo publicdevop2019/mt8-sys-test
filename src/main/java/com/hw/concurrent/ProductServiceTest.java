@@ -233,14 +233,12 @@ public class ProductServiceTest {
         Set<String> strings = new HashSet<>();
         strings.add(TEST_TEST_VALUE);
         command.setAttributesKey(strings);
-        Runnable runnable2 = new Runnable() {
-            @Override
-            public void run() {
-                String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
-                HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
-                ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
-                Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
-            }
+        command.setVersion(0);
+        Runnable runnable2 = () -> {
+            String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
+            HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
+            ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
+            Assert.assertTrue("expected status code in admin update but is " + exchange2.getStatusCodeValue(), integers.contains(exchange2.getStatusCodeValue()));
         };
         ArrayList<Runnable> runnables = new ArrayList<>();
         IntStream.range(0, threadCount).forEach(e -> {
