@@ -30,5 +30,6 @@ public class Client {
     private Boolean autoApprove;
 
     private Boolean hasSecret;
+    private Integer version;
 
 }

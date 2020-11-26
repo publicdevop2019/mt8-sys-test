@@ -198,8 +198,8 @@ public class BIzUserTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bearer);
         user.setGrantedAuthorities(List.of(ResourceOwnerAuthorityEnum.ROLE_ADMIN, ResourceOwnerAuthorityEnum.ROLE_USER));
-        String s1 = mapper.writeValueAsString(user);
-        HttpEntity<String> request = new HttpEntity<>(s1, headers);
+        user.setVersion(0);
+        HttpEntity<ResourceOwner> request = new HttpEntity<>(user, headers);
         ResponseEntity<DefaultOAuth2AccessToken> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
@@ -290,8 +290,8 @@ public class BIzUserTest {
         headers.setBearerAuth(bearer);
         user.setGrantedAuthorities(List.of(ResourceOwnerAuthorityEnum.ROLE_USER));
         user.setLocked(true);
-        String s1 = mapper.writeValueAsString(user);
-        HttpEntity<String> request = new HttpEntity<>(s1, headers);
+        user.setVersion(0);
+        HttpEntity<ResourceOwner> request = new HttpEntity<>(user, headers);
         ResponseEntity<DefaultOAuth2AccessToken> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
@@ -303,8 +303,8 @@ public class BIzUserTest {
         Assert.assertEquals(HttpStatus.BAD_REQUEST, tokenResponse1.getStatusCode());
 
         user.setLocked(false);
-        String s3 = mapper.writeValueAsString(user);
-        HttpEntity<String> request22 = new HttpEntity<>(s3, headers);
+        user.setVersion(1);
+        HttpEntity<ResourceOwner> request22 = new HttpEntity<>(user, headers);
         ResponseEntity<DefaultOAuth2AccessToken> exchange22 = action.restTemplate.exchange(url, HttpMethod.PUT, request22, DefaultOAuth2AccessToken.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange22.getStatusCode());

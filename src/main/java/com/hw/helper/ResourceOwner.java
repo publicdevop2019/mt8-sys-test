@@ -19,5 +19,6 @@ public class ResourceOwner {
     private List<ResourceOwnerAuthorityEnum> grantedAuthorities;
 
     private Set<String> resourceId;
+    private Integer version;
 
 }
