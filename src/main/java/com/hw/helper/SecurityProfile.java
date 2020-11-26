@@ -22,4 +22,5 @@ public class SecurityProfile {
     private String path;
     private String query;
     private String fragment;
+    private Integer version;
 }

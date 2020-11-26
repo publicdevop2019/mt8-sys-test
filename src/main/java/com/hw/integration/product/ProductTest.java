@@ -102,14 +102,16 @@ public class ProductTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
         UpdateProductAdminCommand command = new UpdateProductAdminCommand();
+        command.setVersion(0);
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
+        productSku.setVersion(0);
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
         productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
         command.setName(action.getRandomStr());
-        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/" + action.getRandomStr());
         Set<String> strings = new HashSet<>();
         strings.add(TEST_TEST_VALUE);
         command.setAttributesKey(strings);
@@ -127,14 +129,16 @@ public class ProductTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
         UpdateProductAdminCommand command = new UpdateProductAdminCommand();
+        command.setVersion(0);
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
+        productSku.setVersion(0);
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
         productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
         command.setName(action.getRandomStr());
-        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/" + action.getRandomStr());
         Set<String> strings = new HashSet<>();
         strings.add(TEST_TEST_VALUE);
         command.setAttributesKey(strings);
@@ -144,7 +148,7 @@ public class ProductTest {
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
 
         HttpEntity<UpdateProductAdminCommand> request3 = new HttpEntity<>(null, headers);
-        ResponseEntity<ProductDetailAdminRepresentation> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET,request3, ProductDetailAdminRepresentation.class);
+        ResponseEntity<ProductDetailAdminRepresentation> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET, request3, ProductDetailAdminRepresentation.class);
 
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertEquals(1, exchange3.getBody().getAttributesKey().size());
@@ -188,14 +192,16 @@ public class ProductTest {
         int i = new Random().nextInt(1000);
         productSku.setIncreaseActualStorage(i);
         productSku.setIncreaseOrderStorage(i + new Random().nextInt(1000));
+        productSku.setVersion(0);
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.UNAVAILABLE);
         command.setName(action.getRandomStr());
-        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/" + action.getRandomStr());
         Set<String> strings = new HashSet<>();
         strings.add(TEST_TEST_VALUE);
         command.setAttributesKey(strings);
+        command.setVersion(0);
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
@@ -210,7 +216,9 @@ public class ProductTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
         UpdateProductAdminCommand command = new UpdateProductAdminCommand();
+        command.setVersion(0);
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
+        productSku.setVersion(0);
         BigDecimal abs = BigDecimal.valueOf(new Random().nextDouble()).abs();
         productSku.setPrice(abs);
         productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
@@ -218,7 +226,7 @@ public class ProductTest {
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStartAt(new Date().getTime());
         command.setName(action.getRandomStr());
-        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/" + action.getRandomStr());
         Set<String> strings = new HashSet<>();
         strings.add(TEST_TEST_VALUE);
         command.setAttributesKey(strings);

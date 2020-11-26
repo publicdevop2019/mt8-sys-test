@@ -70,12 +70,18 @@ public class EndpointTest {
         ResponseEntity<SumTotalProfile> listResponseEntity = readProfile();
         SecurityProfile securityProfile = listResponseEntity.getBody().getData().get(6);
         securityProfile.setExpression("hasRole('ROLE_ROOT') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
+
         ResponseEntity<String> stringResponseEntity = updateProfile(securityProfile, 6L);
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity.getStatusCode());
 
         /**
          * after modify, admin is not able to access resourceOwner apis
          */
+        try {
+            Thread.sleep(5000);//wait for cache update
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
 
@@ -83,9 +89,14 @@ public class EndpointTest {
          * modify profile to allow access
          */
         securityProfile.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
+        securityProfile.setVersion(securityProfile.getVersion() + 1);
         ResponseEntity<String> stringResponseEntity1 = updateProfile(securityProfile, 6L);
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity1.getStatusCode());
-
+        try {
+            Thread.sleep(5000);//wait for cache update
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }

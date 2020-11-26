@@ -48,9 +48,11 @@ public class BizClientIdempotentTest {
         headers.setBearerAuth(bearer);
         String s2 = UUID.randomUUID().toString();
         headers.set("changeId", s2);
+        oldClient.setVersion(0);
         HttpEntity<Client> request = new HttpEntity<>(oldClient, headers);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        oldClient.setVersion(1);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }
@@ -110,6 +112,7 @@ public class BizClientIdempotentTest {
         headers.setBearerAuth(bearer);
         String s2 = UUID.randomUUID().toString();
         headers.set("changeId", s2);
+        oldClient.setVersion(0);
         HttpEntity<Client> request = new HttpEntity<>(oldClient, headers);
 
         Runnable runnable2 = () -> {

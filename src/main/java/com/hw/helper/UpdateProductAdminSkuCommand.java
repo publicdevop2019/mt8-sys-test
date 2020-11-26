@@ -16,4 +16,5 @@ public class UpdateProductAdminSkuCommand {
     private Integer storageOrder;
     private Integer storageActual;
     private Integer sales;
+    private Integer version;
 }

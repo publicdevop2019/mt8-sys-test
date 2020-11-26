@@ -88,16 +88,11 @@ public class CatalogTest {
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
         Catalog randomCategory2 = action.generateRandomFrontendCatalog();
-        String s21 = null;
-        try {
-            s21 = mapper.writeValueAsString(randomCategory2);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setContentType(MediaType.APPLICATION_JSON);
         headers2.setBearerAuth(s1);
-        HttpEntity<String> request2 = new HttpEntity<>(s21, headers2);
+        randomCategory2.setVersion(0);
+        HttpEntity<Catalog> request2 = new HttpEntity<>(randomCategory2, headers2);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + exchange.getHeaders().getLocation().toString(), HttpMethod.PUT, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
 
