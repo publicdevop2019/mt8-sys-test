@@ -54,7 +54,7 @@ public class AuthorizationCodeTest {
     public void should_get_authorize_code_after_pwd_login_for_user() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordUser();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> code = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> code = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String body = code.getBody();
         String read = JsonPath.read(body, "$.authorize_code");
         Assert.assertNotNull(read);
@@ -64,12 +64,12 @@ public class AuthorizationCodeTest {
     public void should_authorize_token_has_right_role_for_admin() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordAdmin();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
 
         Assert.assertNotNull(code);
 
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_AUTHORIZATION_CODE, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_MGFB_ID, EMPTY_CLIENT_SECRET);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_AUTHORIZATION_CODE, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_OM_ID, EMPTY_CLIENT_SECRET);
 
         Assert.assertEquals(HttpStatus.OK, authorizationToken.getStatusCode());
         Assert.assertNotNull(authorizationToken.getBody());
@@ -84,12 +84,12 @@ public class AuthorizationCodeTest {
     public void should_authorize_token_has_right_role_for_root() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordRoot();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
 
         Assert.assertNotNull(code);
 
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_AUTHORIZATION_CODE, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_MGFB_ID, EMPTY_CLIENT_SECRET);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_AUTHORIZATION_CODE, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_OM_ID, EMPTY_CLIENT_SECRET);
 
         Assert.assertEquals(HttpStatus.OK, authorizationToken.getStatusCode());
         Assert.assertNotNull(authorizationToken.getBody());
@@ -105,12 +105,12 @@ public class AuthorizationCodeTest {
     public void should_authorize_token_has_right_role_for_user() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordUser();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
 
         Assert.assertNotNull(code);
 
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_AUTHORIZATION_CODE, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_MGFB_ID, EMPTY_CLIENT_SECRET);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_AUTHORIZATION_CODE, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_OM_ID, EMPTY_CLIENT_SECRET);
 
         Assert.assertEquals(HttpStatus.OK, authorizationToken.getStatusCode());
         Assert.assertNotNull(authorizationToken.getBody());
@@ -127,8 +127,8 @@ public class AuthorizationCodeTest {
     public void use_wrong_authorize_code_after_user_grant_access() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordRoot();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> code = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = action.getAuthorizationToken(UUID.randomUUID().toString(), OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_MGFB_ID, EMPTY_CLIENT_SECRET);
+        ResponseEntity<String> code = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = action.getAuthorizationToken(UUID.randomUUID().toString(), OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_OM_ID, EMPTY_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, authorizationToken.getStatusCode());
 
     }
@@ -137,9 +137,9 @@ public class AuthorizationCodeTest {
     public void client_use_wrong_redirect_url_during_authorization() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordRoot();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = action.getAuthorizationToken(code, UUID.randomUUID().toString(), CLIENT_ID_MGFB_ID, EMPTY_CLIENT_SECRET);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = action.getAuthorizationToken(code, UUID.randomUUID().toString(), CLIENT_ID_OM_ID, EMPTY_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, authorizationToken.getStatusCode());
 
     }
@@ -148,9 +148,9 @@ public class AuthorizationCodeTest {
     public void client_use_wrong_grant_type_during_authorization() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordRoot();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
-        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_PASSWORD, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_MGFB_ID, EMPTY_CLIENT_SECRET);
+        ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = getAuthorizationToken(GRANT_TYPE_PASSWORD, code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_OM_ID, EMPTY_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, authorizationToken.getStatusCode());
 
     }
@@ -159,7 +159,7 @@ public class AuthorizationCodeTest {
     public void client_use_wrong_client_id_during_authorization() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordRoot();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
         ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = action.getAuthorizationToken(code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_LOGIN_ID, EMPTY_CLIENT_SECRET);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, authorizationToken.getStatusCode());
@@ -170,7 +170,7 @@ public class AuthorizationCodeTest {
     public void client_use_wrong_client_id_w_credential_during_authorization() {
         ResponseEntity<DefaultOAuth2AccessToken> defaultOAuth2AccessTokenResponseEntity = action.getJwtPasswordRoot();
         String accessToken = defaultOAuth2AccessTokenResponseEntity.getBody().getValue();
-        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_MGFB_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
+        ResponseEntity<String> codeResp = action.getCodeResp(CLIENT_ID_OM_ID, accessToken, OBJECT_MARKET_REDIRECT_URI);
         String code = JsonPath.read(codeResp.getBody(), "$.authorize_code");
         ResponseEntity<DefaultOAuth2AccessToken> authorizationToken = action.getAuthorizationToken(code, OBJECT_MARKET_REDIRECT_URI, CLIENT_ID_LOGIN_ID, UUID.randomUUID().toString());
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, authorizationToken.getStatusCode());

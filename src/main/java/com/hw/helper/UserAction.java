@@ -34,7 +34,7 @@ public class UserAction {
     public static final String CLIENT_ID_LOGIN_ID = "838330249904133";
     public static final String CLIENT_ID_OAUTH2_ID = "838330249904134";
     public static final String CLIENT_ID_REGISTER_ID = "838330249904135";
-    public static final String CLIENT_ID_MGFB_ID = "838330249904136";
+    public static final String CLIENT_ID_OM_ID = "838330249904144";
     public static final String CLIENT_ID_RIGHT_ROLE_NOT_SUFFICIENT_RESOURCE_ID = "838330249904138";
     public static final String CLIENT_ID_RESOURCE_ID = "838330249904139";
     public static final String CLIENT_ID_USER_PROFILE_ID = "838330249904145";
@@ -55,7 +55,7 @@ public class UserAction {
     public static final String SVC_NAME_PRODUCT = "/product-svc";
     public static final String SVC_NAME_PROFILE = "/profile-svc";
     public static final String SVC_NAME_BBS = "/bbs-svc";
-    public static final String OBJECT_MARKET_REDIRECT_URI = "http://localhost:4200";
+    public static final String OBJECT_MARKET_REDIRECT_URI = "http://localhost:4200/account";
     public static final String BBS_REDIRECT_URI = "http://localhost:3000/account";
     public static final String CLIENTS = "/clients";
     public List<ResourceOwner> testUser = new ArrayList<>();
