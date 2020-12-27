@@ -1,4 +1,4 @@
-package com.hw.integration.oauth2;
+package com.hw.integration.identityaccess.oauth2;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;

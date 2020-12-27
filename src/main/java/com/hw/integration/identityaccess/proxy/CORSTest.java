@@ -1,4 +1,4 @@
-package com.hw.integration.proxy;
+package com.hw.integration.identityaccess.proxy;
 
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;

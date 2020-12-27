@@ -1,4 +1,4 @@
-package com.hw.integration.idempotent;
+package com.hw.integration.identityaccess.idempotent;
 
 import com.hw.helper.Client;
 import com.hw.helper.UserAction;

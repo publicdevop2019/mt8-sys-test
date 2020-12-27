@@ -1,4 +1,4 @@
-package com.hw.integration.security;
+package com.hw.integration.identityaccess.security;
 
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;

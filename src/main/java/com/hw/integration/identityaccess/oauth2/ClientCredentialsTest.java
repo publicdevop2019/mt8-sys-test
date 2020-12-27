@@ -1,4 +1,4 @@
-package com.hw.integration.oauth2;
+package com.hw.integration.identityaccess.oauth2;
 
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
@@ -12,7 +12,6 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;

@@ -1,4 +1,4 @@
-package com.hw.integration.proxy;
+package com.hw.integration.identityaccess.proxy;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
