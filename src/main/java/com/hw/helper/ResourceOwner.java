@@ -8,7 +8,7 @@ import java.util.Set;
 @Data
 public class ResourceOwner {
 
-    protected Long id;
+    protected String id;
 
     private String email;
 

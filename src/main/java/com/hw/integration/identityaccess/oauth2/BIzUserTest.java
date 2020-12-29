@@ -31,7 +31,7 @@ import static com.hw.helper.UserAction.*;
 @SpringBootTest
 public class BIzUserTest {
     public static final String RESOURCE_OWNER = "/users";
-    private static final Long root_index = 838330249904129L;
+    private static final String root_index = "0U8AZTODP4H0";
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     @Autowired
     private UserAction action;
