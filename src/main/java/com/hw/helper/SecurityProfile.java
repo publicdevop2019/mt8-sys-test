@@ -14,7 +14,7 @@ public class SecurityProfile {
 
     private String url;
 
-    private Long id;
+    private String id;
     private String scheme;
     private String userInfo;
     private String host;

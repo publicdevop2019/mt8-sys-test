@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static com.hw.helper.UserAction.ACCESS_ROLE_ROOT;
+import static com.hw.helper.UserAction.SVC_NAME_AUTH;
 
 /**
  * this integration auth requires oauth2service to be running
@@ -52,7 +53,7 @@ public class EndpointTest {
 
     @Test
     public void modify_existing_profile_to_prevent_access() {
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + "/users/admin";
+        String url2 = UserAction.proxyUrl + SVC_NAME_AUTH + "/users/admin";
         /**
          * before modify, admin is able to access resourceOwner apis
          */
@@ -71,14 +72,14 @@ public class EndpointTest {
         SecurityProfile securityProfile = listResponseEntity.getBody().getData().get(6);
         securityProfile.setExpression("hasRole('ROLE_ROOT') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
 
-        ResponseEntity<String> stringResponseEntity = updateProfile(securityProfile, 6L);
+        ResponseEntity<String> stringResponseEntity = updateProfile(securityProfile, securityProfile.getId());
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity.getStatusCode());
 
         /**
          * after modify, admin is not able to access resourceOwner apis
          */
         try {
-            Thread.sleep(5000);//wait for cache update
+            Thread.sleep(15*1000);//wait for cache update
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -90,10 +91,10 @@ public class EndpointTest {
          */
         securityProfile.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
         securityProfile.setVersion(securityProfile.getVersion() + 1);
-        ResponseEntity<String> stringResponseEntity1 = updateProfile(securityProfile, 6L);
+        ResponseEntity<String> stringResponseEntity1 = updateProfile(securityProfile, securityProfile.getId());
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity1.getStatusCode());
         try {
-            Thread.sleep(5000);//wait for cache update
+            Thread.sleep(15*1000);//wait for cache update
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -101,11 +102,24 @@ public class EndpointTest {
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }
 
+    @Test
+    public void create_new_endpoint_then_delete() {
+        SecurityProfile securityProfile1 = new SecurityProfile();
+        securityProfile1.setResourceId("123");
+        securityProfile1.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
+        securityProfile1.setMethod("GET");
+        securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-","").replaceAll("\\d", "")+"/abc");
+        ResponseEntity<String> profile = createProfile(securityProfile1);
+        Assert.assertEquals(HttpStatus.OK, profile.getStatusCode());
+        ResponseEntity<String> stringResponseEntity = deleteProfile(profile.getHeaders().getLocation().toString());
+        Assert.assertEquals(HttpStatus.OK, stringResponseEntity.getStatusCode());
+    }
+
 
     private ResponseEntity<SumTotalProfile> readProfile() {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS + ACCESS_ROLE_ROOT;
+        String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(headers1);
@@ -115,27 +129,27 @@ public class EndpointTest {
     private ResponseEntity<String> createProfile(SecurityProfile securityProfile) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS + ACCESS_ROLE_ROOT;
+        String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
         return action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
     }
 
-    private ResponseEntity<String> updateProfile(SecurityProfile securityProfile, Long id) {
+    private ResponseEntity<String> updateProfile(SecurityProfile securityProfile, String id) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS + ACCESS_ROLE_ROOT + "/" + id;
+        String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT + "/" + id;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile, headers1);
         return action.restTemplate.exchange(url, HttpMethod.PUT, hashMapHttpEntity1, String.class);
     }
 
-    private ResponseEntity<String> deleteProfile(Long id) {
+    private ResponseEntity<String> deleteProfile(String id) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
         String bearer1 = pwdTokenResponse2.getBody().getValue();
-        String url = UserAction.proxyUrl + PROXY_SECURITY + ENDPOINTS + ACCESS_ROLE_ROOT + "/" + id;
+        String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT + "/" + id;
         HttpHeaders headers1 = new HttpHeaders();
         headers1.setBearerAuth(bearer1);
         HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
