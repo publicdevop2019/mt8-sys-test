@@ -33,7 +33,7 @@ import static com.hw.helper.UserAction.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class RevokeTokenTest {
-    public static final String PROXY_BLACKLIST = "/proxy/revoke-tokens";
+    public static final String PROXY_BLACKLIST = "/auth-svc/revoke-tokens";
     public static final String USERS_ADMIN = "/users/admin";
 
     private ObjectMapper mapper = new ObjectMapper();
@@ -53,60 +53,6 @@ public class RevokeTokenTest {
     public void setUp() {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
-    }
-
-    @Test
-    public void receive_request_blacklist_client_then_block_client_old_request_which_trying_to_access_proxy_internal_endpoints() throws JsonProcessingException, InterruptedException {
-        String url = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_ROOT;
-        String url2 = UserAction.proxyUrl + PROXY_BLACKLIST + ACCESS_ROLE_APP;
-        /**
-         * before client get blacklisted, client is able to access proxy endpoints
-         */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse1 = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
-        String bearer1 = tokenResponse1.getBody().getValue();
-
-        HttpHeaders headers1 = new HttpHeaders();
-        headers1.setBearerAuth(bearer1);
-        headers1.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> hashMapHttpEntity1 = new HttpEntity<>(null, headers1);
-        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
-
-
-        /**
-         * block client
-         */
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
-        String bearer = tokenResponse.getBody().getValue();
-
-        HashMap<String, String> blockBody = new HashMap<>();
-        blockBody.put("id", CLIENT_ID_OAUTH2_ID);
-        blockBody.put("type", "CLIENT");
-        String body = mapper.writeValueAsString(blockBody);
-        HttpHeaders blockCallHeader = new HttpHeaders();
-        blockCallHeader.setBearerAuth(bearer);
-        blockCallHeader.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> blockReqEntity = new HttpEntity<>(body, blockCallHeader);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.POST, blockReqEntity, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-
-        /**
-         * after client get blacklisted, client with old token will get 401
-         */
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
-        Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange2.getStatusCode());
-
-        /**
-         * after client obtain new token from auth server, it can access resource again
-         * add thread sleep to prevent token get revoked and generate within a second
-         */
-        Thread.sleep(1000);
-        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse3 = action.getJwtClientCredential(CLIENT_ID_OAUTH2_ID, COMMON_CLIENT_SECRET);
-        String bearer3 = tokenResponse3.getBody().getValue();
-        headers1.setBearerAuth(bearer3);
-        HttpEntity<String> hashMapHttpEntity3 = new HttpEntity<>(null, headers1);
-        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity3, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
     }
 
     @Test
