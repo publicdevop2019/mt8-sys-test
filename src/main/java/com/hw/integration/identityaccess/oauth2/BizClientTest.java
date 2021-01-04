@@ -135,6 +135,28 @@ public class BizClientTest {
     }
 
     @Test
+    public void create_client_then_replace_it_with_same_client_info_only_password_is_empty_N_times_then_client_version_should_not_increase() {
+        ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword(ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
+        String bearer = tokenResponse.getBody().getValue();
+        Client oldClient = action.getClientAsNonResource(CLIENT_ID_RESOURCE_ID);
+        ResponseEntity<String> client1 = action.createClient(oldClient);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + client1.getHeaders().getLocation().toString();
+        oldClient.setClientSecret(" ");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(bearer);
+        HttpEntity<Client> request = new HttpEntity<>(oldClient, headers);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
+        ResponseEntity<Client> exchange1 = action.restTemplate.exchange(url, HttpMethod.GET, request, Client.class);
+
+        Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
+        Assert.assertEquals(0, (int) exchange1.getBody().getVersion());
+    }
+
+    @Test
     public void create_client_then_update_it_tobe_resource() throws JsonProcessingException {
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword(ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
         String bearer = tokenResponse.getBody().getValue();

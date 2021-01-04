@@ -105,7 +105,7 @@ public class EndpointTest {
     @Test
     public void create_new_endpoint_then_delete() {
         SecurityProfile securityProfile1 = new SecurityProfile();
-        securityProfile1.setResourceId("123");
+        securityProfile1.setResourceId("0C8AZTODP4HT");
         securityProfile1.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
         securityProfile1.setMethod("GET");
         securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-","").replaceAll("\\d", "")+"/abc");
