@@ -28,7 +28,7 @@ public class CORSTest {
     @Autowired
     private UserAction action;
 
-    private String thirdPartyOrigin = "https://editor.swagger.io";
+    private String thirdPartyOrigin = "http://localhost:4300";
 
     private String[] corsUris = {"/oauth/token", "/oauth/token_key", "/client", "/client/0", "/clients",
             "/authorize", "/resourceOwner", "/resourceOwner/0", "/resourceOwner/pwd", "/resourceOwners"};
@@ -159,7 +159,7 @@ public class CORSTest {
 
     private void corsAssertToken(ResponseEntity res) {
         Assert.assertEquals(HttpStatus.OK, res.getStatusCode());
-        Assert.assertEquals("*", res.getHeaders().getAccessControlAllowOrigin());
+        Assert.assertEquals("http://localhost:4300", res.getHeaders().getAccessControlAllowOrigin());
         Assert.assertEquals("[POST, PATCH, GET, DELETE, PUT, OPTIONS]", res.getHeaders().getAccessControlAllowMethods().toString());
         Assert.assertEquals("[authorization, x-requested-with]", res.getHeaders().getAccessControlAllowHeaders().toString());
         Assert.assertEquals(86400, res.getHeaders().getAccessControlMaxAge());
@@ -173,6 +173,7 @@ public class CORSTest {
         System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
         HttpHeaders headers = new HttpHeaders();
         headers.add("Origin", thirdPartyOrigin);
+        headers.add("Access-Control-Allow-Origin", "http://localhost:4300");
         headers.add("Access-Control-Request-Method", method.toString());
         headers.add("Access-Control-Request-Headers", "authorization");
         HttpEntity<String> request = new HttpEntity<>(headers);
@@ -182,7 +183,7 @@ public class CORSTest {
 
     private void corsAssertNonToken(ResponseEntity res) {
         Assert.assertEquals(HttpStatus.OK, res.getStatusCode());
-        Assert.assertEquals("*", res.getHeaders().getAccessControlAllowOrigin());
+        Assert.assertEquals("http://localhost:4300", res.getHeaders().getAccessControlAllowOrigin());
         Assert.assertEquals("[POST, PATCH, GET, DELETE, PUT, OPTIONS]", res.getHeaders().getAccessControlAllowMethods().toString());
         Assert.assertEquals("[authorization]", res.getHeaders().getAccessControlAllowHeaders().toString());
         Assert.assertEquals(86400, res.getHeaders().getAccessControlMaxAge());

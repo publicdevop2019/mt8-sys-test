@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.runner.Description;
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -161,6 +162,8 @@ public class UserAction {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bearer);
         headers.set("changeId", changeId);
+        headers.set("X-XSRF-TOKEN","123");
+        headers.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
         HttpEntity<Client> request = new HttpEntity<>(client, headers);
         return restTemplate.exchange(URL2, HttpMethod.POST, request, String.class);
     }

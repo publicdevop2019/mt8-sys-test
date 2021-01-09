@@ -15,7 +15,7 @@ import javax.annotation.PreDestroy;
 
 @Slf4j
 @SpringBootApplication
-@EnableScheduling
+//@EnableScheduling
 public class TestRunner {
 //    @Autowired
 //    TestResultRepo testResultRepo;

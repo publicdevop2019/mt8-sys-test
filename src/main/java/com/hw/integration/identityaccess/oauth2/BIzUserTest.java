@@ -366,7 +366,7 @@ public class BIzUserTest {
          */
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse2 = action.getJwtPassword(ACCOUNT_USERNAME_ADMIN, ACCOUNT_PASSWORD_ADMIN);
         HttpHeaders headers2 = new HttpHeaders();
-        headers.setBearerAuth(tokenResponse2.getBody().getValue());
+        headers2.setBearerAuth(tokenResponse2.getBody().getValue());
         HttpEntity<Object> request2 = new HttpEntity<>(null, headers2);
         ResponseEntity<Object> exchange2 = action.restTemplate.exchange(url, HttpMethod.DELETE, request2, Object.class);
         /**

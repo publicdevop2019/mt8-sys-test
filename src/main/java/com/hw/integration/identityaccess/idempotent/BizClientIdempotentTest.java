@@ -48,6 +48,8 @@ public class BizClientIdempotentTest {
         headers.setBearerAuth(bearer);
         String s2 = UUID.randomUUID().toString();
         headers.set("changeId", s2);
+        headers.set("X-XSRF-TOKEN","123");
+        headers.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
         oldClient.setVersion(0);
         HttpEntity<Client> request = new HttpEntity<>(oldClient, headers);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
@@ -72,6 +74,8 @@ public class BizClientIdempotentTest {
         headers.setBearerAuth(bearer);
         String s2 = UUID.randomUUID().toString();
         headers.set("changeId", s2);
+        headers.set("X-XSRF-TOKEN","123");
+        headers.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
         HttpEntity<Client> request = new HttpEntity<>(oldClient, headers);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
@@ -112,6 +116,8 @@ public class BizClientIdempotentTest {
         headers.setBearerAuth(bearer);
         String s2 = UUID.randomUUID().toString();
         headers.set("changeId", s2);
+        headers.set("X-XSRF-TOKEN","123");
+        headers.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
         oldClient.setVersion(0);
         HttpEntity<Client> request = new HttpEntity<>(oldClient, headers);
 
@@ -144,6 +150,8 @@ public class BizClientIdempotentTest {
         headers.setBearerAuth(bearer);
         String s2 = UUID.randomUUID().toString();
         headers.set("changeId", s2);
+        headers.set("X-XSRF-TOKEN","123");
+        headers.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
         HttpEntity<Client> request = new HttpEntity<>(oldClient, headers);
 
         Runnable runnable2 = () -> {

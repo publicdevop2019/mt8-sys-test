@@ -2,6 +2,7 @@ package com.hw.helper;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -24,6 +25,8 @@ public class OutgoingReqInterceptor implements ClientHttpRequestInterceptor {
     public ClientHttpResponse intercept(HttpRequest httpRequest, byte[] bytes, ClientHttpRequestExecution clientHttpRequestExecution) throws IOException {
         httpRequest.getHeaders().set("testId", testId.toString());
         httpRequest.getHeaders().set("changeId", UUID.randomUUID().toString());
+        httpRequest.getHeaders().set("X-XSRF-TOKEN","123");
+        httpRequest.getHeaders().add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
         return clientHttpRequestExecution.execute(httpRequest, bytes);
     }
 }
