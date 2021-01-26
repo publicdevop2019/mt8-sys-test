@@ -19,6 +19,8 @@ import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 import static com.hw.helper.UserAction.ACCESS_ROLE_ROOT;
@@ -70,7 +72,9 @@ public class EndpointTest {
          */
         ResponseEntity<SumTotalProfile> listResponseEntity = readProfile();
         SecurityProfile securityProfile = listResponseEntity.getBody().getData().get(6);
-        securityProfile.setExpression("hasRole('ROLE_ROOT') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
+        securityProfile.getUserRoles().remove("ROLE_ADMIN");
+        securityProfile.getUserRoles().add("ROLE_ROOT");
+//        securityProfile.setExpression("hasRole('ROLE_ROOT') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
 
         ResponseEntity<String> stringResponseEntity = updateProfile(securityProfile, securityProfile.getId());
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity.getStatusCode());
@@ -89,7 +93,8 @@ public class EndpointTest {
         /**
          * modify profile to allow access
          */
-        securityProfile.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
+        securityProfile.getUserRoles().remove("ROLE_ROOT");
+        securityProfile.getUserRoles().add("ROLE_ADMIN");
         securityProfile.setVersion(securityProfile.getVersion() + 1);
         ResponseEntity<String> stringResponseEntity1 = updateProfile(securityProfile, securityProfile.getId());
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity1.getStatusCode());
@@ -106,7 +111,9 @@ public class EndpointTest {
     public void create_new_endpoint_then_delete() {
         SecurityProfile securityProfile1 = new SecurityProfile();
         securityProfile1.setResourceId("0C8AZTODP4HT");
-        securityProfile1.setExpression("hasRole('ROLE_ADMIN') and #oauth2.hasScope('TRUST') and #oauth2.isUser()");
+        securityProfile1.setUserRoles(new HashSet<>(List.of("ROLE_ADMIN")));
+        securityProfile1.setClientRoles(new HashSet<>(List.of("TRUST")));
+        securityProfile1.setUserOnly(true);
         securityProfile1.setMethod("GET");
         securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-","").replaceAll("\\d", "")+"/abc");
         ResponseEntity<String> profile = createProfile(securityProfile1);

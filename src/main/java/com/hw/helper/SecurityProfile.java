@@ -2,10 +2,10 @@ package com.hw.helper;
 
 import lombok.Data;
 
+import java.util.Set;
+
 @Data
 public class SecurityProfile {
-    private String expression;
-
     private String resourceId;
 
     private String lookupPath;
@@ -23,4 +23,12 @@ public class SecurityProfile {
     private String query;
     private String fragment;
     private Integer version;
+    private String description;
+    private Set<String> clientRoles;
+    private Set<String> userRoles;
+    private Set<String> clientScopes;
+    private boolean secured;
+    private boolean userOnly;
+    private boolean clientOnly;
+
 }

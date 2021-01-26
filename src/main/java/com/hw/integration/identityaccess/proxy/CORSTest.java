@@ -30,8 +30,8 @@ public class CORSTest {
 
     private String thirdPartyOrigin = "http://localhost:4300";
 
-    private String[] corsUris = {"/oauth/token", "/oauth/token_key", "/client", "/client/0", "/clients",
-            "/authorize", "/resourceOwner", "/resourceOwner/0", "/resourceOwner/pwd", "/resourceOwners"};
+    private String[] corsUris = {"/auth-svc/oauth/token", "/auth-svc/oauth/token_key", "/auth-svc/client", "/auth-svc/client/0", "/auth-svc/clients",
+            "/auth-svc/authorize", "/auth-svc/resourceOwner", "/auth-svc/resourceOwner/0", "/auth-svc/resourceOwner/pwd", "/auth-svc/resourceOwners"};
     UUID uuid;
     @Rule
     public TestWatcher watchman = new TestWatcher() {

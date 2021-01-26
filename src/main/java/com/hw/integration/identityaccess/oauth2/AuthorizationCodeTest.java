@@ -192,6 +192,7 @@ public class AuthorizationCodeTest {
         params.add("redirect_uri", redirect_uri);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
