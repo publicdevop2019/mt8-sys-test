@@ -284,6 +284,7 @@ public class UserAction {
         params.add("redirect_uri", redirectUri);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearerToken);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
@@ -295,6 +296,7 @@ public class UserAction {
         params.add("redirect_uri", redirect_uri);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
