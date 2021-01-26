@@ -131,6 +131,7 @@ public class PasswordFlowTest {
         params.add("username", username);
         params.add("password", userPwd);
         HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.setBasicAuth(clientId, clientSecret);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return action.restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);

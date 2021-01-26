@@ -64,8 +64,8 @@ public class RefreshTokenTest {
         HashSet<ScopeEnum> scopes = new HashSet<>();
         scopes.add(ScopeEnum.TRUST);
         clientRaw.setScopeEnums(scopes);
-        clientRaw.setAccessTokenValiditySeconds(10);
-        clientRaw.setRefreshTokenValiditySeconds(100);
+        clientRaw.setAccessTokenValiditySeconds(1);
+        clientRaw.setRefreshTokenValiditySeconds(1000);
         ResponseEntity<String> client = action.createClient(clientRaw);
         String clientId = client.getHeaders().getLocation().toString();
         Assert.assertEquals(HttpStatus.OK, client.getStatusCode());
@@ -79,7 +79,7 @@ public class RefreshTokenTest {
         HttpEntity<String> request = new HttpEntity<>(null, headers);
         ResponseEntity<SumTotalUser> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, SumTotalUser.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-        Thread.sleep(11000);
+        Thread.sleep(60000+2000);//spring cloud gateway add 60S leeway
         //access access token should expire
         ResponseEntity<SumTotalUser> exchange2 = action.restTemplate.exchange(url, HttpMethod.GET, request, SumTotalUser.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange2.getStatusCode());
@@ -89,6 +89,7 @@ public class RefreshTokenTest {
         params.add("refresh_token", jwtPasswordWithClient.getBody().getRefreshToken().getValue());
         HttpHeaders headers2 = new HttpHeaders();
         headers2.setBasicAuth(clientId, clientSecret);
+        headers2.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> request2 = new HttpEntity<>(params, headers2);
         ResponseEntity<DefaultOAuth2AccessToken> exchange1 = action.restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request2, DefaultOAuth2AccessToken.class);
         Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());

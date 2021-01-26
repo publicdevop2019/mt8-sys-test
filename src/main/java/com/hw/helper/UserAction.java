@@ -140,6 +140,7 @@ public class UserAction {
         params.add("password", userPwd);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(UserAction.PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
@@ -235,6 +236,7 @@ public class UserAction {
         params.add("password", userPwd);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(PROXY_URL_TOKEN, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
@@ -256,6 +258,7 @@ public class UserAction {
         params.add("grant_type", GRANT_TYPE_CLIENT_CREDENTIALS);
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         return restTemplate.exchange(URL, HttpMethod.POST, request, DefaultOAuth2AccessToken.class);
     }
