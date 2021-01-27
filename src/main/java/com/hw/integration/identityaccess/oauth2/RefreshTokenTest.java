@@ -1,5 +1,6 @@
 package com.hw.integration.identityaccess.oauth2;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
@@ -15,14 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
+import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
 
 import static com.hw.helper.UserAction.*;
 import static com.hw.integration.identityaccess.oauth2.BIzUserTest.RESOURCE_OWNER;
@@ -99,6 +99,50 @@ public class RefreshTokenTest {
         HttpEntity<String> request3 = new HttpEntity<>(null, headers3);
         ResponseEntity<SumTotalUser> exchange3 = action.restTemplate.exchange(url, HttpMethod.GET, request3, SumTotalUser.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
+    }
+
+    @Test
+    public void refresh_token_should_have_exp(){
+        //create client supports refresh token
+        Client clientRaw = action.getClientRaw();
+        String clientSecret = clientRaw.getClientSecret();
+        HashSet<GrantTypeEnum> enums = new HashSet<>();
+        enums.add(GrantTypeEnum.PASSWORD);
+        enums.add(GrantTypeEnum.REFRESH_TOKEN);
+        clientRaw.setResourceIds(Collections.singleton(CLIENT_ID_OAUTH2_ID));
+        clientRaw.setGrantTypeEnums(enums);
+        clientRaw.setGrantedAuthorities(List.of(ClientAuthorityEnum.ROLE_FRONTEND));
+        HashSet<ScopeEnum> scopes = new HashSet<>();
+        scopes.add(ScopeEnum.TRUST);
+        clientRaw.setScopeEnums(scopes);
+        clientRaw.setAccessTokenValiditySeconds(1);
+        clientRaw.setRefreshTokenValiditySeconds(1000);
+        ResponseEntity<String> client = action.createClient(clientRaw);
+        String clientId = client.getHeaders().getLocation().toString();
+        Assert.assertEquals(HttpStatus.OK, client.getStatusCode());
+        //get jwt
+        ResponseEntity<DefaultOAuth2AccessToken> jwtPasswordWithClient = action.getJwtPasswordWithClient(clientId, clientSecret, ACCOUNT_USERNAME_ADMIN, ACCOUNT_PASSWORD_ADMIN);
+        Assert.assertEquals(HttpStatus.OK, jwtPasswordWithClient.getStatusCode());
+        OAuth2RefreshToken refreshToken = jwtPasswordWithClient.getBody().getRefreshToken();
+        String jwt = refreshToken.getValue();
+        String jwtBody;
+        try {
+            jwtBody = jwt.split("\\.")[1];
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new IllegalArgumentException("malformed jwt token");
+        }
+        Base64.Decoder decoder = Base64.getDecoder();
+        byte[] decode = decoder.decode(jwtBody);
+        String s = new String(decode);
+        Integer exp;
+        try {
+            Map<String, Object> var0 = mapper.readValue(s, new TypeReference<Map<String, Object>>() {
+            });
+            exp = (Integer)var0.get("exp");
+        } catch (IOException e) {
+            throw new IllegalArgumentException("unable to find authorities in authorization header");
+        }
+        Assert.assertNotNull(exp);
     }
 
 
