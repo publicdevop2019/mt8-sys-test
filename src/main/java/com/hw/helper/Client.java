@@ -9,6 +9,7 @@ import java.util.Set;
 public class Client {
 
     private String clientSecret;
+    private String description;
     private String name;
 
     private Set<GrantTypeEnum> grantTypeEnums;

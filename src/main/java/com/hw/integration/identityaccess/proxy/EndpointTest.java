@@ -70,7 +70,7 @@ public class EndpointTest {
         /**
          * modify profile to prevent admin access
          */
-        ResponseEntity<SumTotalProfile> listResponseEntity = readProfile();
+        ResponseEntity<SumTotalProfile> listResponseEntity = readProfiles();
         SecurityProfile securityProfile = listResponseEntity.getBody().getData().get(6);
         securityProfile.getUserRoles().remove("ROLE_ADMIN");
         securityProfile.getUserRoles().add("ROLE_ROOT");
@@ -83,7 +83,7 @@ public class EndpointTest {
          * after modify, admin is not able to access resourceOwner apis
          */
         try {
-            Thread.sleep(15*1000);//wait for cache update
+            Thread.sleep(15 * 1000);//wait for cache update
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -99,7 +99,7 @@ public class EndpointTest {
         ResponseEntity<String> stringResponseEntity1 = updateProfile(securityProfile, securityProfile.getId());
         Assert.assertEquals(HttpStatus.OK, stringResponseEntity1.getStatusCode());
         try {
-            Thread.sleep(15*1000);//wait for cache update
+            Thread.sleep(15 * 1000);//wait for cache update
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -115,7 +115,7 @@ public class EndpointTest {
         securityProfile1.setClientRoles(new HashSet<>(List.of("TRUST")));
         securityProfile1.setUserOnly(true);
         securityProfile1.setMethod("GET");
-        securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-","").replaceAll("\\d", "")+"/abc");
+        securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-", "").replaceAll("\\d", "") + "/abc");
         ResponseEntity<String> profile = createProfile(securityProfile1);
         Assert.assertEquals(HttpStatus.OK, profile.getStatusCode());
         ResponseEntity<String> stringResponseEntity = deleteProfile(profile.getHeaders().getLocation().toString());
@@ -123,7 +123,11 @@ public class EndpointTest {
     }
 
 
-    private ResponseEntity<SumTotalProfile> readProfile() {
+    private ResponseEntity<SumTotalProfile> readProfiles() {
+        return readProfiles(action);
+    }
+
+    public static ResponseEntity<SumTotalProfile> readProfiles(UserAction action) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
         String bearer1 = pwdTokenResponse2.getBody().getValue();
         String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT;
@@ -133,7 +137,21 @@ public class EndpointTest {
         return action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, SumTotalProfile.class);
     }
 
+    public static ResponseEntity<SecurityProfile> readProfile(UserAction action, String id) {
+        ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
+        String bearer1 = pwdTokenResponse2.getBody().getValue();
+        String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT + "/" + id;
+        HttpHeaders headers1 = new HttpHeaders();
+        headers1.setBearerAuth(bearer1);
+        HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(headers1);
+        return action.restTemplate.exchange(url, HttpMethod.GET, hashMapHttpEntity1, SecurityProfile.class);
+    }
+
     private ResponseEntity<String> createProfile(SecurityProfile securityProfile) {
+        return createProfile(securityProfile, action);
+    }
+
+    public static ResponseEntity<String> createProfile(SecurityProfile securityProfile, UserAction action) {
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
         String bearer1 = pwdTokenResponse2.getBody().getValue();
         String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT;
