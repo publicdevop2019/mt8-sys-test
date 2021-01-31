@@ -3,7 +3,10 @@ package com.hw.integration.identityaccess.proxy;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.helper.*;
+import com.hw.helper.Client;
+import com.hw.helper.OutgoingReqInterceptor;
+import com.hw.helper.SecurityProfile;
+import com.hw.helper.UserAction;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,8 +28,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.hw.helper.UserAction.*;
-import static com.hw.helper.UserAction.ACCOUNT_PASSWORD_ROOT;
-import static com.hw.integration.identityaccess.proxy.EndpointTest.*;
+import static com.hw.integration.identityaccess.proxy.EndpointTest.createProfile;
+import static com.hw.integration.identityaccess.proxy.EndpointTest.readProfile;
 import static com.hw.integration.identityaccess.proxy.RevokeTokenTest.USERS_ADMIN;
 
 @RunWith(SpringRunner.class)
@@ -66,7 +69,7 @@ public class GatewayFilterTest {
     }
 
     @Test
-    public void should_get_gzip_for_get_resources()  {
+    public void should_get_gzip_for_get_resources() {
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordRoot();
         String bearer0 = pwdTokenResponse.getBody().getValue();
@@ -80,7 +83,7 @@ public class GatewayFilterTest {
     }
 
     @Test
-    public void should_get_302_when_etag_present(){
+    public void should_get_302_when_etag_present() {
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordAdmin();
         String bearer0 = pwdTokenResponse.getBody().getValue();
@@ -94,6 +97,7 @@ public class GatewayFilterTest {
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity2, String.class);
         Assert.assertEquals(HttpStatus.NOT_MODIFIED, exchange3.getStatusCode());
     }
+
     @Test
     public void should_sanitize_request_json() {
         SecurityProfile securityProfile1 = new SecurityProfile();
@@ -103,8 +107,8 @@ public class GatewayFilterTest {
         securityProfile1.setUserOnly(true);
         securityProfile1.setMethod("GET");
         securityProfile1.setDescription("<script>test</script>");
-        securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-","").replaceAll("\\d", "")+"/abc");
-        ResponseEntity<String> profile = createProfile(securityProfile1,action);
+        securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-", "").replaceAll("\\d", "") + "/abc");
+        ResponseEntity<String> profile = createProfile(securityProfile1, action);
         String s = profile.getHeaders().getLocation().toString();
         Assert.assertEquals(HttpStatus.OK, profile.getStatusCode());
         ResponseEntity<SecurityProfile> securityProfileResponseEntity = readProfile(action, s);
@@ -113,7 +117,7 @@ public class GatewayFilterTest {
 
     @Test
     public void should_sanitize_response_json() {
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT+"/"+CLIENT_ID_RIGHT_ROLE_NOT_SUFFICIENT_RESOURCE_ID;
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + CLIENT_ID_RIGHT_ROLE_NOT_SUFFICIENT_RESOURCE_ID;
         ResponseEntity<DefaultOAuth2AccessToken> tokenResponse = action.getJwtPassword(ACCOUNT_USERNAME_ROOT, ACCOUNT_PASSWORD_ROOT);
         String bearer = tokenResponse.getBody().getValue();
         HttpHeaders headers = new HttpHeaders();
@@ -121,5 +125,14 @@ public class GatewayFilterTest {
         HttpEntity<String> request = new HttpEntity<>(null, headers);
         ResponseEntity<Client> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, Client.class);
         Assert.assertEquals("&lt;script&gt;test&lt;/script&gt;", exchange.getBody().getDescription());
+    }
+
+    @Test
+    public void should_allow_public_access() {
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_FILE_UPLOAD + FILES + ACCESS_ROLE_PUBLIC + "/" + "845181169475584";
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        Assert.assertNotEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
     }
 }
