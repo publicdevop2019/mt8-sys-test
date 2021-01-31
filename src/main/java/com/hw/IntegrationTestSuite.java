@@ -1,5 +1,6 @@
 package com.hw;
 
+import com.hw.integration.identityaccess.proxy.CORSTest;
 import com.hw.integration.identityaccess.oauth2.*;
 import com.hw.integration.product.CatalogTest;
 import com.hw.integration.product.ProductTest;
@@ -7,7 +8,7 @@ import com.hw.integration.profile.AddressTest;
 import com.hw.integration.profile.CartTest;
 import com.hw.integration.profile.OrderTest;
 import com.hw.integration.identityaccess.proxy.*;
-import com.hw.integration.identityaccess.security.SecurityTest;
+import com.hw.integration.identityaccess.proxy.JwtSecurityTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -30,7 +31,7 @@ import org.junit.runners.Suite;
         CORSTest.class,
         BizUserApiSecurityTest.class,
         EndpointTest.class,
-        SecurityTest.class
+        JwtSecurityTest.class
 
 })
 public class IntegrationTestSuite {

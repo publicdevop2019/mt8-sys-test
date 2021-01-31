@@ -1,4 +1,4 @@
-package com.hw.integration.identityaccess.security;
+package com.hw.integration.identityaccess.proxy;
 
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.UserAction;
@@ -23,7 +23,7 @@ import java.util.UUID;
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
-public class SecurityTest {
+public class JwtSecurityTest {
     @Autowired
     UserAction action;
     UUID uuid;
