@@ -54,11 +54,13 @@ public class UserAction {
     public static final String ACCOUNT_PASSWORD_USER = "root";
     public static final String SVC_NAME_AUTH = "/auth-svc";
     public static final String SVC_NAME_PRODUCT = "/product-svc";
+    public static final String SVC_NAME_FILE_UPLOAD = "/file-upload-svc";
     public static final String SVC_NAME_PROFILE = "/profile-svc";
     public static final String SVC_NAME_BBS = "/bbs-svc";
     public static final String OBJECT_MARKET_REDIRECT_URI = "http://localhost:4200/account";
     public static final String BBS_REDIRECT_URI = "http://localhost:3000/account";
     public static final String CLIENTS = "/clients";
+    public static final String FILES = "/files";
     public List<ResourceOwner> testUser = new ArrayList<>();
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     public TestRestTemplate restTemplate = new TestRestTemplate();
