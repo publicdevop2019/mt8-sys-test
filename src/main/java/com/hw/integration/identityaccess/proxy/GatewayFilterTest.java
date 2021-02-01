@@ -23,11 +23,10 @@ import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static com.hw.concurrent.ProductServiceTest.assertConcurrent;
 import static com.hw.helper.UserAction.*;
 import static com.hw.integration.identityaccess.proxy.EndpointTest.*;
 import static com.hw.integration.identityaccess.proxy.RevokeTokenTest.USERS_ADMIN;
@@ -66,6 +65,23 @@ public class GatewayFilterTest {
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
         String eTag = exchange2.getHeaders().getETag();
         Assert.assertNotNull(eTag);
+    }
+
+    @Test
+    public void should_get_cache_control_for_get_resources() {
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
+        ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordAdmin();
+        String bearer0 = pwdTokenResponse.getBody().getValue();
+        HttpHeaders headers1 = new HttpHeaders();
+        headers1.setBearerAuth(bearer0);
+        HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+        String cacheControl = exchange2.getHeaders().getCacheControl();
+        Assert.assertNotNull(cacheControl);
+        long expires = exchange2.getHeaders().getExpires();
+        Assert.assertEquals(-1L,expires);
+        String pragma = exchange2.getHeaders().getPragma();
+        Assert.assertNull(pragma);
     }
 
     @Test
@@ -175,10 +191,46 @@ public class GatewayFilterTest {
         HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile1, headers1);
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
         Assert.assertEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
-        headers1.set("X-XSRF-TOKEN","123");
-        headers1.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
+        headers1.set("X-XSRF-TOKEN", "123");
+        headers1.add(HttpHeaders.COOKIE, "XSRF-TOKEN=123");
         HttpEntity<SecurityProfile> hashMapHttpEntity2 = new HttpEntity<>(securityProfile1, headers1);
         ResponseEntity<String> exchange2 = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
+    }
+
+    @Test
+    public void should_get_too_many_request_exceed_burst_rate_limit() {
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;
+        ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordRoot();
+        String bearer0 = pwdTokenResponse.getBody().getValue();
+        HttpHeaders headers1 = new HttpHeaders();
+        headers1.setBearerAuth(bearer0);
+        HttpEntity<Object> hashMapHttpEntity1 = new HttpEntity<>(headers1);
+        AtomicReference<Integer> count = new AtomicReference<>(0);
+        Runnable runnable2 = () -> {
+            ResponseEntity<String> exchange = action.restTemplate.exchange(url2, HttpMethod.GET, hashMapHttpEntity1, String.class);
+            if (exchange.getStatusCode().equals(HttpStatus.TOO_MANY_REQUESTS)) {
+                count.getAndSet(count.get() + 1);
+            }
+        };
+        ArrayList<Runnable> runnables = new ArrayList<>();
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        try {
+            assertConcurrent("", runnables, 30000);
+            Assert.assertNotEquals(0, count.get().intValue());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
