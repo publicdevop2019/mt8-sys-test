@@ -17,6 +17,7 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -28,8 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.hw.helper.UserAction.*;
-import static com.hw.integration.identityaccess.proxy.EndpointTest.createProfile;
-import static com.hw.integration.identityaccess.proxy.EndpointTest.readProfile;
+import static com.hw.integration.identityaccess.proxy.EndpointTest.*;
 import static com.hw.integration.identityaccess.proxy.RevokeTokenTest.USERS_ADMIN;
 
 @RunWith(SpringRunner.class)
@@ -70,7 +70,7 @@ public class GatewayFilterTest {
 
     @Test
     public void should_get_gzip_for_get_resources() {
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordRoot();
         String bearer0 = pwdTokenResponse.getBody().getValue();
         HttpHeaders headers1 = new HttpHeaders();
@@ -134,5 +134,51 @@ public class GatewayFilterTest {
         HttpEntity<String> request = new HttpEntity<>(null, headers);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         Assert.assertNotEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
+    }
+
+    @Test
+    public void should_cut_off_api_when_max_limit_reach() {
+        String url = UserAction.proxyUrl + SVC_NAME_TEST + "/test/delay/" + "15000";
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        Assert.assertEquals(HttpStatus.GATEWAY_TIMEOUT, exchange.getStatusCode());
+    }
+
+    @Test
+    public void should_has_no_response_body_when_500() {
+        String url = UserAction.proxyUrl + SVC_NAME_TEST + "/test/status/500";
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        Assert.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exchange.getStatusCode());
+        Assert.assertNull(exchange.getBody());
+    }
+
+    @Test
+    public void should_ask_for_csrf_token_when_post() {
+        SecurityProfile securityProfile1 = new SecurityProfile();
+        securityProfile1.setResourceId("0C8AZTODP4HT");
+        securityProfile1.setUserRoles(new HashSet<>(List.of("ROLE_ADMIN")));
+        securityProfile1.setClientRoles(new HashSet<>(List.of("TRUST")));
+        securityProfile1.setUserOnly(true);
+        securityProfile1.setMethod("GET");
+        securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-", "").replaceAll("\\d", "") + "/abc");
+        ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse2 = action.getJwtPasswordRoot();
+        String bearer1 = pwdTokenResponse2.getBody().getValue();
+        String url = UserAction.proxyUrl + SVC_NAME_AUTH + ENDPOINTS + ACCESS_ROLE_ROOT;
+        HttpHeaders headers1 = new HttpHeaders();
+        headers1.setBearerAuth(bearer1);
+        headers1.set("testId", uuid.toString());
+        headers1.set("changeId", UUID.randomUUID().toString());
+        TestRestTemplate restTemplate = new TestRestTemplate();
+        HttpEntity<SecurityProfile> hashMapHttpEntity1 = new HttpEntity<>(securityProfile1, headers1);
+        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity1, String.class);
+        Assert.assertEquals(HttpStatus.FORBIDDEN, exchange.getStatusCode());
+        headers1.set("X-XSRF-TOKEN","123");
+        headers1.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
+        HttpEntity<SecurityProfile> hashMapHttpEntity2 = new HttpEntity<>(securityProfile1, headers1);
+        ResponseEntity<String> exchange2 = restTemplate.exchange(url, HttpMethod.POST, hashMapHttpEntity2, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }
 }

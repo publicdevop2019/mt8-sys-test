@@ -57,6 +57,7 @@ public class UserAction {
     public static final String SVC_NAME_FILE_UPLOAD = "/file-upload-svc";
     public static final String SVC_NAME_PROFILE = "/profile-svc";
     public static final String SVC_NAME_BBS = "/bbs-svc";
+    public static final String SVC_NAME_TEST = "/test-svc";
     public static final String OBJECT_MARKET_REDIRECT_URI = "http://localhost:4200/account";
     public static final String BBS_REDIRECT_URI = "http://localhost:3000/account";
     public static final String CLIENTS = "/clients";
