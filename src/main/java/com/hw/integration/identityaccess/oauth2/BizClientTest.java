@@ -280,6 +280,7 @@ public class BizClientTest {
         enums.add(GrantTypeEnum.PASSWORD);
         enums.add(GrantTypeEnum.REFRESH_TOKEN);
         clientAsNonResource.setGrantTypeEnums(enums);
+        clientAsNonResource.setRefreshTokenValiditySeconds(120);
         ResponseEntity<String> client1 = action.createClient(clientAsNonResource);
         Assert.assertEquals(HttpStatus.OK, client1.getStatusCode());
         String clientId = client1.getHeaders().getLocation().toString();
@@ -347,6 +348,7 @@ public class BizClientTest {
         enums.add(GrantTypeEnum.PASSWORD);
         enums.add(GrantTypeEnum.REFRESH_TOKEN);
         clientAsNonResource.setGrantTypeEnums(enums);
+        clientAsNonResource.setRefreshTokenValiditySeconds(120);
         ResponseEntity<String> client1 = action.createClient(clientAsNonResource);
         Assert.assertEquals(HttpStatus.OK, client1.getStatusCode());
         String clientId = client1.getHeaders().getLocation().toString();

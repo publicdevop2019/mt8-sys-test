@@ -49,9 +49,10 @@ public class GatewayFilterTest {
     };
 
     @Before
-    public void setUp() {
+    public void setUp() throws InterruptedException {
         uuid = UUID.randomUUID();
         action.restTemplate.getRestTemplate().setInterceptors(Collections.singletonList(new OutgoingReqInterceptor(uuid)));
+        Thread.sleep(1000);//avoid too many request
     }
 
     @Test
@@ -85,7 +86,7 @@ public class GatewayFilterTest {
     }
 
     @Test
-    public void should_get_gzip_for_get_resources() {
+    public void should_get_gzip_for_get_resources() throws InterruptedException {
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordRoot();
         String bearer0 = pwdTokenResponse.getBody().getValue();
@@ -214,6 +215,10 @@ public class GatewayFilterTest {
             }
         };
         ArrayList<Runnable> runnables = new ArrayList<>();
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
         runnables.add(runnable2);
         runnables.add(runnable2);
         runnables.add(runnable2);

@@ -64,7 +64,7 @@ public class RefreshTokenTest {
         HashSet<ScopeEnum> scopes = new HashSet<>();
         scopes.add(ScopeEnum.TRUST);
         clientRaw.setScopeEnums(scopes);
-        clientRaw.setAccessTokenValiditySeconds(1);
+        clientRaw.setAccessTokenValiditySeconds(60);
         clientRaw.setRefreshTokenValiditySeconds(1000);
         ResponseEntity<String> client = action.createClient(clientRaw);
         String clientId = client.getHeaders().getLocation().toString();
@@ -79,7 +79,7 @@ public class RefreshTokenTest {
         HttpEntity<String> request = new HttpEntity<>(null, headers);
         ResponseEntity<SumTotalUser> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, SumTotalUser.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-        Thread.sleep(60000+2000);//spring cloud gateway add 60S leeway
+        Thread.sleep(60000+60000+2000);//spring cloud gateway add 60S leeway
         //access access token should expire
         ResponseEntity<SumTotalUser> exchange2 = action.restTemplate.exchange(url, HttpMethod.GET, request, SumTotalUser.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange2.getStatusCode());
@@ -115,7 +115,7 @@ public class RefreshTokenTest {
         HashSet<ScopeEnum> scopes = new HashSet<>();
         scopes.add(ScopeEnum.TRUST);
         clientRaw.setScopeEnums(scopes);
-        clientRaw.setAccessTokenValiditySeconds(1);
+        clientRaw.setAccessTokenValiditySeconds(60);
         clientRaw.setRefreshTokenValiditySeconds(1000);
         ResponseEntity<String> client = action.createClient(clientRaw);
         String clientId = client.getHeaders().getLocation().toString();
