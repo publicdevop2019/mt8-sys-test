@@ -99,7 +99,7 @@ public class GatewayFilterTest {
     }
 
     @Test
-    public void should_get_302_when_etag_present() {
+    public void should_get_304_when_etag_present() {
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + USERS_ADMIN;
         ResponseEntity<DefaultOAuth2AccessToken> pwdTokenResponse = action.getJwtPasswordAdmin();
         String bearer0 = pwdTokenResponse.getBody().getValue();
