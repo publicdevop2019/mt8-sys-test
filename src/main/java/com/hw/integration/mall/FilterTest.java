@@ -1,4 +1,4 @@
-package com.hw.integration.product;
+package com.hw.integration.mall;
 
 import com.hw.helper.ProductCustomerSummaryPaginatedRepresentation;
 import com.hw.helper.UserAction;

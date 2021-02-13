@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static com.hw.helper.UserAction.*;
-import static com.hw.integration.product.ProductTest.PRODUCTS_ADMIN;
+import static com.hw.integration.mall.ProductTest.PRODUCTS_ADMIN;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)

@@ -1,4 +1,4 @@
-package com.hw.integration.product;
+package com.hw.integration.mall;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;

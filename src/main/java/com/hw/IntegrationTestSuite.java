@@ -2,8 +2,8 @@ package com.hw;
 
 import com.hw.integration.identityaccess.proxy.CORSTest;
 import com.hw.integration.identityaccess.oauth2.*;
-import com.hw.integration.product.CatalogTest;
-import com.hw.integration.product.ProductTest;
+import com.hw.integration.mall.CatalogTest;
+import com.hw.integration.mall.ProductTest;
 import com.hw.integration.profile.AddressTest;
 import com.hw.integration.profile.CartTest;
 import com.hw.integration.profile.OrderTest;
