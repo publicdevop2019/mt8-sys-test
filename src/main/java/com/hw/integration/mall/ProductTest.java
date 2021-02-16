@@ -234,7 +234,7 @@ public class ProductTest {
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + id;
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
-        ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = action.readProductDetailById(Long.parseLong(id));
+        ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = action.readProductDetailById(id);
         List<ProductSkuCustomerRepresentation> skus = productDetailCustomRepresentationResponseEntity.getBody().getSkus();
         ProductSkuCustomerRepresentation productSkuCustomerRepresentation = skus.get(0);
         Assert.assertEquals(abs.round(new MathContext(2)), productSkuCustomerRepresentation.getPrice());

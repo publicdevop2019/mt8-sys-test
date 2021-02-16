@@ -8,7 +8,7 @@ import java.util.Set;
 
 @Data
 public class ProductDetailCustomRepresentation {
-    private Long id;
+    private String id;
     private String name;
     private String imageUrlSmall;
     private Set<String> imageUrlLarge;

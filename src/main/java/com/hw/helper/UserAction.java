@@ -336,7 +336,7 @@ public class UserAction {
         return orderDetail;
     }
 
-    public OrderDetail createBizOrderForUserAndProduct(String defaultUserToken, Long productId) {
+    public OrderDetail createBizOrderForUserAndProduct(String defaultUserToken, String productId) {
         ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = readProductDetailById(productId);
         SnapshotProduct snapshotProduct = selectProduct(productDetailCustomRepresentationResponseEntity.getBody());
         String url2 = proxyUrl + SVC_NAME_PROFILE + "/cart/user";
@@ -357,7 +357,7 @@ public class UserAction {
 
 
     public ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> readProductsByQuery() {
-        String query = "query=attr:835604081303552-服装$835602958278656-女&page=num:0,size:20,by:lowestPrice,order:asc";
+        String query = "query=attr:3T8BRPK17W81-服装$3T8BRPK17W80-女&page=num:0,size:20,by:lowestPrice,order:asc";
         return readProductsByQuery(query);
     }
 
@@ -573,12 +573,12 @@ public class UserAction {
         return readProductDetailById(productSimple.getId());
     }
 
-    public ResponseEntity<ProductDetailCustomRepresentation> readProductDetailById(Long id) {
+    public ResponseEntity<ProductDetailCustomRepresentation> readProductDetailById(String id) {
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + "/products/public/" + id;
         return restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
     }
 
-    public ResponseEntity<ProductDetailAdminRepresentation> readProductDetailByIdAdmin(Long id) {
+    public ResponseEntity<ProductDetailAdminRepresentation> readProductDetailByIdAdmin(String id) {
         String defaultAdminToken = getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

@@ -114,7 +114,7 @@ public class OrderTest {
         ResponseEntity<String> exchange1 = action.createRandomProductDetail(0);
         // place an order for this product
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        OrderDetail orderDetailForUser = action.createBizOrderForUserAndProduct(defaultUserToken, Long.parseLong(exchange1.getHeaders().get("Location").get(0)));
+        OrderDetail orderDetailForUser = action.createBizOrderForUserAndProduct(defaultUserToken, exchange1.getHeaders().get("Location").get(0));
         String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + ORDERS_USER;
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());

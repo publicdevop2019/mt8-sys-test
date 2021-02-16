@@ -56,7 +56,7 @@ public class ProductServiceTest {
     public void create_product_then_concurrent_decrease_order_storage() {
         AtomicInteger iniOrderStorage = new AtomicInteger(1000);
         ResponseEntity<String> exchange = action.createRandomProductDetail(null, iniOrderStorage.get());
-        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
+        String productId = exchange.getHeaders().getLocation().toString();
         PatchCommand patchCommand = new PatchCommand();
         patchCommand.setOp("diff");
         patchCommand.setExpect(1);
@@ -106,9 +106,9 @@ public class ProductServiceTest {
         ResponseEntity<String> exchange = action.createRandomProductDetail(null, initialStorage);
         ResponseEntity<String> exchange2 = action.createRandomProductDetail(null, initialStorage);
         ResponseEntity<String> exchange3 = action.createRandomProductDetail(null, initialStorage);
-        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
-        Long productId2 = Long.parseLong(exchange2.getHeaders().getLocation().toString());
-        Long productId3 = Long.parseLong(exchange3.getHeaders().getLocation().toString());
+        String productId = exchange.getHeaders().getLocation().toString();
+        String productId2 = exchange2.getHeaders().getLocation().toString();
+        String productId3 = exchange3.getHeaders().getLocation().toString();
 
         ArrayList<PatchCommand> patchCommands = new ArrayList<>();
         PatchCommand patchCommand = new PatchCommand();
@@ -195,7 +195,7 @@ public class ProductServiceTest {
     @Test
     public void admin_update_product_while_product_total_sales_change_by_order_confirm() {
         ResponseEntity<String> exchange = action.createRandomProductDetail(100);
-        Long productId = Long.parseLong(exchange.getHeaders().getLocation().toString());
+        String productId = exchange.getHeaders().getLocation().toString();
         PatchCommand patchCommand = new PatchCommand();
         patchCommand.setOp("sum");
         patchCommand.setExpect(1);
@@ -229,7 +229,7 @@ public class ProductServiceTest {
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.AVAILABLE);
         command.setName(action.getRandomStr());
-        command.setImageUrlSmall("http://www.test.com/"+action.getRandomStr());
+        command.setImageUrlSmall("http://www.test.com/" + action.getRandomStr());
         Set<String> strings = new HashSet<>();
         strings.add(TEST_TEST_VALUE);
         command.setAttributesKey(strings);

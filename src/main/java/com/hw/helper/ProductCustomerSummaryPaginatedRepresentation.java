@@ -13,7 +13,7 @@ public class ProductCustomerSummaryPaginatedRepresentation {
 
     @Data
     public static class ProductSearchRepresentation {
-        private Long id;
+        private String id;
         private String name;
         private String imageUrlSmall;
         private String description;

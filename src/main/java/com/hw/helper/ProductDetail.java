@@ -8,7 +8,7 @@ import java.util.Set;
 @Data
 public class ProductDetail extends ProductSimple {
 
-    private Long id;
+    private String id;
 
     private String imageUrlSmall;
 

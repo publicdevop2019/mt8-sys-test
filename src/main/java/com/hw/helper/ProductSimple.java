@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 @Data
 public class ProductSimple {
 
-    private Long id;
+    private String id;
 
     private String imageUrlSmall;
 
