@@ -23,7 +23,7 @@ import java.util.*;
 @Component
 @Slf4j
 public class UserAction {
-    public static final String TEST_TEST_VALUE = "835606767755264:S";
+    public static final String TEST_TEST_VALUE = "3T8BRPK17WA:S";
     public static final String ACCESS_ROLE_ROOT = "/root";
     public static final String ACCESS_ROLE_ADMIN = "/admin";
     public static final String ACCESS_ROLE_APP = "/app";
