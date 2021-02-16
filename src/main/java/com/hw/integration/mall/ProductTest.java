@@ -55,6 +55,9 @@ public class ProductTest {
 
     @Test
     public void shop_get_product_detail_customer() {
+        ResponseEntity<String> productDetailForCatalog = action.createRandomProductDetail(null);
+        Assert.assertEquals(HttpStatus.OK, productDetailForCatalog.getStatusCode());
+        Assert.assertNotEquals(null, productDetailForCatalog.getHeaders().get("Location"));
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getBody());
@@ -91,7 +94,7 @@ public class ProductTest {
     public void shop_create_product() {
         ResponseEntity<String> productDetailForCatalog = action.createRandomProductDetail(null);
         Assert.assertEquals(HttpStatus.OK, productDetailForCatalog.getStatusCode());
-        Assert.assertNotEquals(0, productDetailForCatalog.getHeaders().get("Location"));
+        Assert.assertNotEquals(null, productDetailForCatalog.getHeaders().get("Location"));
     }
 
     @Test
@@ -237,7 +240,7 @@ public class ProductTest {
         ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = action.readProductDetailById(id);
         List<ProductSkuCustomerRepresentation> skus = productDetailCustomRepresentationResponseEntity.getBody().getSkus();
         ProductSkuCustomerRepresentation productSkuCustomerRepresentation = skus.get(0);
-        Assert.assertEquals(abs.round(new MathContext(2)), productSkuCustomerRepresentation.getPrice());
+        Assert.assertEquals(abs.round(new MathContext(2)).doubleValue(), productSkuCustomerRepresentation.getPrice().doubleValue(),0d);
     }
 
 
