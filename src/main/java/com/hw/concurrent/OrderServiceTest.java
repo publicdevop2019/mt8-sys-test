@@ -22,7 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import static com.hw.concurrent.ProductServiceTest.assertConcurrent;
+import static com.hw.helper.UserAction.assertConcurrent;
 import static com.hw.integration.profile.OrderTest.getOrderIdFromPaymentLink;
 
 @Slf4j

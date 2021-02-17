@@ -26,7 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.hw.concurrent.ProductServiceTest.assertConcurrent;
+import static com.hw.helper.UserAction.assertConcurrent;
 import static com.hw.helper.UserAction.*;
 import static com.hw.integration.identityaccess.proxy.EndpointTest.*;
 import static com.hw.integration.identityaccess.proxy.RevokeTokenTest.USERS_ADMIN;

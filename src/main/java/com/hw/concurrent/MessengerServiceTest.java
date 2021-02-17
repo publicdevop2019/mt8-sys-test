@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.ForgetPasswordRequest;
 import com.hw.helper.OutgoingReqInterceptor;
-import com.hw.helper.ResourceOwner;
 import com.hw.helper.UserAction;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.*;
@@ -23,7 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import static com.hw.concurrent.ProductServiceTest.assertConcurrent;
+import static com.hw.helper.UserAction.assertConcurrent;
 import static org.junit.Assert.assertTrue;
 
 /**

@@ -1,4 +1,4 @@
-package com.hw.concurrent;
+package com.hw.integration.mall;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hw.helper.*;
@@ -17,10 +17,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -90,7 +86,7 @@ public class ProductServiceTest {
             assertConcurrent("", runnables, 30000);
             // get product order count
             ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
-            assertTrue("remain storage should be " + iniOrderStorage.get() + "but is " + productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder(), productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
+            assertTrue("remain storage should be " + iniOrderStorage.get() + " but is " + productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder(), productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -249,52 +245,10 @@ public class ProductServiceTest {
             assertConcurrent("", runnables, 30000);
             // get product order count
             ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
-            assertTrue("total sales should be " + threadCount + "but is " + productDetailAdminRepresentationResponseEntity.getBody().getTotalSales(), productDetailAdminRepresentationResponseEntity.getBody().getTotalSales().equals(threadCount));
+            assertTrue("total sales should be " + threadCount + " but is " + productDetailAdminRepresentationResponseEntity.getBody().getTotalSales(), productDetailAdminRepresentationResponseEntity.getBody().getTotalSales().equals(threadCount));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * copied from https://www.planetgeek.ch/2009/08/25/how-to-find-a-concurrency-bug-with-java/
-     *
-     * @param message
-     * @param runnables
-     * @param maxTimeoutSeconds
-     * @throws InterruptedException
-     */
-    public static void assertConcurrent(final String message, final List<? extends Runnable> runnables, final int maxTimeoutSeconds) throws InterruptedException {
-        final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
-        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
-        try {
-            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
-            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
-            final CountDownLatch allDone = new CountDownLatch(numThreads);
-            for (final Runnable submittedTestRunnable : runnables) {
-                threadPool.submit(new Runnable() {
-                    public void run() {
-                        allExecutorThreadsReady.countDown();
-                        try {
-                            afterInitBlocker.await();
-                            submittedTestRunnable.run();
-                        } catch (final Throwable e) {
-                            exceptions.add(e);
-                        } finally {
-                            allDone.countDown();
-                        }
-                    }
-                });
-            }
-            // wait until all threads are ready
-            assertTrue("Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent", allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
-            // start all test runners
-            afterInitBlocker.countDown();
-            assertTrue(message + " timeout! More than" + maxTimeoutSeconds + "seconds", allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
-        } finally {
-            threadPool.shutdownNow();
-        }
-        assertTrue(message + "failed with exception(s)" + exceptions, exceptions.isEmpty());
     }
 
 }

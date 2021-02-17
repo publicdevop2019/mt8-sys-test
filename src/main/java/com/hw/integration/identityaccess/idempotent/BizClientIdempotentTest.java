@@ -14,7 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import static com.hw.concurrent.ProductServiceTest.assertConcurrent;
+import static com.hw.helper.UserAction.assertConcurrent;
 import static com.hw.helper.UserAction.*;
 
 @RunWith(SpringRunner.class)
