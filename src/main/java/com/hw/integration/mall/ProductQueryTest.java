@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class FilterTest {
+public class ProductQueryTest {
     @Autowired
     UserAction action;
 

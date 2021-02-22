@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
-public class ProductServiceTest {
+public class ProductConcurrentTest {
     public static final String URL_2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + "/products/app";
     @Autowired
     UserAction action;

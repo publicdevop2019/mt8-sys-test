@@ -548,7 +548,7 @@ public class UserAction {
         category.setName(UUID.randomUUID().toString().replace("-", ""));
         category.setCatalogType(CatalogType.FRONTEND);
         HashSet<String> strings = new HashSet<>();
-        strings.add(UUID.randomUUID().toString().replace("-", ""));
+        strings.add(TEST_TEST_VALUE);
         category.setAttributes(strings);
         return category;
     }
