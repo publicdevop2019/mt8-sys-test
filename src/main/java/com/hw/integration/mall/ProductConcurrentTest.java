@@ -17,11 +17,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static com.hw.helper.UserAction.*;
 import static com.hw.integration.mall.ProductTest.PRODUCTS_ADMIN;
+import static com.hw.integration.mall.ProductTest.PRODUCTS_PUBLIC;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
@@ -251,4 +253,50 @@ public class ProductConcurrentTest {
         }
     }
 
+    @Test
+    public void customer_read_product_while_it_taken_down_by_admin() {
+        AtomicBoolean emptyBody = new AtomicBoolean(false);
+        ResponseEntity<String> exchange = action.createRandomProductDetail(null);
+        String pId = exchange.getHeaders().getLocation().toString();
+        //customer can read product
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_PUBLIC + "/" + pId;
+        ResponseEntity<ProductDetail> exchange1 = action.restTemplate.exchange(url2, HttpMethod.GET, null, ProductDetail.class);
+        Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
+        //admin take down product
+        Runnable runnable1 = () -> {
+            HttpHeaders headers = new HttpHeaders();
+            String s1 = action.getDefaultAdminToken();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(s1);
+            UpdateProductAdminCommand command = new UpdateProductAdminCommand();
+            command.setName(action.getRandomStr());
+            command.setEndAt(System.currentTimeMillis());
+            command.setImageUrlSmall("http://www.test.com/" + action.getRandomStr());
+            Set<String> strings = new HashSet<>();
+            strings.add(TEST_TEST_VALUE);
+            command.setAttributesKey(strings);
+            command.setVersion(0);
+            String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + pId;
+            HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
+            ResponseEntity<String> exchange2 = action.restTemplate.exchange(url3, HttpMethod.PUT, request2, String.class);
+            Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
+        };
+        Runnable runnable2 = () -> {
+            //customer read again
+            ResponseEntity<ProductDetail> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET, null, ProductDetail.class);
+            Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
+            emptyBody.compareAndExchange(false, true);
+        };
+        ArrayList<Runnable> runnables = new ArrayList<>();
+        runnables.add(runnable1);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        runnables.add(runnable2);
+        try {
+            assertConcurrent("", runnables, 30000);
+            assertTrue(emptyBody.get());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

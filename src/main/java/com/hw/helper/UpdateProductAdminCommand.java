@@ -19,5 +19,6 @@ public class UpdateProductAdminCommand {
     private List<UpdateProductAdminSkuCommand> skus;
     private ProductStatus status;
     private Long startAt;
+    private Long endAt;
     private Integer version;
 }

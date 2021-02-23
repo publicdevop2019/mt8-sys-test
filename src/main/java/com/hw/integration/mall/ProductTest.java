@@ -21,8 +21,8 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.*;
 
-import static com.hw.helper.UserAction.TEST_TEST_VALUE;
-import static com.hw.helper.UserAction.TEST_TEST_VALUE_2;
+import static com.hw.helper.UserAction.*;
+import static com.hw.integration.mall.ProductConcurrentTest.URL_2;
 
 @Slf4j
 @SpringBootTest
@@ -30,6 +30,7 @@ import static com.hw.helper.UserAction.TEST_TEST_VALUE_2;
 public class ProductTest {
     public static final String PRODUCTS_ADMIN = "/products/admin";
     public static final String PRODUCTS_PUBLIC = "/products/public";
+    public static final String PRODUCTS_CHANGE_APP = "/products/change/app";
     @Autowired
     UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -337,4 +338,36 @@ public class ProductTest {
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
     }
+
+    @Test
+    public void change_product_sku_then_rollback() {
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_CHANGE_APP;
+        ResponseEntity<String> exchange = action.createRandomProductDetail(null, 1000);
+        String productId = exchange.getHeaders().getLocation().toString();
+        PatchCommand patchCommand = new PatchCommand();
+        patchCommand.setOp("diff");
+        patchCommand.setExpect(1);
+        patchCommand.setValue(1);
+        patchCommand.setPath("/" + productId + "/skus?query=" + "attributesSales:" + TEST_TEST_VALUE.replace(":", "-") + "/storageOrder");
+        ArrayList<PatchCommand> patchCommands = new ArrayList<>();
+        patchCommands.add(patchCommand);
+        HttpHeaders headers2 = new HttpHeaders();
+        String changeId = UUID.randomUUID().toString();
+        headers2.set("changeId", changeId);
+        headers2.setBearerAuth(action.getJwtClientCredential(CLIENT_ID_SAGA_ID, COMMON_CLIENT_SECRET).getBody().getValue());
+        HttpEntity<ArrayList<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
+        ResponseEntity<Object> exchange2 = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity, Object.class);
+        Assert.assertEquals(200, exchange2.getStatusCode().value());
+        ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin = action.readProductDetailByIdAdmin(productId);
+        Assert.assertEquals(999, productDetailByIdAdmin.getBody().getSkus().get(0).getStorageOrder().intValue());
+
+        //rollback change
+        ResponseEntity<Void> exchange3 = action.restTemplate.exchange(url + "/" + changeId, HttpMethod.DELETE, listHttpEntity, Void.class);
+        Assert.assertEquals(200, exchange3.getStatusCode().value());
+        ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin2 = action.readProductDetailByIdAdmin(productId);
+        Assert.assertEquals(1000, productDetailByIdAdmin.getBody().getSkus().get(0).getStorageOrder().intValue());
+
+    }
+
+
 }
