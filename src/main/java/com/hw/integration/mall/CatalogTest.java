@@ -103,4 +103,19 @@ public class CatalogTest {
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url + "/" + exchange.getHeaders().getLocation().toString(), HttpMethod.DELETE, request3, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
     }
+
+    @Test
+    public void shop_create_catalog_which_has_invalid_parentId() {
+        Catalog randomCategory = action.generateRandomFrontendCatalog();
+        randomCategory.setParentId("invalidValue");
+        String s1 = action.getDefaultAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<Catalog> request = new HttpEntity<>(randomCategory, headers);
+
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + "/catalogs/admin";
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange.getStatusCode());
+    }
 }

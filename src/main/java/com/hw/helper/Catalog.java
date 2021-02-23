@@ -11,7 +11,7 @@ public class Catalog {
 
     private String name;
 
-    private Long parentId;
+    private String parentId;
     private Integer version;
 
     private Set<String> attributes;
