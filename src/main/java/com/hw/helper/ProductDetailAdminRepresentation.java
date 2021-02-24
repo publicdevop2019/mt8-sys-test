@@ -29,4 +29,5 @@ public class ProductDetailAdminRepresentation {
 
     private List<ProductSku> skus;
     private Integer totalSales;
+    private Integer version;
 }

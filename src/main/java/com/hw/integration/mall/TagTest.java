@@ -100,7 +100,8 @@ public class TagTest {
         updateTagCommand.setName(action.getRandomStr());
         updateTagCommand.setMethod(TagValueType.MANUAL);
         updateTagCommand.setSelectValues(new HashSet<>(List.of("123", "234")));
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + exchange.getHeaders().getLocation().toString(), HttpMethod.PUT, request, String.class);
+        HttpEntity<UpdateTagCommand> request2 = new HttpEntity<>(updateTagCommand, headers);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url +"/"+ exchange.getHeaders().getLocation().toString(), HttpMethod.PUT, request2, String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange2.getStatusCode());
 
     }

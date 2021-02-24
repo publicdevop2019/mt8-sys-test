@@ -16,4 +16,6 @@ public class ProductSku {
     private Integer storageActual;
     private BigDecimal price;
     private Integer sales;
+    private Integer version;
+
 }

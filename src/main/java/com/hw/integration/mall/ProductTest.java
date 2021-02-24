@@ -162,9 +162,13 @@ public class ProductTest {
         Assert.assertEquals(TEST_TEST_VALUE, exchange3.getBody().getAttributesKey().toArray()[1]);
         Assert.assertTrue(exchange3.getBody().getAttributesKey().contains(TEST_TEST_VALUE_2));
         //remove tag
+        Integer version = exchange3.getBody().getSkus().get(0).getVersion();
+        productSku.setVersion(version);
         Set<String> strings2 = new HashSet<>();
         strings2.add(TEST_TEST_VALUE_2);
         command.setAttributesKey(strings2);
+        command.setVersion(exchange3.getBody().getVersion());
+        command.setSkus(new ArrayList<>(List.of(productSku)));
         HttpEntity<UpdateProductAdminCommand> request4 = new HttpEntity<>(command, headers);
         ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2, HttpMethod.PUT, request4, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
@@ -366,7 +370,7 @@ public class ProductTest {
         ResponseEntity<Void> exchange3 = action.restTemplate.exchange(url + "/" + changeId, HttpMethod.DELETE, listHttpEntity, Void.class);
         Assert.assertEquals(200, exchange3.getStatusCode().value());
         ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin2 = action.readProductDetailByIdAdmin(productId);
-        Assert.assertEquals(1000, productDetailByIdAdmin.getBody().getSkus().get(0).getStorageOrder().intValue());
+        Assert.assertEquals(1000, productDetailByIdAdmin2.getBody().getSkus().get(0).getStorageOrder().intValue());
 
     }
 

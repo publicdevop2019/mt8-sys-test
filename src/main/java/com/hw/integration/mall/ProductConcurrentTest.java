@@ -276,6 +276,13 @@ public class ProductConcurrentTest {
             strings.add(TEST_TEST_VALUE);
             command.setAttributesKey(strings);
             command.setVersion(0);
+            UpdateProductAdminSkuCommand skuCommand = new UpdateProductAdminSkuCommand();
+            skuCommand.setPrice(BigDecimal.TEN);
+            skuCommand.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+            skuCommand.setVersion(0);
+            ArrayList<UpdateProductAdminSkuCommand> skuCommands = new ArrayList<>();
+            skuCommands.add(skuCommand);
+            command.setSkus(skuCommands);
             String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + pId;
             HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
             ResponseEntity<String> exchange2 = action.restTemplate.exchange(url3, HttpMethod.PUT, request2, String.class);
