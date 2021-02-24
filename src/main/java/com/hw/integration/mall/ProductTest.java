@@ -30,7 +30,7 @@ import static com.hw.integration.mall.ProductConcurrentTest.URL_2;
 public class ProductTest {
     public static final String PRODUCTS_ADMIN = "/products/admin";
     public static final String PRODUCTS_PUBLIC = "/products/public";
-    public static final String PRODUCTS_CHANGE_APP = "/products/change/app";
+    public static final String PRODUCTS_CHANGE_APP = "/products/changes/app";
     @Autowired
     UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -159,7 +159,7 @@ public class ProductTest {
 
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertEquals(2, exchange3.getBody().getAttributesKey().size());
-        Assert.assertEquals(TEST_TEST_VALUE, exchange3.getBody().getAttributesKey().toArray()[0]);
+        Assert.assertEquals(TEST_TEST_VALUE, exchange3.getBody().getAttributesKey().toArray()[1]);
         Assert.assertTrue(exchange3.getBody().getAttributesKey().contains(TEST_TEST_VALUE_2));
         //remove tag
         Set<String> strings2 = new HashSet<>();
@@ -288,7 +288,7 @@ public class ProductTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(s1);
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + query;
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "?query=" + query;
         String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/";
         HttpEntity<String> request2 = new HttpEntity<>(headers);
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.DELETE, request2, String.class);
@@ -303,7 +303,7 @@ public class ProductTest {
 
     @Test
     public void shop_delete_product_by_query_name() {
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/";
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN;
         String s1 = action.getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -313,18 +313,18 @@ public class ProductTest {
         String p1Id = productDetailForCatalog.getHeaders().getLocation().toString();
         ResponseEntity<String> productDetailForCatalog2 = action.createRandomProductDetail(null);
         String p2Id = productDetailForCatalog2.getHeaders().getLocation().toString();
-        ResponseEntity<ProductDetail> exchange4 = action.restTemplate.exchange(url + p1Id, HttpMethod.GET, request2, ProductDetail.class);
+        ResponseEntity<ProductDetail> exchange4 = action.restTemplate.exchange(url + "/" + p1Id, HttpMethod.GET, request2, ProductDetail.class);
         String name1 = exchange4.getBody().getName();
-        ResponseEntity<ProductDetail> exchange5 = action.restTemplate.exchange(url + p2Id, HttpMethod.GET, request2, ProductDetail.class);
+        ResponseEntity<ProductDetail> exchange5 = action.restTemplate.exchange(url + "/" + p2Id, HttpMethod.GET, request2, ProductDetail.class);
         String name2 = exchange5.getBody().getName();
 
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "name:" + name1 + "." + name2, HttpMethod.DELETE, request2, String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "?query=name:" + name1 + "." + name2, HttpMethod.DELETE, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
 
-        ResponseEntity<String> exchange6 = action.restTemplate.exchange(url + p1Id, HttpMethod.GET, request2, String.class);
+        ResponseEntity<String> exchange6 = action.restTemplate.exchange(url + "/" + p1Id, HttpMethod.GET, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange6.getStatusCode());
         Assert.assertNull(exchange6.getBody());
-        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url + p2Id, HttpMethod.GET, request2, String.class);
+        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url + "/" + p2Id, HttpMethod.GET, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
         Assert.assertNull(exchange7.getBody());
     }
@@ -354,7 +354,8 @@ public class ProductTest {
         HttpHeaders headers2 = new HttpHeaders();
         String changeId = UUID.randomUUID().toString();
         headers2.set("changeId", changeId);
-        headers2.setBearerAuth(action.getJwtClientCredential(CLIENT_ID_SAGA_ID, COMMON_CLIENT_SECRET).getBody().getValue());
+        String value = action.getJwtClientCredential(CLIENT_ID_SAGA_ID, COMMON_CLIENT_SECRET).getBody().getValue();
+        headers2.setBearerAuth(value);
         HttpEntity<ArrayList<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
         ResponseEntity<Object> exchange2 = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity, Object.class);
         Assert.assertEquals(200, exchange2.getStatusCode().value());
