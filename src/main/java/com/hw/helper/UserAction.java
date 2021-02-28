@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 @Component
 @Slf4j
 public class UserAction {
-    public static final String TEST_TEST_VALUE = "3T8BRPK17WA:S";
+    public static final String TEST_TEST_VALUE = "3T8BRPK17W8A:S";
     public static final String TEST_TEST_VALUE_2 = "3T8BRPK17W94:上装";
     public static final String ACCESS_ROLE_ROOT = "/root";
     public static final String ACCESS_ROLE_ADMIN = "/admin";

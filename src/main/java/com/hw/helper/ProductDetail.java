@@ -31,4 +31,5 @@ public class ProductDetail extends ProductSimple {
     private List<ProductSku> productSkuList;
 
     private ProductStatus status;
+    private Integer version;
 }

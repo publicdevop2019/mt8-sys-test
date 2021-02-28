@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
@@ -20,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.hw.helper.UserAction.*;
 import static com.hw.integration.mall.ProductConcurrentTest.URL_2;
@@ -101,7 +103,7 @@ public class ProductTest {
     }
 
     @Test
-    public void shop_update_product() {
+    public void shop_update_product_many_fields() {
         ResponseEntity<String> exchange = action.createRandomProductDetail(null);
         String s1 = action.getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
@@ -126,6 +128,105 @@ public class ProductTest {
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }
+
+    @Test
+    public void shop_should_get_right_version_when_update_product() {
+        String s1 = action.getDefaultAdminToken();
+        CategorySummaryCardRepresentation catalogFromList = action.getFixedCatalogFromList();
+        ProductDetail randomProduct = action.getRandomProduct(catalogFromList, null, null);
+        CreateProductAdminCommand createCommand = new CreateProductAdminCommand();
+        BeanUtils.copyProperties(randomProduct, createCommand);
+        createCommand.setSkus(randomProduct.getProductSkuList());
+        createCommand.setStartAt(new Date().getTime());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<CreateProductAdminCommand> request = new HttpEntity<>(createCommand, headers);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + "/products/admin";
+        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
+        UpdateProductAdminCommand updateCommand = new UpdateProductAdminCommand();
+        BeanUtils.copyProperties(createCommand, updateCommand);
+        List<UpdateProductAdminSkuCommand> collect = createCommand.getSkus().stream().map(e -> {
+            UpdateProductAdminSkuCommand updateProductAdminSkuCommand = new UpdateProductAdminSkuCommand();
+            updateProductAdminSkuCommand.setVersion(0);
+            updateProductAdminSkuCommand.setAttributesSales(e.getAttributesSales());
+            updateProductAdminSkuCommand.setPrice(e.getPrice());
+            return updateProductAdminSkuCommand;
+        }).collect(Collectors.toList());
+        updateCommand.setVersion(0);
+        updateCommand.setSkus(collect);
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange1.getHeaders().getLocation().toString();
+        HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(updateCommand, headers);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
+        ResponseEntity<ProductDetail> exchange3 = action.restTemplate.exchange(url2, HttpMethod.GET, request2, ProductDetail.class);
+        Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
+        Assert.assertEquals(0, exchange3.getBody().getVersion().intValue());
+        updateCommand.setVersion(0);
+        updateCommand.setSkus(collect);
+        updateCommand.setDescription(action.getRandomStr());
+        updateCommand.setStatus(ProductStatus.UNAVAILABLE);
+        updateCommand.setName(action.getRandomStr());
+        updateCommand.setImageUrlSmall("http://www.test.com/" + action.getRandomStr());
+        HttpEntity<UpdateProductAdminCommand> request3 = new HttpEntity<>(updateCommand, headers);
+        ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2, HttpMethod.PUT, request3, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
+        ResponseEntity<ProductDetail> exchange5 = action.restTemplate.exchange(url2, HttpMethod.GET, request2, ProductDetail.class);
+        Assert.assertEquals(HttpStatus.OK, exchange5.getStatusCode());
+        Assert.assertEquals(1, exchange5.getBody().getVersion().intValue());
+        Set<String> strings = new HashSet<>();
+        strings.add(TEST_TEST_VALUE);
+        updateCommand.setVersion(1);
+        updateCommand.setAttributesKey(strings);
+        HttpEntity<UpdateProductAdminCommand> request5 = new HttpEntity<>(updateCommand, headers);
+        ResponseEntity<String> exchange6 = action.restTemplate.exchange(url2, HttpMethod.PUT, request5, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange6.getStatusCode());
+        ResponseEntity<ProductDetail> exchange7 = action.restTemplate.exchange(url2, HttpMethod.GET, request2, ProductDetail.class);
+        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
+        Assert.assertEquals(2, exchange7.getBody().getVersion().intValue());
+    }
+    @Test
+    public void shop_should_get_right_version_when_update_product_attr_key_only() {
+        String s1 = action.getDefaultAdminToken();
+        CategorySummaryCardRepresentation catalogFromList = action.getFixedCatalogFromList();
+        ProductDetail randomProduct = action.getRandomProduct(catalogFromList, null, null);
+        CreateProductAdminCommand createCommand = new CreateProductAdminCommand();
+        BeanUtils.copyProperties(randomProduct, createCommand);
+        createCommand.setSkus(randomProduct.getProductSkuList());
+        createCommand.setStartAt(new Date().getTime());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(s1);
+        HttpEntity<CreateProductAdminCommand> request = new HttpEntity<>(createCommand, headers);
+        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + "/products/admin";
+        ResponseEntity<String> exchange1 = action.restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
+        UpdateProductAdminCommand updateCommand = new UpdateProductAdminCommand();
+        BeanUtils.copyProperties(createCommand, updateCommand);
+        List<UpdateProductAdminSkuCommand> collect = createCommand.getSkus().stream().map(e -> {
+            UpdateProductAdminSkuCommand updateProductAdminSkuCommand = new UpdateProductAdminSkuCommand();
+            updateProductAdminSkuCommand.setVersion(0);
+            updateProductAdminSkuCommand.setAttributesSales(e.getAttributesSales());
+            updateProductAdminSkuCommand.setPrice(e.getPrice());
+            return updateProductAdminSkuCommand;
+        }).collect(Collectors.toList());
+        updateCommand.setSkus(collect);
+        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange1.getHeaders().getLocation().toString();
+        HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(updateCommand, headers);
+        updateCommand.setVersion(0);
+        Set<String> strings = new HashSet<>();
+        strings.add(TEST_TEST_VALUE);
+        updateCommand.setAttributesKey(strings);
+        HttpEntity<UpdateProductAdminCommand> request5 = new HttpEntity<>(updateCommand, headers);
+        ResponseEntity<String> exchange6 = action.restTemplate.exchange(url2, HttpMethod.PUT, request5, String.class);
+        Assert.assertEquals(HttpStatus.OK, exchange6.getStatusCode());
+        ResponseEntity<ProductDetail> exchange7 = action.restTemplate.exchange(url2, HttpMethod.GET, request2, ProductDetail.class);
+        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
+        Assert.assertEquals(1, exchange7.getBody().getVersion().intValue());
+    }
+
+
 
     @Test
     public void shop_add_product_attr_key_then_remove() {
@@ -159,7 +260,7 @@ public class ProductTest {
 
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertEquals(2, exchange3.getBody().getAttributesKey().size());
-        Assert.assertEquals(TEST_TEST_VALUE, exchange3.getBody().getAttributesKey().toArray()[1]);
+        Assert.assertTrue(exchange3.getBody().getAttributesKey().contains(TEST_TEST_VALUE));
         Assert.assertTrue(exchange3.getBody().getAttributesKey().contains(TEST_TEST_VALUE_2));
         //remove tag
         Integer version = exchange3.getBody().getSkus().get(0).getVersion();
@@ -176,7 +277,7 @@ public class ProductTest {
         ResponseEntity<ProductDetailAdminRepresentation> exchange5 = action.restTemplate.exchange(url2, HttpMethod.GET, request5, ProductDetailAdminRepresentation.class);
         Assert.assertEquals(HttpStatus.OK, exchange5.getStatusCode());
         Assert.assertEquals(1, exchange5.getBody().getAttributesKey().size());
-        Assert.assertEquals(TEST_TEST_VALUE_2, exchange3.getBody().getAttributesKey().toArray()[0]);
+        Assert.assertEquals(TEST_TEST_VALUE_2, exchange5.getBody().getAttributesKey().toArray()[0]);
     }
 
     @Test
