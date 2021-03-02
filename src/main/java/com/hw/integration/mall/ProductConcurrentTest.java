@@ -87,6 +87,7 @@ public class ProductConcurrentTest {
         try {
             assertConcurrent("", runnables, 30000);
             // get product order count
+            Thread.sleep(60*1000);
             ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
             assertTrue("remain storage should be " + iniOrderStorage.get() + " but is " + productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder(), productDetailAdminRepresentationResponseEntity.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
         } catch (InterruptedException e) {
@@ -97,13 +98,14 @@ public class ProductConcurrentTest {
     /**
      * if lock is pessimistic then deadlock exception will detected
      */
-    public void create_three_product_then_concurrent_decrease_diff_product_concurrent(Integer initialStorage, Integer threads) {
+    public void create_three_product_then_concurrent_decrease_diff_product_concurrent(Integer initialStorage, Integer threads) throws InterruptedException {
         AtomicInteger iniOrderStorage = new AtomicInteger(initialStorage);
         AtomicInteger iniOrderStorage2 = new AtomicInteger(initialStorage);
         AtomicInteger iniOrderStorage3 = new AtomicInteger(initialStorage);
         ResponseEntity<String> exchange = action.createRandomProductDetail(null, initialStorage);
         ResponseEntity<String> exchange2 = action.createRandomProductDetail(null, initialStorage);
         ResponseEntity<String> exchange3 = action.createRandomProductDetail(null, initialStorage);
+        Thread.sleep(2000);
         String productId = exchange.getHeaders().getLocation().toString();
         String productId2 = exchange2.getHeaders().getLocation().toString();
         String productId3 = exchange3.getHeaders().getLocation().toString();
@@ -169,24 +171,25 @@ public class ProductConcurrentTest {
         try {
             assertConcurrent("", runnables, 30000);
             // get product order count
+            Thread.sleep(60*1000);
             ResponseEntity<ProductDetailAdminRepresentation> ex = action.readProductDetailByIdAdmin(productId);
-            assertTrue("remain storage should be " + iniOrderStorage.get(), ex.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage.get()));
+            Assert.assertEquals(Math.max(iniOrderStorage.get(), 0), ex.getBody().getSkus().get(0).getStorageOrder().intValue());
             ResponseEntity<ProductDetailAdminRepresentation> ex2 = action.readProductDetailByIdAdmin(productId2);
-            assertTrue("remain storage should be " + iniOrderStorage2.get(), ex2.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage2.get()));
+            Assert.assertEquals(Math.max(iniOrderStorage2.get(), 0), ex2.getBody().getSkus().get(0).getStorageOrder().intValue());
             ResponseEntity<ProductDetailAdminRepresentation> ex3 = action.readProductDetailByIdAdmin(productId3);
-            assertTrue("remain storage should be " + iniOrderStorage3.get(), ex3.getBody().getSkus().get(0).getStorageOrder().equals(iniOrderStorage3.get()));
+            Assert.assertEquals(Math.max(iniOrderStorage3.get(), 0), ex3.getBody().getSkus().get(0).getStorageOrder().intValue());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    public void transactionalDecreaseEnough() {
+    public void transactionalDecreaseNotEnough() throws InterruptedException {
         create_three_product_then_concurrent_decrease_diff_product_concurrent(50, 30);
     }
 
     @Test
-    public void transactionalDecreaseNotEnough() {
+    public void transactionalDecreaseEnough() throws InterruptedException {
         create_three_product_then_concurrent_decrease_diff_product_concurrent(100, 30);
     }
 
@@ -206,8 +209,10 @@ public class ProductConcurrentTest {
         headers2.setBearerAuth(action.getJwtClientCredential(CLIENT_ID_SAGA_ID, COMMON_CLIENT_SECRET).getBody().getValue());
         ArrayList<Integer> integers = new ArrayList<>();
         integers.add(200);
-        integers.add(400);
-        Runnable runnable = new Runnable() {
+        ArrayList<Integer> integers2 = new ArrayList<>();
+        integers2.add(200);
+        integers2.add(400);
+        Runnable orderConfirm = new Runnable() {
             @Override
             public void run() {
                 HttpEntity<ArrayList<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
@@ -223,6 +228,7 @@ public class ProductConcurrentTest {
         UpdateProductAdminSkuCommand productSku = new UpdateProductAdminSkuCommand();
         productSku.setPrice(BigDecimal.valueOf(new Random().nextDouble()).abs());
         productSku.setAttributesSales(new HashSet<>(List.of(TEST_TEST_VALUE)));
+        productSku.setVersion(0);
         command.setDescription(action.getRandomStr());
         command.setSkus(new ArrayList<>(List.of(productSku)));
         command.setStatus(ProductStatus.AVAILABLE);
@@ -232,19 +238,20 @@ public class ProductConcurrentTest {
         strings.add(TEST_TEST_VALUE);
         command.setAttributesKey(strings);
         command.setVersion(0);
-        Runnable runnable2 = () -> {
+        Runnable adminUpdate = () -> {
             String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + exchange.getHeaders().getLocation().toString();
             HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
             ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
-            Assert.assertTrue("expected status code in admin update but is " + exchange2.getStatusCodeValue(), integers.contains(exchange2.getStatusCodeValue()));
+            Assert.assertTrue("expected status code in admin update but is " + exchange2.getStatusCodeValue(), integers2.contains(exchange2.getStatusCodeValue()));
         };
         ArrayList<Runnable> runnables = new ArrayList<>();
         IntStream.range(0, threadCount).forEach(e -> {
-            runnables.add(runnable);
-            runnables.add(runnable2);
+            runnables.add(orderConfirm);
+            runnables.add(adminUpdate);
         });
         try {
             assertConcurrent("", runnables, 30000);
+            Thread.sleep(10000);
             // get product order count
             ResponseEntity<ProductDetailAdminRepresentation> productDetailAdminRepresentationResponseEntity = action.readProductDetailByIdAdmin(productId);
             assertTrue("total sales should be " + threadCount + " but is " + productDetailAdminRepresentationResponseEntity.getBody().getTotalSales(), productDetailAdminRepresentationResponseEntity.getBody().getTotalSales().equals(threadCount));

@@ -20,6 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -334,7 +335,7 @@ public class ProductTest {
     }
 
     @Test
-    public void shop_update_product_price() {
+    public void shop_update_product_price() throws InterruptedException {
         ResponseEntity<String> exchange = action.createRandomProductDetail(null);
         String s1 = action.getDefaultAdminToken();
         HttpHeaders headers = new HttpHeaders();
@@ -358,11 +359,13 @@ public class ProductTest {
         String id = exchange.getHeaders().getLocation().toString();
         String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/" + id;
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
+        Thread.sleep(2000);
         action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
+        Thread.sleep(2000);
         ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = action.readProductDetailById(id);
         List<ProductSkuCustomerRepresentation> skus = productDetailCustomRepresentationResponseEntity.getBody().getSkus();
-        ProductSkuCustomerRepresentation productSkuCustomerRepresentation = skus.get(0);
-        Assert.assertEquals(abs.round(new MathContext(2)).doubleValue(), productSkuCustomerRepresentation.getPrice().doubleValue(), 0d);
+        ProductSkuCustomerRepresentation representation = skus.get(0);
+        Assert.assertEquals(abs.setScale(2, RoundingMode.CEILING).doubleValue(), representation.getPrice().doubleValue(), 0d);
     }
 
 
@@ -445,7 +448,7 @@ public class ProductTest {
     }
 
     @Test
-    public void change_product_sku_then_rollback() {
+    public void change_product_sku_then_rollback() throws InterruptedException {
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_CHANGE_APP;
         ResponseEntity<String> exchange = action.createRandomProductDetail(null, 1000);
         String productId = exchange.getHeaders().getLocation().toString();
@@ -464,12 +467,14 @@ public class ProductTest {
         HttpEntity<ArrayList<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
         ResponseEntity<Object> exchange2 = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity, Object.class);
         Assert.assertEquals(200, exchange2.getStatusCode().value());
+        Thread.sleep(2000);
         ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin = action.readProductDetailByIdAdmin(productId);
         Assert.assertEquals(999, productDetailByIdAdmin.getBody().getSkus().get(0).getStorageOrder().intValue());
 
         //rollback change
         ResponseEntity<Void> exchange3 = action.restTemplate.exchange(url + "/" + changeId, HttpMethod.DELETE, listHttpEntity, Void.class);
         Assert.assertEquals(200, exchange3.getStatusCode().value());
+        Thread.sleep(2000);
         ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin2 = action.readProductDetailByIdAdmin(productId);
         Assert.assertEquals(1000, productDetailByIdAdmin2.getBody().getSkus().get(0).getStorageOrder().intValue());
 
