@@ -165,7 +165,6 @@ public class ProductTest {
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertEquals(0, exchange3.getBody().getVersion().intValue());
         updateCommand.setVersion(0);
-        updateCommand.setSkus(collect);
         updateCommand.setDescription(action.getRandomStr());
         updateCommand.setStatus(ProductStatus.UNAVAILABLE);
         updateCommand.setName(action.getRandomStr());

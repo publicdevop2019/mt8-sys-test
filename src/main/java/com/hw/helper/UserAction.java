@@ -465,6 +465,7 @@ public class UserAction {
     public CategorySummaryCardRepresentation getFixedCatalogFromList() {
         ResponseEntity<CategorySummaryCustomerRepresentation> categories = getCatalogs();
         List<CategorySummaryCardRepresentation> body = categories.getBody().getData();
+        Assert.assertEquals("should get default catalog","女装精品",body.get(0).getName());
         return body.get(0);
     }
 
