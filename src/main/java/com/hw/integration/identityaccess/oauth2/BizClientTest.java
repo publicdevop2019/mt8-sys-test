@@ -304,7 +304,7 @@ public class BizClientTest {
         HttpEntity<String> request4 = new HttpEntity<>(null, headers4);
         ResponseEntity<String> exchange1 = action.restTemplate.exchange(url4, HttpMethod.DELETE, request4, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         //clientAsNonResource should not have removed client
         String url5 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT + "/" + clientId;
         ResponseEntity<Client> exchange3 = action.restTemplate.exchange(url5, HttpMethod.GET, request4, Client.class);
@@ -373,7 +373,7 @@ public class BizClientTest {
         HttpEntity<Client> request4 = new HttpEntity<>(clientAsResource, headers4);
         ResponseEntity<String> exchange1 = action.restTemplate.exchange(url4, HttpMethod.PUT, request4, String.class);
         Assert.assertEquals(HttpStatus.OK, exchange1.getStatusCode());
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         //clientAsNonResource can not access endpoint both access token
         ResponseEntity<SumTotalUser> exchange2 = action.restTemplate.exchange(url, HttpMethod.GET, request, SumTotalUser.class);
         Assert.assertEquals(HttpStatus.UNAUTHORIZED, exchange2.getStatusCode());

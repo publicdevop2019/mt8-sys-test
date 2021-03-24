@@ -360,7 +360,7 @@ public class ProductTest {
         HttpEntity<UpdateProductAdminCommand> request2 = new HttpEntity<>(command, headers);
         Thread.sleep(2000);
         action.restTemplate.exchange(url2, HttpMethod.PUT, request2, String.class);
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = action.readProductDetailById(id);
         List<ProductSkuCustomerRepresentation> skus = productDetailCustomRepresentationResponseEntity.getBody().getSkus();
         ProductSkuCustomerRepresentation representation = skus.get(0);
@@ -466,14 +466,14 @@ public class ProductTest {
         HttpEntity<ArrayList<PatchCommand>> listHttpEntity = new HttpEntity<>(patchCommands, headers2);
         ResponseEntity<Object> exchange2 = action.restTemplate.exchange(URL_2, HttpMethod.PATCH, listHttpEntity, Object.class);
         Assert.assertEquals(200, exchange2.getStatusCode().value());
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin = action.readProductDetailByIdAdmin(productId);
         Assert.assertEquals(999, productDetailByIdAdmin.getBody().getSkus().get(0).getStorageOrder().intValue());
 
         //rollback change
         ResponseEntity<Void> exchange3 = action.restTemplate.exchange(url + "/" + changeId, HttpMethod.DELETE, listHttpEntity, Void.class);
         Assert.assertEquals(200, exchange3.getStatusCode().value());
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin2 = action.readProductDetailByIdAdmin(productId);
         Assert.assertEquals(1000, productDetailByIdAdmin2.getBody().getSkus().get(0).getStorageOrder().intValue());
 

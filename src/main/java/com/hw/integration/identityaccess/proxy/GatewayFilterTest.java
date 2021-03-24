@@ -120,7 +120,6 @@ public class GatewayFilterTest {
         SecurityProfile securityProfile1 = new SecurityProfile();
         securityProfile1.setResourceId("0C8AZTODP4HT");
         securityProfile1.setUserRoles(new HashSet<>(List.of("ROLE_ADMIN")));
-        securityProfile1.setClientRoles(new HashSet<>(List.of("TRUST")));
         securityProfile1.setUserOnly(true);
         securityProfile1.setMethod("GET");
         securityProfile1.setDescription("<script>test</script>");
@@ -177,7 +176,6 @@ public class GatewayFilterTest {
         SecurityProfile securityProfile1 = new SecurityProfile();
         securityProfile1.setResourceId("0C8AZTODP4HT");
         securityProfile1.setUserRoles(new HashSet<>(List.of("ROLE_ADMIN")));
-        securityProfile1.setClientRoles(new HashSet<>(List.of("TRUST")));
         securityProfile1.setUserOnly(true);
         securityProfile1.setMethod("GET");
         securityProfile1.setPath("/test/" + UUID.randomUUID().toString().replace("-", "").replaceAll("\\d", "") + "/abc");

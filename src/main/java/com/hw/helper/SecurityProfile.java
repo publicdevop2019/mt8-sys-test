@@ -21,6 +21,7 @@ public class SecurityProfile {
     private Integer port;
     private String path;
     private String query;
+    private boolean websocket;
     private String fragment;
     private Integer version;
     private String description;
