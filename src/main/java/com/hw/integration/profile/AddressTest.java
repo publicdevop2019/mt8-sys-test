@@ -3,6 +3,7 @@ package com.hw.integration.profile;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hw.TestHelper;
 import com.hw.helper.Address;
 import com.hw.helper.OutgoingReqInterceptor;
 import com.hw.helper.SumTotalAddress;
@@ -34,6 +35,8 @@ public class AddressTest {
     public static final String ADDRESSES = "/addresses" ;
     @Autowired
     UserAction action;
+    @Autowired
+    TestHelper helper;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     UUID uuid;
     @Rule
@@ -54,7 +57,7 @@ public class AddressTest {
     @Test
     public void shop_read_all_addresses() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + ADDRESSES +ACCESS_ROLE_USER;
+        String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         ResponseEntity<SumTotalAddress> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), SumTotalAddress.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(-1, exchange.getBody().getData().size());
@@ -64,10 +67,10 @@ public class AddressTest {
     public void shop_read_address_details() {
 
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  ADDRESSES +ACCESS_ROLE_USER;
+        String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
         String addressId = exchange.getHeaders().getLocation().toString();
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  ADDRESSES +ACCESS_ROLE_USER+"/" + addressId;
+        String url2 = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER+"/" + addressId);
         ResponseEntity<Address> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, action.getHttpRequest(defaultUserToken), Address.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
 
@@ -76,7 +79,7 @@ public class AddressTest {
     @Test
     public void shop_update_address_details() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  ADDRESSES +ACCESS_ROLE_USER ;
+        String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
         String s = exchange.getHeaders().getLocation().toString();
         ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + s, HttpMethod.PUT, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
@@ -86,7 +89,7 @@ public class AddressTest {
     @Test
     public void shop_create_address() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  ADDRESSES +ACCESS_ROLE_USER ;
+        String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
@@ -95,7 +98,7 @@ public class AddressTest {
     @Test
     public void should_not_able_to_create_same_address() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  ADDRESSES +ACCESS_ROLE_USER ;
+        String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         Address randomAddress = action.getRandomAddress();
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
@@ -107,7 +110,7 @@ public class AddressTest {
     @Test
     public void shop_delete_address() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  ADDRESSES +ACCESS_ROLE_USER ;
+        String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         Address randomAddress = action.getRandomAddress();
         ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
         String s = exchange.getHeaders().getLocation().toString();

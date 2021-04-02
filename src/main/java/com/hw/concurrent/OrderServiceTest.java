@@ -3,7 +3,11 @@ package com.hw.concurrent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hw.helper.*;
+import com.hw.TestHelper;
+import com.hw.helper.OrderDetail;
+import com.hw.helper.OutgoingReqInterceptor;
+import com.hw.helper.SnapshotAddress;
+import com.hw.helper.UserAction;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -16,10 +20,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.*;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static com.hw.helper.UserAction.assertConcurrent;
@@ -32,6 +40,8 @@ public class OrderServiceTest {
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     @Autowired
     UserAction action;
+    @Autowired
+    TestHelper helper;
     int numOfConcurrent = 1;
     UUID uuid;
     @Rule
@@ -56,13 +66,15 @@ public class OrderServiceTest {
             public void run() {
                 String defaultUserToken = action.registerResourceOwnerThenLogin();
                 OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
-                String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user";
+
+                String url3 = helper.getUserProfileUrl("/orders/user");
                 ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
                 Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user/" + getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString()) + "/confirm";
+                String url4 = helper.getUserProfileUrl("/orders/user/" + getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString()) + "/confirm");
                 ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
+                log.info("payment result {}", exchange7.getBody());
                 Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
                 Assert.assertEquals(true, read);
             }
@@ -90,7 +102,7 @@ public class OrderServiceTest {
     public void place_order_then_confirm_pay_and_reserve_at_same_time() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
-        String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user";
+        String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + "/orders/user";
         ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
@@ -98,7 +110,7 @@ public class OrderServiceTest {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user/" + orderIdFromPaymentLink + "/confirm";
+                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + "/orders/user/" + orderIdFromPaymentLink + "/confirm";
                 ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
                 Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
@@ -117,7 +129,7 @@ public class OrderServiceTest {
                 BeanUtils.copyProperties(action.getRandomAddress(), snapshotAddress);
                 orderDetailForUser.setAddress(snapshotAddress);
 
-                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE +  "/orders/user/" + orderIdFromPaymentLink + "/reserve";
+                String url4 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + "/orders/user/" + orderIdFromPaymentLink + "/reserve";
                 ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
                 Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
             }

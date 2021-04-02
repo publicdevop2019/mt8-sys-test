@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hw.TestHelper;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.runner.Description;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
@@ -29,6 +31,8 @@ import static org.junit.Assert.assertTrue;
 @Component
 @Slf4j
 public class UserAction {
+    @Autowired
+    private TestHelper testHelper;
     public static final String TEST_TEST_VALUE = "3T8BRPK17W8A:S";
     public static final String TEST_TEST_VALUE_2 = "3T8BRPK17W94:上装";
     public static final String ACCESS_ROLE_ROOT = "/root";
@@ -359,7 +363,7 @@ public class UserAction {
         List<ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation> data = randomProducts.getBody().getData();
 
         ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple = data.get(new Random().nextInt(data.size()));
-        String url = proxyUrl + SVC_NAME_PRODUCT + "/products/public/" + productSimple.getId();
+        String url = testHelper.getMallUrl("/products/public/" + productSimple.getId());
         ResponseEntity<ProductDetailCustomRepresentation> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
         while (exchange.getBody().getSkus().stream().anyMatch(e -> e.getStorage().equals(0))) {
             ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts2 = readProductsByQuery();

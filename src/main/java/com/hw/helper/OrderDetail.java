@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 public class OrderDetail {
-    private Long id;
+    private String id;
     private SnapshotAddress address;
     private List<SnapshotProduct> productList;
     private String paymentType;

@@ -3,6 +3,7 @@ package com.hw.integration.profile;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hw.TestHelper;
 import com.hw.helper.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -33,6 +34,8 @@ public class CartTest {
     UserAction action;
     public ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.USE_ANNOTATIONS, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
     UUID uuid;
+    @Autowired
+    TestHelper helper;
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
@@ -53,7 +56,7 @@ public class CartTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + CART + ACCESS_ROLE_USER;
+        String url2 = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
@@ -64,7 +67,7 @@ public class CartTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + CART + ACCESS_ROLE_USER;
+        String url2 = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
@@ -76,7 +79,7 @@ public class CartTest {
     @Test
     public void shop_read_all_carts() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + CART + ACCESS_ROLE_USER;
+        String url = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
         ResponseEntity<SumTotalSnapshotProduct> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotEquals(-1, exchange.getBody().getData().size());
@@ -88,7 +91,7 @@ public class CartTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PROFILE + CART + ACCESS_ROLE_USER;
+        String url2 = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
         ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
         String s = exchange3.getHeaders().getLocation().toString();
         ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2 + "/" + s, HttpMethod.DELETE, action.getHttpRequest(defaultUserToken), String.class);
