@@ -52,14 +52,18 @@ public class CartTest {
     }
 
     @Test
-    public void shop_add_product_cart() {
+    public void shop_add_product_cart_then_read_all() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
         String url2 = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
-        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
+        String url = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
+        ResponseEntity<SumTotalSnapshotProduct> exchange2 = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
+        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
+        Assert.assertNotEquals(0, exchange2.getBody().getData().size());
     }
 
     @Test
@@ -68,21 +72,12 @@ public class CartTest {
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
         String url2 = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
-        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
         Assert.assertNotEquals(-1, exchange3.getHeaders().getLocation().toString());
-        ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
         Assert.assertNotEquals(-1, exchange4.getHeaders().getLocation().toString());
-    }
-
-    @Test
-    public void shop_read_all_carts() {
-        String defaultUserToken = action.registerResourceOwnerThenLogin();
-        String url = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
-        ResponseEntity<SumTotalSnapshotProduct> exchange = action.restTemplate.exchange(url, HttpMethod.GET, action.getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
-        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
-        Assert.assertNotEquals(-1, exchange.getBody().getData().size());
     }
 
 
@@ -92,7 +87,7 @@ public class CartTest {
         ResponseEntity<ProductDetailCustomRepresentation> exchange = action.readRandomProductDetail();
         SnapshotProduct snapshotProduct = action.selectProduct(exchange.getBody());
         String url2 = helper.getUserProfileUrl(CART + ACCESS_ROLE_USER);
-        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url2, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
         String s = exchange3.getHeaders().getLocation().toString();
         ResponseEntity<String> exchange4 = action.restTemplate.exchange(url2 + "/" + s, HttpMethod.DELETE, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());

@@ -12,6 +12,7 @@ public class OrderDetail {
     private SnapshotAddress address;
     private List<SnapshotProduct> productList;
     private String paymentType;
+    private String orderState;
     private BigDecimal paymentAmt;
     private String paymentDate;
     private PaymentStatus paymentStatus;

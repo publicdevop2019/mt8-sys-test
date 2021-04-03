@@ -68,7 +68,7 @@ public class AddressTest {
 
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, action.getRandomAddress()), String.class);
         String addressId = exchange.getHeaders().getLocation().toString();
         String url2 = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER+"/" + addressId);
         ResponseEntity<Address> exchange2 = action.restTemplate.exchange(url2, HttpMethod.GET, action.getHttpRequest(defaultUserToken), Address.class);
@@ -80,9 +80,9 @@ public class AddressTest {
     public void shop_update_address_details() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, action.getRandomAddress()), String.class);
         String s = exchange.getHeaders().getLocation().toString();
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + s, HttpMethod.PUT, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + s, HttpMethod.PUT, action.getHttpRequestAsString(defaultUserToken, action.getRandomAddress()), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }
 
@@ -90,7 +90,7 @@ public class AddressTest {
     public void shop_create_address() {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, action.getRandomAddress()), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, action.getRandomAddress()), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
     }
@@ -100,10 +100,10 @@ public class AddressTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         Address randomAddress = action.getRandomAddress();
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, randomAddress), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, randomAddress), String.class);
         Assert.assertEquals(HttpStatus.BAD_REQUEST, exchange2.getStatusCode());
     }
 
@@ -112,9 +112,9 @@ public class AddressTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         String url = helper.getUserProfileUrl(ADDRESSES +ACCESS_ROLE_USER);
         Address randomAddress = action.getRandomAddress();
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, randomAddress), String.class);
         String s = exchange.getHeaders().getLocation().toString();
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + s, HttpMethod.DELETE, action.getHttpRequest(defaultUserToken, randomAddress), String.class);
+        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "/" + s, HttpMethod.DELETE, action.getHttpRequestAsString(defaultUserToken, randomAddress), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
     }
 }

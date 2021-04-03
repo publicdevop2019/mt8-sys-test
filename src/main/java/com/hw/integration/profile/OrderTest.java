@@ -55,7 +55,7 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String url3 = helper.getUserProfileUrl(ORDERS_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
     }
@@ -65,10 +65,10 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String url3 = helper.getUserProfileUrl(ORDERS_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-        String url4 = helper.getUserProfileUrl(ORDERS_USER + "/"+getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString()) + "/confirm");
+        String url4 = helper.getUserProfileUrl(ORDERS_USER + "/"+ getOrderId(exchange.getHeaders().getLocation().toString()) + "/confirm");
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
         Boolean read = JsonPath.read(exchange7.getBody(), "$.paymentStatus");
@@ -80,11 +80,11 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String url3 = helper.getUserProfileUrl(ORDERS_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-        String url4 = helper.getUserProfileUrl(ORDERS_USER + "/"+getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString()) + "/reserve");
-        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken, null), String.class);
+        String url4 = helper.getUserProfileUrl(ORDERS_USER + "/"+ getOrderId(exchange.getHeaders().getLocation().toString()) + "/reserve");
+        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequestAsString(defaultUserToken, null), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
     }
 
@@ -102,8 +102,8 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
         String url3 = helper.getUserProfileUrl(ORDERS_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
-        String url4 = helper.getUserProfileUrl(ORDERS_USER+"/"+getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString()));
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, orderDetailForUser), String.class);
+        String url4 = helper.getUserProfileUrl(ORDERS_USER+"/"+ getOrderId(exchange.getHeaders().getLocation().toString()));
         ResponseEntity<OrderDetail> exchange2 = action.restTemplate.exchange(url4, HttpMethod.GET, action.getHttpRequest(defaultUserToken), OrderDetail.class);
         Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
         Assert.assertNotNull(exchange2.getBody());
@@ -119,17 +119,16 @@ public class OrderTest {
         String defaultUserToken = action.registerResourceOwnerThenLogin();
         OrderDetail orderDetailForUser = action.createBizOrderForUserAndProduct(defaultUserToken, exchange1.getHeaders().get("Location").get(0));
         String url3 = helper.getUserProfileUrl(ORDERS_USER);
-        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequest(defaultUserToken, orderDetailForUser), String.class);
+        ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, orderDetailForUser), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
         Assert.assertNotNull(exchange.getHeaders().getLocation().toString());
-        String orderIdFromPaymentLink = getOrderIdFromPaymentLink(exchange.getHeaders().getLocation().toString());
+        String orderIdFromPaymentLink = getOrderId(exchange.getHeaders().getLocation().toString());
         String url4 = helper.getUserProfileUrl(ORDERS_USER +"/"+orderIdFromPaymentLink+ "/confirm");
         ResponseEntity<String> exchange7 = action.restTemplate.exchange(url4, HttpMethod.PUT, action.getHttpRequest(defaultUserToken), String.class);
         Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
     }
 
-    public static String getOrderIdFromPaymentLink(String link){
-        Optional<String> product_id = Arrays.stream(link.split("&")).filter(e -> e.contains("product_id=")).findFirst();
-        return product_id.get().replace("product_id=","");
+    public static String getOrderId(String link){
+        return link;
     }
 }

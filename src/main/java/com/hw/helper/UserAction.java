@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 public class UserAction {
     @Autowired
-    private TestHelper testHelper;
+    private TestHelper helper;
     public static final String TEST_TEST_VALUE = "3T8BRPK17W8A:S";
     public static final String TEST_TEST_VALUE_2 = "3T8BRPK17W94:上装";
     public static final String ACCESS_ROLE_ROOT = "/root";
@@ -78,8 +78,6 @@ public class UserAction {
     public TestRestTemplate restTemplate = new TestRestTemplate();
     //        public static String proxyUrl = "http://api.manytreetechnology.com:" + 8111;
     public static String proxyUrl = "http://localhost:" + 8111;
-    public static final String URL1 = proxyUrl + SVC_NAME_AUTH + "/users/app";
-    public static final String URL_REGISTER = proxyUrl + SVC_NAME_AUTH + "/pending-users/app";
     public static final String URL = UserAction.proxyUrl + SVC_NAME_AUTH + "/oauth/token";
     public static String PROXY_URL_TOKEN = proxyUrl + SVC_NAME_AUTH + "/oauth/token";
     public static final String URL2 = UserAction.proxyUrl + UserAction.SVC_NAME_AUTH + CLIENTS + ACCESS_ROLE_ROOT;
@@ -219,8 +217,8 @@ public class UserAction {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(bearer);
         headers.set("changeId", changeId);
-        headers.set("X-XSRF-TOKEN","123");
-        headers.add(HttpHeaders.COOKIE,"XSRF-TOKEN=123");
+        headers.set("X-XSRF-TOKEN", "123");
+        headers.add(HttpHeaders.COOKIE, "XSRF-TOKEN=123");
         HttpEntity<Client> request = new HttpEntity<>(client, headers);
         return restTemplate.exchange(URL2, HttpMethod.POST, request, String.class);
     }
@@ -249,7 +247,7 @@ public class UserAction {
     public ResponseEntity<DefaultOAuth2AccessToken> registerAnUser(ResourceOwner user) {
         ResponseEntity<DefaultOAuth2AccessToken> registerTokenResponse = getRegisterToken();
         PendingResourceOwner pendingResourceOwner = new PendingResourceOwner();
-        ResponseEntity<Void> voidResponseEntity = createPendingUser(user, registerTokenResponse.getBody().getValue(), pendingResourceOwner);
+        createPendingUser(user, registerTokenResponse.getBody().getValue(), pendingResourceOwner);
         return enterActivationCode(user, registerTokenResponse.getBody().getValue(), pendingResourceOwner);
     }
 
@@ -261,7 +259,7 @@ public class UserAction {
         pendingResourceOwner.setPassword(user.getPassword());
         pendingResourceOwner.setActivationCode("123456");
         HttpEntity<PendingResourceOwner> request1 = new HttpEntity<>(pendingResourceOwner, headers1);
-        return restTemplate.exchange(URL1, HttpMethod.POST, request1, DefaultOAuth2AccessToken.class);
+        return restTemplate.exchange(helper.getAccessUrl("/users/app"), HttpMethod.POST, request1, DefaultOAuth2AccessToken.class);
     }
 
     public ResponseEntity<Void> createPendingUser(ResourceOwner user, String registerToken, PendingResourceOwner pendingResourceOwner) {
@@ -271,7 +269,7 @@ public class UserAction {
         headers.set("changeId", UUID.randomUUID().toString());
         pendingResourceOwner.setEmail(user.getEmail());
         HttpEntity<PendingResourceOwner> request = new HttpEntity<>(pendingResourceOwner, headers);
-        return restTemplate.exchange(URL_REGISTER, HttpMethod.POST, request, Void.class);
+        return restTemplate.exchange(helper.getAccessUrl("/pending-users/app"), HttpMethod.POST, request, Void.class);
     }
 
     public String registerResourceOwnerThenLogin() {
@@ -363,18 +361,18 @@ public class UserAction {
         List<ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation> data = randomProducts.getBody().getData();
 
         ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple = data.get(new Random().nextInt(data.size()));
-        String url = testHelper.getMallUrl("/products/public/" + productSimple.getId());
+        String url = helper.getMallUrl("/products/public/" + productSimple.getId());
         ResponseEntity<ProductDetailCustomRepresentation> exchange = restTemplate.exchange(url, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
         while (exchange.getBody().getSkus().stream().anyMatch(e -> e.getStorage().equals(0))) {
             ResponseEntity<ProductCustomerSummaryPaginatedRepresentation> randomProducts2 = readProductsByQuery();
 
             ProductCustomerSummaryPaginatedRepresentation.ProductSearchRepresentation productSimple2 = data.get(new Random().nextInt(randomProducts2.getBody().getData().size()));
-            String url3 = proxyUrl + SVC_NAME_PRODUCT + "/products/public/" + productSimple2.getId();
+            String url3 = helper.getMallUrl("/products/public/" + productSimple2.getId());
             exchange = restTemplate.exchange(url3, HttpMethod.GET, null, ProductDetailCustomRepresentation.class);
         }
         SnapshotProduct snapshotProduct = selectProduct(exchange.getBody());
-        String url2 = proxyUrl + SVC_NAME_PROFILE + "/cart/user";
-        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        String url2 = helper.getUserProfileUrl("/cart/user");
+        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
 
         ResponseEntity<SumTotalSnapshotProduct> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
 
@@ -393,7 +391,7 @@ public class UserAction {
         ResponseEntity<ProductDetailCustomRepresentation> productDetailCustomRepresentationResponseEntity = readProductDetailById(productId);
         SnapshotProduct snapshotProduct = selectProduct(productDetailCustomRepresentationResponseEntity.getBody());
         String url2 = proxyUrl + SVC_NAME_PROFILE + "/cart/user";
-        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequest(defaultUserToken, snapshotProduct), String.class);
+        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
 
         ResponseEntity<SumTotalSnapshotProduct> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
 
@@ -469,7 +467,7 @@ public class UserAction {
     public CategorySummaryCardRepresentation getFixedCatalogFromList() {
         ResponseEntity<CategorySummaryCustomerRepresentation> categories = getCatalogs();
         List<CategorySummaryCardRepresentation> body = categories.getBody().getData();
-        Assert.assertEquals("should get default catalog","女装精品",body.get(0).getName());
+        Assert.assertEquals("should get default catalog", "女装精品", body.get(0).getName());
         return body.get(0);
     }
 
@@ -493,9 +491,9 @@ public class UserAction {
         return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 
-    public ResponseEntity<String> createRandomProductDetail(Set<String> attrKeys, Set<String> attrProd,BigDecimal price) {
+    public ResponseEntity<String> createRandomProductDetail(Set<String> attrKeys, Set<String> attrProd, BigDecimal price) {
         CategorySummaryCardRepresentation catalogFromList = getFixedCatalogFromList();
-        ProductDetail randomProduct = getRandomProduct(catalogFromList, 10, 10,price);
+        ProductDetail randomProduct = getRandomProduct(catalogFromList, 10, 10, price);
         CreateProductAdminCommand createProductAdminCommand = new CreateProductAdminCommand();
         BeanUtils.copyProperties(randomProduct, createProductAdminCommand);
         createProductAdminCommand.setSkus(randomProduct.getProductSkuList());
@@ -535,7 +533,7 @@ public class UserAction {
         return new HttpEntity<>(headers);
     }
 
-    public HttpEntity getHttpRequest(String authorizeToken, Object object) {
+    public HttpEntity getHttpRequestAsString(String authorizeToken, Object object) {
         String s = null;
         try {
             s = mapper.writeValueAsString(object);
@@ -547,6 +545,14 @@ public class UserAction {
         headers.setAcceptCharset(List.of(StandardCharsets.UTF_8));
         headers.setBearerAuth(authorizeToken);
         return new HttpEntity<>(s, headers);
+    }
+
+    public <T> HttpEntity<T> getHttpRequest(String authorizeToken, T object) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAcceptCharset(List.of(StandardCharsets.UTF_8));
+        headers.setBearerAuth(authorizeToken);
+        return new HttpEntity<>(object, headers);
     }
 
     public Catalog generateRandomFrontendCatalog() {
@@ -574,7 +580,7 @@ public class UserAction {
 
     public ProductDetail getRandomProduct(CategorySummaryCardRepresentation catalog, Integer actualStorage, Integer orderStorage, BigDecimal price) {
         ProductDetail productDetail = new ProductDetail();
-        productDetail.setImageUrlSmall("http://www.test.com/"+UUID.randomUUID().toString().replace("-", ""));
+        productDetail.setImageUrlSmall("http://www.test.com/" + UUID.randomUUID().toString().replace("-", ""));
         HashSet<String> objects = new HashSet<>();
         objects.add(UUID.randomUUID().toString().replace("-", ""));
         objects.add(UUID.randomUUID().toString().replace("-", ""));

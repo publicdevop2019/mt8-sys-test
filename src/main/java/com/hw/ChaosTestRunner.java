@@ -21,8 +21,6 @@ import javax.annotation.PreDestroy;
 //@SpringBootApplication
 @EnableScheduling
 public class ChaosTestRunner {
-//    @Autowired
-//    TestResultRepo testResultRepo;
 
     @Autowired
     UserAction userAction;
@@ -42,7 +40,6 @@ public class ChaosTestRunner {
         TestResult testResult = new TestResult();
         testResult.setStatus("just started");
         StringBuilder stringBuilder = new StringBuilder();
-//        testResultRepo.save(testResult);
         Result result = JUnitCore.runClasses(ChaosTest.class);
         for (Failure failure : result.getFailures()) {
             log.error(failure.toString());
@@ -61,7 +58,6 @@ public class ChaosTestRunner {
             testResult.setStatus("failed");
             log.error("Long run tests failed, check log");
         }
-//        testResultRepo.save(testResult);
     }
 
     @PreDestroy
