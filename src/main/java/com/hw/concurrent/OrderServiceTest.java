@@ -143,7 +143,7 @@ public class OrderServiceTest {
         UpdateBizOrderCommand updateBizOrderCommand = new UpdateBizOrderCommand();
         updateBizOrderCommand.setOrderId(orderIdFromPaymentLink);
         updateBizOrderCommand.setVersion(0);
-        updateBizOrderCommand.setOrderState("NOT_PAID_RECYCLED");
+        updateBizOrderCommand.setOrderState(BizOrderStatus.NOT_PAID_RECYCLED.name());
         updateBizOrderCommand.setChangeId(UUID.randomUUID().toString());
         HttpEntity<UpdateBizOrderCommand> httpRequest = action.getHttpRequest(value, updateBizOrderCommand);
         //concurrent update
