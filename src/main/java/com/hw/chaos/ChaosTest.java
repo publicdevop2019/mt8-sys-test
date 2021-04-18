@@ -74,9 +74,9 @@ public class ChaosTest {
                 integers4.add(500);
                 ResourceOwner resourceOwner1 = action.testUser.get(new Random().nextInt(5));
                 String defaultUserToken = action.getJwtPassword(resourceOwner1.getEmail(), resourceOwner1.getPassword()).getBody().getValue();
-                log.info("defaultUserToken " + defaultUserToken);
+                log.info("user token " + defaultUserToken);
                 OrderDetail orderDetailForUser = action.createOrderDetailForUser(defaultUserToken);
-                log.info("order with id created {}", orderDetailForUser.getId());
+                log.info("draft order created");
                 String url3 = helper.getUserProfileUrl("/orders/user");
                 ResponseEntity<String> exchange = action.restTemplate.exchange(url3, HttpMethod.POST, action.getHttpRequestAsString(defaultUserToken, orderDetailForUser), String.class);
                 log.info("create status code " + exchange.getStatusCode());

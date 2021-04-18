@@ -11,7 +11,7 @@ public class OrderDetail {
     private String id;
     private SnapshotAddress address;
     private List<SnapshotProduct> productList;
-    private String paymentType;
+    private PaymentType paymentType;
     private String orderState;
     private BigDecimal paymentAmt;
     private String paymentDate;
@@ -19,6 +19,7 @@ public class OrderDetail {
     private Date modifiedByUserAt;
     private Boolean expired;
     private Boolean revoked;
+    private Boolean paid;
 
 }
 

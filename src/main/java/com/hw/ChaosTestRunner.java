@@ -19,7 +19,7 @@ import javax.annotation.PreDestroy;
 
 @Slf4j
 //@SpringBootApplication
-@EnableScheduling
+//@EnableScheduling
 public class ChaosTestRunner {
 
     @Autowired

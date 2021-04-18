@@ -372,7 +372,7 @@ public class UserAction {
         }
         SnapshotProduct snapshotProduct = selectProduct(exchange.getBody());
         String url2 = helper.getUserProfileUrl("/cart/user");
-        restTemplate.exchange(url2, HttpMethod.POST, getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
+        ResponseEntity<String> exchange1 = restTemplate.exchange(url2, HttpMethod.POST, getHttpRequestAsString(defaultUserToken, snapshotProduct), String.class);
 
         ResponseEntity<SumTotalSnapshotProduct> exchange5 = restTemplate.exchange(url2, HttpMethod.GET, getHttpRequest(defaultUserToken), SumTotalSnapshotProduct.class);
 
@@ -380,8 +380,11 @@ public class UserAction {
         SnapshotAddress snapshotAddress = new SnapshotAddress();
         BeanUtils.copyProperties(getRandomAddress(), snapshotAddress);
         orderDetail.setAddress(snapshotAddress);
+        exchange5.getBody().getData().forEach(e -> {
+            e.setCartId(e.getId());
+        });
         orderDetail.setProductList(exchange5.getBody().getData());
-        orderDetail.setPaymentType("wechatpay");
+        orderDetail.setPaymentType(PaymentType.WECHAT_PAY);
         BigDecimal reduce = orderDetail.getProductList().stream().map(e -> BigDecimal.valueOf(Double.parseDouble(e.getFinalPrice()))).reduce(BigDecimal.valueOf(0), BigDecimal::add);
         orderDetail.setPaymentAmt(reduce);
         return orderDetail;
@@ -400,7 +403,7 @@ public class UserAction {
         BeanUtils.copyProperties(getRandomAddress(), snapshotAddress);
         orderDetail.setAddress(snapshotAddress);
         orderDetail.setProductList(exchange5.getBody().getData());
-        orderDetail.setPaymentType("wechatpay");
+        orderDetail.setPaymentType(PaymentType.WECHAT_PAY);
         BigDecimal reduce = orderDetail.getProductList().stream().map(e -> BigDecimal.valueOf(Double.parseDouble(e.getFinalPrice()))).reduce(BigDecimal.valueOf(0), BigDecimal::add);
         orderDetail.setPaymentAmt(reduce);
         return orderDetail;
@@ -456,6 +459,8 @@ public class UserAction {
         List<ProductSkuCustomerRepresentation> productSkuList = productDetail.getSkus();
         snapshotProduct.setFinalPrice(calc.add(productSkuList.get(0).getPrice()).toString());
         snapshotProduct.setAttributesSales(productSkuList.get(0).getAttributesSales());
+        snapshotProduct.setSkuId(productSkuList.get(0).getSkuId());
+        snapshotProduct.setAmount(1);
         return snapshotProduct;
     }
 

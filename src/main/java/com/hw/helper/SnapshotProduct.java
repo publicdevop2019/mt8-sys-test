@@ -9,6 +9,7 @@ import java.util.Set;
 public class SnapshotProduct {
 
     private String name;
+    private String id;
 
     private List<ProductOption> selectedOptions;
 
@@ -17,6 +18,9 @@ public class SnapshotProduct {
     private String imageUrlSmall;
 
     private String productId;
+    private String skuId;
+    private String cartId;
+    private Integer amount;
 
     private Set<String> attributesSales;
 
