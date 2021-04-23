@@ -3,6 +3,7 @@ package com.hw.chaos;
 import com.hw.TestHelper;
 import com.hw.helper.*;
 import com.jayway.jsonpath.JsonPath;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,8 +66,10 @@ public class ChaosTest {
         int numOfConcurrent = 10;
 
         Runnable runnable = new Runnable() {
+            @SneakyThrows
             @Override
             public void run() {
+                Thread.sleep(5000);//give some delay
                 // randomly pick test user
                 log.info("thread start ");
                 ArrayList<Integer> integers4 = new ArrayList<>();

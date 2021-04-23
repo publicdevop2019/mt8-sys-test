@@ -385,58 +385,6 @@ public class ProductTest {
     }
 
     @Test
-    public void shop_delete_product_by_query_id() {
-        ResponseEntity<String> productDetailForCatalog = action.createRandomProductDetail(null);
-        String p1Id = productDetailForCatalog.getHeaders().getLocation().toString();
-        ResponseEntity<String> productDetailForCatalog2 = action.createRandomProductDetail(null);
-        String p2Id = productDetailForCatalog2.getHeaders().getLocation().toString();
-        String query = "id:" + p1Id + "." + p2Id;
-        String s1 = action.getDefaultAdminToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(s1);
-        String url2 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "?query=" + query;
-        String url3 = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN + "/";
-        HttpEntity<String> request2 = new HttpEntity<>(headers);
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url2, HttpMethod.DELETE, request2, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
-        ResponseEntity<String> exchange3 = action.restTemplate.exchange(url3 + p1Id, HttpMethod.GET, request2, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange3.getStatusCode());
-        Assert.assertNull(exchange3.getBody());
-        ResponseEntity<String> exchange4 = action.restTemplate.exchange(url3 + p2Id, HttpMethod.GET, request2, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange4.getStatusCode());
-        Assert.assertNull(exchange4.getBody());
-    }
-
-    @Test
-    public void shop_delete_product_by_query_name() {
-        String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_ADMIN;
-        String s1 = action.getDefaultAdminToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(s1);
-        HttpEntity<String> request2 = new HttpEntity<>(headers);
-        ResponseEntity<String> productDetailForCatalog = action.createRandomProductDetail(null);
-        String p1Id = productDetailForCatalog.getHeaders().getLocation().toString();
-        ResponseEntity<String> productDetailForCatalog2 = action.createRandomProductDetail(null);
-        String p2Id = productDetailForCatalog2.getHeaders().getLocation().toString();
-        ResponseEntity<ProductDetail> exchange4 = action.restTemplate.exchange(url + "/" + p1Id, HttpMethod.GET, request2, ProductDetail.class);
-        String name1 = exchange4.getBody().getName();
-        ResponseEntity<ProductDetail> exchange5 = action.restTemplate.exchange(url + "/" + p2Id, HttpMethod.GET, request2, ProductDetail.class);
-        String name2 = exchange5.getBody().getName();
-
-        ResponseEntity<String> exchange2 = action.restTemplate.exchange(url + "?query=name:" + name1 + "." + name2, HttpMethod.DELETE, request2, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange2.getStatusCode());
-
-        ResponseEntity<String> exchange6 = action.restTemplate.exchange(url + "/" + p1Id, HttpMethod.GET, request2, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange6.getStatusCode());
-        Assert.assertNull(exchange6.getBody());
-        ResponseEntity<String> exchange7 = action.restTemplate.exchange(url + "/" + p2Id, HttpMethod.GET, request2, String.class);
-        Assert.assertEquals(HttpStatus.OK, exchange7.getStatusCode());
-        Assert.assertNull(exchange7.getBody());
-    }
-
-    @Test
     public void shop_customer_should_not_query_all() {
         String url = UserAction.proxyUrl + UserAction.SVC_NAME_PRODUCT + PRODUCTS_PUBLIC;
         HttpHeaders headers = new HttpHeaders();
@@ -469,14 +417,6 @@ public class ProductTest {
         Thread.sleep(5000);
         ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin = action.readProductDetailByIdAdmin(productId);
         Assert.assertEquals(999, productDetailByIdAdmin.getBody().getSkus().get(0).getStorageOrder().intValue());
-
-        //rollback change
-        ResponseEntity<Void> exchange3 = action.restTemplate.exchange(url + "/" + changeId, HttpMethod.DELETE, listHttpEntity, Void.class);
-        Assert.assertEquals(200, exchange3.getStatusCode().value());
-        Thread.sleep(5000);
-        ResponseEntity<ProductDetailAdminRepresentation> productDetailByIdAdmin2 = action.readProductDetailByIdAdmin(productId);
-        Assert.assertEquals(1000, productDetailByIdAdmin2.getBody().getSkus().get(0).getStorageOrder().intValue());
-
     }
 
 
